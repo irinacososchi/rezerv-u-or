@@ -1,43 +1,73 @@
+import { supabase } from "@/integrations/supabase/external-client";
+import type { Room } from "@/components/room-card";
 import sala1 from "@/assets/sala-1.jpg";
 import sala2 from "@/assets/sala-2.jpg";
 import sala3 from "@/assets/sala-3.jpg";
-import type { Room } from "@/components/room-card";
 
-export const rooms: Room[] = [
-  {
-    id: "1",
-    name: "Studio Lumina",
-    neighbourhood: "Floreasca",
-    city: "București",
-    priceMin: 60,
-    priceMax: 90,
-    image: sala1,
-    hasMirrors: true,
-    hasSound: false,
-    hasBarre: true,
-  },
-  {
-    id: "2",
-    name: "Sala Ritm",
-    neighbourhood: "Centru",
-    city: "Cluj-Napoca",
-    priceMin: 80,
-    priceMax: 120,
-    image: sala2,
-    hasMirrors: true,
-    hasSound: true,
-    hasBarre: false,
-  },
-  {
-    id: "3",
-    name: "Atelier Mișcare",
-    neighbourhood: "Iosefin",
-    city: "Timișoara",
-    priceMin: 50,
-    priceMax: 80,
-    image: sala3,
-    hasMirrors: true,
-    hasSound: false,
-    hasBarre: true,
-  },
-];
+const FALLBACK_IMAGES = [sala1, sala2, sala3];
+
+type RoomRow = {
+  id: string;
+  name: string;
+  city: string;
+  neighbourhood: string | null;
+  has_mirrors: boolean | null;
+  has_sound_system: boolean | null;
+  has_ballet_barre: boolean | null;
+  is_active: boolean | null;
+  room_photos: { storage_url: string; is_cover: boolean | null; sort_order: number | null }[] | null;
+  pricing_rules: { price_per_hour: number; is_active: boolean | null }[] | null;
+};
+
+function pickImage(row: RoomRow, idx: number): string {
+  const photos = row.room_photos ?? [];
+  if (photos.length > 0) {
+    const cover = photos.find((p) => p.is_cover);
+    if (cover) return cover.storage_url;
+    const sorted = [...photos].sort(
+      (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
+    );
+    return sorted[0].storage_url;
+  }
+  return FALLBACK_IMAGES[idx % FALLBACK_IMAGES.length];
+}
+
+function priceRange(row: RoomRow): { min: number; max: number } {
+  const prices = (row.pricing_rules ?? [])
+    .filter((p) => p.is_active !== false)
+    .map((p) => Number(p.price_per_hour))
+    .filter((n) => !Number.isNaN(n));
+  if (prices.length === 0) return { min: 0, max: 0 };
+  return { min: Math.min(...prices), max: Math.max(...prices) };
+}
+
+export async function fetchRooms(limit?: number): Promise<Room[]> {
+  let query = supabase
+    .from("rooms")
+    .select(
+      "id, name, city, neighbourhood, has_mirrors, has_sound_system, has_ballet_barre, is_active, room_photos(storage_url, is_cover, sort_order), pricing_rules(price_per_hour, is_active)",
+    )
+    .eq("is_active", true)
+    .order("created_at", { ascending: false });
+
+  if (limit) query = query.limit(limit);
+
+  const { data, error } = await query;
+  if (error) throw error;
+
+  return (data as RoomRow[]).map((row, idx) => {
+    const { min, max } = priceRange(row);
+    return {
+      id: row.id,
+      name: row.name,
+      city: row.city ?? "",
+      neighbourhood: row.neighbourhood ?? "",
+      priceMin: min,
+      priceMax: max,
+      image: pickImage(row, idx),
+      hasMirrors: !!row.has_mirrors,
+      hasSound: !!row.has_sound_system,
+      hasBarre: !!row.has_ballet_barre,
+    };
+  });
+}
