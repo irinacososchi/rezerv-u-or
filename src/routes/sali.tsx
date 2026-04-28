@@ -1,13 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
-import { RoomCard } from "@/components/room-card";
+import { RoomCard, type Room } from "@/components/room-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { rooms } from "@/data/rooms";
+import { fetchRooms } from "@/data/rooms";
 import { SearchX } from "lucide-react";
 
 type SaliSearch = { city?: string };
@@ -41,6 +41,11 @@ function SaliPage() {
   const [mirrors, setMirrors] = useState(false);
   const [sound, setSound] = useState(false);
   const [barre, setBarre] = useState(false);
+  const [rooms, setRooms] = useState<Room[]>([]);
+
+  useEffect(() => {
+    fetchRooms().then(setRooms).catch((e) => console.error("fetchRooms", e));
+  }, []);
 
   const filtered = useMemo(() => {
     const min = priceMin ? Number(priceMin) : undefined;

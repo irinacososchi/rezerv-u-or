@@ -29,7 +29,12 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
   const [query, setQuery] = useState("");
+  const [rooms, setRooms] = useState<Room[]>([]);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchRooms(6).then(setRooms).catch((e) => console.error("fetchRooms", e));
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
