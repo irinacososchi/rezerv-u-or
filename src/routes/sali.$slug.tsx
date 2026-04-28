@@ -24,6 +24,7 @@ import {
 } from "@/lib/date-utils";
 
 export const Route = createFileRoute("/sali/$slug")({
+  loader: ({ params }) => ({ slug: params.slug }),
   head: () => ({
     meta: [
       { title: "Detalii sală — Rezervări Săli" },
