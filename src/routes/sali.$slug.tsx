@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   MapPin,
@@ -117,6 +117,7 @@ function getPriceForSlot(
 // ---------- Page ----------
 function RoomDetailsPage() {
   const { slug } = Route.useParams() as { slug: string };
+  const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -609,9 +610,23 @@ function RoomDetailsPage() {
                 )}
 
                 <Button
-                  className="mt-5 w-full"
+                  className="mt-5 w-full cursor-pointer"
                   size="lg"
                   disabled={!summary || !summary.contiguous}
+                  onClick={() => {
+                    if (!summary || !summary.contiguous || !selectedDate || !room) return;
+                    navigate({
+                      to: "/rezerva/$slug",
+                      params: { slug: room.slug },
+                      search: {
+                        date: formatDateISO(selectedDate),
+                        start: summary.start,
+                        end: summary.end,
+                        duration: summary.duration,
+                        total: summary.total,
+                      },
+                    });
+                  }}
                 >
                   Rezervă acum
                 </Button>
