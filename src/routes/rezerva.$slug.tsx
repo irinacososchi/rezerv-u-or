@@ -342,7 +342,7 @@ function CheckoutPage() {
     }
 
     const reference = (data as { reference?: string; id: string })?.reference ?? (data as { id: string }).id;
-    navigate({ to: "/confirmare", search: { reference } });
+    navigate({ to: "/confirmare", search: { reference } as never });
   }
 
   // ---------- Render ----------
