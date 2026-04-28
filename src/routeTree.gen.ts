@@ -12,9 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SaliRouteImport } from './routes/sali'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ConfirmareRouteImport } from './routes/confirmare'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SaliIndexRouteImport } from './routes/sali.index'
 import { Route as SaliSlugRouteImport } from './routes/sali.$slug'
+import { Route as RezervaSlugRouteImport } from './routes/rezerva.$slug'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -29,6 +31,11 @@ const SaliRoute = SaliRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfirmareRoute = ConfirmareRouteImport.update({
+  id: '/confirmare',
+  path: '/confirmare',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -46,51 +53,81 @@ const SaliSlugRoute = SaliSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => SaliRoute,
 } as any)
+const RezervaSlugRoute = RezervaSlugRouteImport.update({
+  id: '/rezerva/$slug',
+  path: '/rezerva/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/confirmare': typeof ConfirmareRoute
   '/login': typeof LoginRoute
   '/sali': typeof SaliRouteWithChildren
   '/signup': typeof SignupRoute
+  '/rezerva/$slug': typeof RezervaSlugRoute
   '/sali/$slug': typeof SaliSlugRoute
   '/sali/': typeof SaliIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/confirmare': typeof ConfirmareRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/rezerva/$slug': typeof RezervaSlugRoute
   '/sali/$slug': typeof SaliSlugRoute
   '/sali': typeof SaliIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/confirmare': typeof ConfirmareRoute
   '/login': typeof LoginRoute
   '/sali': typeof SaliRouteWithChildren
   '/signup': typeof SignupRoute
+  '/rezerva/$slug': typeof RezervaSlugRoute
   '/sali/$slug': typeof SaliSlugRoute
   '/sali/': typeof SaliIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/sali' | '/signup' | '/sali/$slug' | '/sali/'
-  fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/signup' | '/sali/$slug' | '/sali'
-  id:
-    | '__root__'
+  fullPaths:
     | '/'
+    | '/confirmare'
     | '/login'
     | '/sali'
     | '/signup'
+    | '/rezerva/$slug'
+    | '/sali/$slug'
+    | '/sali/'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/'
+    | '/confirmare'
+    | '/login'
+    | '/signup'
+    | '/rezerva/$slug'
+    | '/sali/$slug'
+    | '/sali'
+  id:
+    | '__root__'
+    | '/'
+    | '/confirmare'
+    | '/login'
+    | '/sali'
+    | '/signup'
+    | '/rezerva/$slug'
     | '/sali/$slug'
     | '/sali/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ConfirmareRoute: typeof ConfirmareRoute
   LoginRoute: typeof LoginRoute
   SaliRoute: typeof SaliRouteWithChildren
   SignupRoute: typeof SignupRoute
+  RezervaSlugRoute: typeof RezervaSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -116,6 +153,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/confirmare': {
+      id: '/confirmare'
+      path: '/confirmare'
+      fullPath: '/confirmare'
+      preLoaderRoute: typeof ConfirmareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -137,6 +181,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SaliSlugRouteImport
       parentRoute: typeof SaliRoute
     }
+    '/rezerva/$slug': {
+      id: '/rezerva/$slug'
+      path: '/rezerva/$slug'
+      fullPath: '/rezerva/$slug'
+      preLoaderRoute: typeof RezervaSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -154,9 +205,11 @@ const SaliRouteWithChildren = SaliRoute._addFileChildren(SaliRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ConfirmareRoute: ConfirmareRoute,
   LoginRoute: LoginRoute,
   SaliRoute: SaliRouteWithChildren,
   SignupRoute: SignupRoute,
+  RezervaSlugRoute: RezervaSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
