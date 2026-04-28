@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { MapPin } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+
 
 export interface Room {
   id: string;
