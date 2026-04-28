@@ -25,6 +25,9 @@ export function SiteHeader() {
 
         <nav className="flex items-center gap-2 sm:gap-3">
           <Button variant="ghost" asChild className="text-foreground/80">
+            <Link to="/">Acasă</Link>
+          </Button>
+          <Button variant="ghost" asChild className="text-foreground/80">
             <Link to="/sali">Săli</Link>
           </Button>
           <Button variant="ghost" asChild className="text-foreground/80">
