@@ -1,12 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search, Sparkles, Calendar, CheckCircle2 } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
-import { RoomCard } from "@/components/room-card";
+import { RoomCard, type Room } from "@/components/room-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { rooms } from "@/data/rooms";
+import { fetchRooms } from "@/data/rooms";
 
 export const Route = createFileRoute("/")({
   head: () => ({
