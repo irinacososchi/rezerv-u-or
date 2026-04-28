@@ -27,6 +27,11 @@ export function SiteHeader() {
           <Button variant="ghost" asChild className="text-foreground/80">
             <Link to="/sali">Săli</Link>
           </Button>
+          <Button variant="ghost" asChild className="text-foreground/80">
+            <Link to="/sali/$slug" params={{ slug: "studio-dans-floreasca" }}>
+              Test sală
+            </Link>
+          </Button>
 
           {!loading && !user && (
             <>
