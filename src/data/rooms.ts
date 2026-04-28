@@ -46,7 +46,7 @@ export async function fetchRooms(limit = 6): Promise<Room[]> {
   const { data, error } = await supabase
     .from("rooms")
     .select(
-      `*, room_photos(storage_url, is_cover, sort_order), pricing_rules(price_per_hour, is_active)`,
+      `id, name, slug, city, neighbourhood, has_mirrors, has_sound_system, has_ballet_barre, is_active, room_photos(storage_url, is_cover, sort_order), pricing_rules(price_per_hour, is_active)`,
     )
     .eq("is_active", true)
     .limit(limit);
