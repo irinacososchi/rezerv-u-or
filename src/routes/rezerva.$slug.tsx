@@ -1,6 +1,4 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { zodValidator, fallback } from "@tanstack/zod-adapter";
-import { z } from "zod";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Tag, Check, Loader2, AlertCircle } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
@@ -18,16 +16,22 @@ import {
 } from "@/lib/date-utils";
 
 // ---------- Search params ----------
-const checkoutSearchSchema = z.object({
-  date: fallback(z.string(), "").default(""),
-  start: fallback(z.string(), "").default(""),
-  end: fallback(z.string(), "").default(""),
-  duration: fallback(z.number(), 0).default(0),
-  total: fallback(z.number(), 0).default(0),
-});
+type CheckoutSearch = {
+  date: string;
+  start: string;
+  end: string;
+  duration: number;
+  total: number;
+};
 
 export const Route = createFileRoute("/rezerva/$slug")({
-  validateSearch: zodValidator(checkoutSearchSchema),
+  validateSearch: (raw: Record<string, unknown>): CheckoutSearch => ({
+    date: typeof raw.date === "string" ? raw.date : "",
+    start: typeof raw.start === "string" ? raw.start : "",
+    end: typeof raw.end === "string" ? raw.end : "",
+    duration: Number(raw.duration) || 0,
+    total: Number(raw.total) || 0,
+  }),
   loader: ({ params }) => ({ slug: params.slug }),
   head: () => ({
     meta: [
