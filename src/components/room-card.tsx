@@ -52,6 +52,7 @@ export function RoomCard({ room }: { room: Room }) {
           <Button
             size="sm"
             variant="secondary"
+            className="cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
               navigate({ to: "/sali/$slug", params: { slug: room.slug } });
