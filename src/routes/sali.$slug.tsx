@@ -546,7 +546,7 @@ function RoomDetailsPage() {
                         Nicio oră disponibilă.
                       </p>
                     ) : (
-                      <div className="mt-2 grid grid-cols-4 gap-2">
+                      <div className="mt-2 grid grid-cols-2 gap-2">
                         {slots.map((s) => {
                           const selected = selectedHours.includes(s.hour);
                           return (
@@ -562,7 +562,7 @@ function RoomDetailsPage() {
                                     : "border-border bg-background hover:border-primary hover:text-primary"
                               }`}
                             >
-                              {s.hour.toString().padStart(2, "0")}:00
+                              {`${s.hour.toString().padStart(2, "0")}:00–${(s.hour + 1).toString().padStart(2, "0")}:00`}
                             </button>
                           );
                         })}
