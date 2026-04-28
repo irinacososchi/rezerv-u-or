@@ -1,28 +1,28 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { zodValidator, fallback } from "@tanstack/zod-adapter";
-import { z } from "zod";
+import { useEffect, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
 
-const confirmSearchSchema = z.object({
-  reference: fallback(z.string(), "").default(""),
-});
-
 export const Route = createFileRoute("/confirmare")({
-  validateSearch: zodValidator(confirmSearchSchema),
   head: () => ({
     meta: [
       { title: "Rezervare confirmată — Rezervări Săli" },
       { name: "description", content: "Rezervarea ta a fost înregistrată cu succes." },
     ],
   }),
-  component: ConfirmationPage,
+  component: ConfirmarePage,
 });
 
-function ConfirmationPage() {
-  const { reference } = Route.useSearch();
+function ConfirmarePage() {
+  const [reference, setReference] = useState("");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    setReference(params.get("reference") ?? "");
+  }, []);
 
   return (
     <div className="flex min-h-screen flex-col bg-secondary/30">
