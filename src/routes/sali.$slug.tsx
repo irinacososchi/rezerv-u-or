@@ -24,6 +24,7 @@ import {
 } from "@/lib/date-utils";
 
 export const Route = createFileRoute("/sali/$slug")({
+  loader: ({ params }) => ({ slug: params.slug }),
   head: () => ({
     meta: [
       { title: "Detalii sală — Rezervări Săli" },
@@ -115,7 +116,7 @@ function getPriceForSlot(
 
 // ---------- Page ----------
 function RoomDetailsPage() {
-  const { slug } = Route.useParams();
+  const { slug } = Route.useParams() as { slug: string };
 
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
