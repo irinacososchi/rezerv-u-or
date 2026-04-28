@@ -116,7 +116,7 @@ function getPriceForSlot(
 
 // ---------- Page ----------
 function RoomDetailsPage() {
-  const { slug } = Route.useParams();
+  const { slug } = Route.useParams() as { slug: string };
 
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
