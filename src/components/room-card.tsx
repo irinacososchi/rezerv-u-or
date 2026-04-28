@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { MapPin } from "lucide-react";
-
+import { useNavigate } from "@tanstack/react-router";
 
 export interface Room {
   id: string;
-  slug?: string;
   name: string;
+  slug: string;
   neighbourhood: string;
   city: string;
   priceMin: number;
@@ -17,8 +17,13 @@ export interface Room {
 }
 
 export function RoomCard({ room }: { room: Room }) {
+  const navigate = useNavigate();
+
   return (
-    <article className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-soft)]">
+    <article
+      className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-soft)] cursor-pointer"
+      onClick={() => navigate({ to: "/sali/$slug", params: { slug: room.slug } })}
+    >
       <div className="aspect-[4/3] w-full overflow-hidden bg-muted">
         <img
           src={room.image}
@@ -40,21 +45,20 @@ export function RoomCard({ room }: { room: Room }) {
         <div className="mt-auto flex items-center justify-between pt-2">
           <span className="text-sm">
             <span className="font-semibold text-foreground">
-              {room.priceMin}–{room.priceMax} RON
+              {room.priceMin === room.priceMax ? `${room.priceMin} RON` : `${room.priceMin}–${room.priceMax} RON`}
             </span>
             <span className="text-muted-foreground">/oră</span>
           </span>
-          {room.slug ? (
-            <a href={`/sali/${room.slug}`} className="cursor-pointer">
-              <Button size="sm" variant="secondary" className="cursor-pointer">
-                Vezi detalii
-              </Button>
-            </a>
-          ) : (
-            <Button size="sm" variant="secondary" className="cursor-pointer">
-              Vezi detalii
-            </Button>
-          )}
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate({ to: "/sali/$slug", params: { slug: room.slug } });
+            }}
+          >
+            Vezi detalii
+          </Button>
         </div>
       </div>
     </article>
