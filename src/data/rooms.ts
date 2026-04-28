@@ -61,7 +61,7 @@ export async function fetchRooms(limit = 6): Promise<Room[]> {
     const { min, max } = priceRange(row);
     return {
       id: row.id,
-      slug: row.slug ?? undefined,
+      slug: row.slug ?? "",
       name: row.name,
       city: row.city ?? "",
       neighbourhood: row.neighbourhood ?? "",
