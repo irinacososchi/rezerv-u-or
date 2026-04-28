@@ -12,7 +12,7 @@ import { SearchX } from "lucide-react";
 
 type SaliSearch = { city?: string };
 
-export const Route = createFileRoute("/sali")({
+export const Route = createFileRoute("/sali/")({
   validateSearch: (search: Record<string, unknown>): SaliSearch => ({
     city: typeof search.city === "string" ? search.city : undefined,
   }),
