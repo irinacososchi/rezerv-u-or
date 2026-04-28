@@ -45,13 +45,13 @@ export function RoomCard({ room }: { room: Room }) {
             <span className="text-muted-foreground">/oră</span>
           </span>
           {room.slug ? (
-            <a href={`/sali/${room.slug}`}>
-              <Button size="sm" variant="secondary">
+            <a href={`/sali/${room.slug}`} className="cursor-pointer">
+              <Button size="sm" variant="secondary" className="cursor-pointer">
                 Vezi detalii
               </Button>
             </a>
           ) : (
-            <Button size="sm" variant="secondary">
+            <Button size="sm" variant="secondary" className="cursor-pointer">
               Vezi detalii
             </Button>
           )}
