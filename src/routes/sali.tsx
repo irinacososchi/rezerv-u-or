@@ -67,7 +67,7 @@ function SaliPage() {
       if (barre && !r.hasBarre) return false;
       return true;
     });
-  }, [city, priceMin, priceMax, mirrors, sound, barre]);
+  }, [rooms, city, priceMin, priceMax, mirrors, sound, barre]);
 
   const reset = () => {
     setCity("");
