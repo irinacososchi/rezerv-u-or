@@ -41,21 +41,22 @@ function priceRange(row: RoomRow): { min: number; max: number } {
   return { min: Math.min(...prices), max: Math.max(...prices) };
 }
 
-export async function fetchRooms(limit?: number): Promise<Room[]> {
-  let query = supabase
+export async function fetchRooms(limit = 6): Promise<Room[]> {
+  const { data, error } = await supabase
     .from("rooms")
     .select(
-      "id, name, city, neighbourhood, has_mirrors, has_sound_system, has_ballet_barre, is_active, room_photos(storage_url, is_cover, sort_order), pricing_rules(price_per_hour, is_active)",
+      `*, room_photos(storage_url, is_cover, sort_order), pricing_rules(price_per_hour, is_active)`,
     )
     .eq("is_active", true)
-    .order("created_at", { ascending: false });
+    .limit(limit);
 
-  if (limit) query = query.limit(limit);
+  if (error) {
+    console.error("fetchRooms error:", error.message);
+    return [];
+  }
 
-  const { data, error } = await query;
-  if (error) throw error;
-
-  return (data as RoomRow[]).map((row, idx) => {
+  const rows = (data ?? []) as RoomRow[];
+  return rows.map((row, idx) => {
     const { min, max } = priceRange(row);
     return {
       id: row.id,
