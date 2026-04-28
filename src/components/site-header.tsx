@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { Music2 } from "lucide-react";
+import { Disc3 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/external-client";
 
@@ -18,7 +18,7 @@ export function SiteHeader() {
       <div className="container mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2 font-semibold">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <Music2 className="h-5 w-5" />
+            <Disc3 className="h-5 w-5" />
           </span>
           <span className="text-lg tracking-tight">Rezervări Săli</span>
         </Link>
