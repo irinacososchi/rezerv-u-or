@@ -43,3 +43,19 @@ export function isSameDay(a: Date, b: Date): boolean {
     a.getDate() === b.getDate()
   );
 }
+
+export const MONTH_NAMES_RO = [
+  "ianuarie", "februarie", "martie", "aprilie", "mai", "iunie",
+  "iulie", "august", "septembrie", "octombrie", "noiembrie", "decembrie",
+];
+
+// Format: "Luni, 15 ianuarie 2025"
+export function formatDateRO(d: Date): string {
+  return `${DAY_NAMES_RO[getDayOfWeek(d)]}, ${d.getDate()} ${MONTH_NAMES_RO[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+// Parse "YYYY-MM-DD" to local Date (avoid TZ shift from new Date(iso))
+export function parseISODate(s: string): Date {
+  const [y, m, d] = s.split("-").map((n) => parseInt(n, 10));
+  return new Date(y, m - 1, d);
+}
