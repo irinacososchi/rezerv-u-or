@@ -13,6 +13,7 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SaliRouteImport } from './routes/sali'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SaliSlugRouteImport } from './routes/sali.$slug'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -34,38 +35,46 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SaliSlugRoute = SaliSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => SaliRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/sali': typeof SaliRoute
+  '/sali': typeof SaliRouteWithChildren
   '/signup': typeof SignupRoute
+  '/sali/$slug': typeof SaliSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/sali': typeof SaliRoute
+  '/sali': typeof SaliRouteWithChildren
   '/signup': typeof SignupRoute
+  '/sali/$slug': typeof SaliSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/sali': typeof SaliRoute
+  '/sali': typeof SaliRouteWithChildren
   '/signup': typeof SignupRoute
+  '/sali/$slug': typeof SaliSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/sali' | '/signup'
+  fullPaths: '/' | '/login' | '/sali' | '/signup' | '/sali/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/sali' | '/signup'
-  id: '__root__' | '/' | '/login' | '/sali' | '/signup'
+  to: '/' | '/login' | '/sali' | '/signup' | '/sali/$slug'
+  id: '__root__' | '/' | '/login' | '/sali' | '/signup' | '/sali/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
-  SaliRoute: typeof SaliRoute
+  SaliRoute: typeof SaliRouteWithChildren
   SignupRoute: typeof SignupRoute
 }
 
@@ -99,13 +108,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sali/$slug': {
+      id: '/sali/$slug'
+      path: '/$slug'
+      fullPath: '/sali/$slug'
+      preLoaderRoute: typeof SaliSlugRouteImport
+      parentRoute: typeof SaliRoute
+    }
   }
 }
+
+interface SaliRouteChildren {
+  SaliSlugRoute: typeof SaliSlugRoute
+}
+
+const SaliRouteChildren: SaliRouteChildren = {
+  SaliSlugRoute: SaliSlugRoute,
+}
+
+const SaliRouteWithChildren = SaliRoute._addFileChildren(SaliRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
-  SaliRoute: SaliRoute,
+  SaliRoute: SaliRouteWithChildren,
   SignupRoute: SignupRoute,
 }
 export const routeTree = rootRouteImport

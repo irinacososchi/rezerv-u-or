@@ -8,6 +8,7 @@ const FALLBACK_IMAGES = [sala1, sala2, sala3];
 
 type RoomRow = {
   id: string;
+  slug: string | null;
   name: string;
   city: string;
   neighbourhood: string | null;
@@ -60,6 +61,7 @@ export async function fetchRooms(limit = 6): Promise<Room[]> {
     const { min, max } = priceRange(row);
     return {
       id: row.id,
+      slug: row.slug ?? undefined,
       name: row.name,
       city: row.city ?? "",
       neighbourhood: row.neighbourhood ?? "",

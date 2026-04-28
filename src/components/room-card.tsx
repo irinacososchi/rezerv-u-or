@@ -1,8 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { MapPin } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 
 export interface Room {
   id: string;
+  slug?: string;
   name: string;
   neighbourhood: string;
   city: string;
@@ -42,9 +44,17 @@ export function RoomCard({ room }: { room: Room }) {
             </span>
             <span className="text-muted-foreground">/oră</span>
           </span>
-          <Button size="sm" variant="secondary">
-            Vezi detalii
-          </Button>
+          {room.slug ? (
+            <Button size="sm" variant="secondary" asChild>
+              <Link to="/sali/$slug" params={{ slug: room.slug }}>
+                Vezi detalii
+              </Link>
+            </Button>
+          ) : (
+            <Button size="sm" variant="secondary">
+              Vezi detalii
+            </Button>
+          )}
         </div>
       </div>
     </article>
