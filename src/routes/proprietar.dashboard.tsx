@@ -284,9 +284,9 @@ function DashboardPage() {
                         <td className="px-3 py-2 font-mono text-xs">{b.reference ?? "—"}</td>
                         <td className="px-3 py-2">{b.room_name}</td>
                         <td className="px-3 py-2">{b.renter_name ?? b.renter_email ?? "—"}</td>
-                        <td className="px-3 py-2">{b.booking_date}</td>
+                        <td className="px-3 py-2">{formatDateShort(b.booking_date)}</td>
                         <td className="px-3 py-2">{formatTimeRange(b.start_time, b.end_time)}</td>
-                        <td className="px-3 py-2 font-medium">{formatRON(b.total)}</td>
+                        <td className="px-3 py-2 font-medium">{formatRON(totalOf(b))}</td>
                         <td className="px-3 py-2"><StatusBadge status={b.status} /></td>
                         <td className="px-3 py-2"><PaymentBadge status={b.payment_status} /></td>
                       </tr>
