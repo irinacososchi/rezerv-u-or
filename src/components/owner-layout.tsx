@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, Link, useLocation } from "@tanstack/react-router";
+import { useNavigate, useLocation } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/external-client";
 import {
   LayoutDashboard,
@@ -86,9 +86,9 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
             const Icon = item.icon;
             const active = isActive(item.to);
             return (
-              <Link
+              <a
                 key={item.to}
-                to={item.to as never}
+                href={item.to}
                 className={
                   "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors " +
                   (active
@@ -98,7 +98,7 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
               >
                 <Icon className="h-4 w-4" />
                 {item.label}
-              </Link>
+              </a>
             );
           })}
         </nav>
@@ -136,9 +136,9 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
             const Icon = item.icon;
             const active = isActive(item.to);
             return (
-              <Link
+              <a
                 key={item.to}
-                to={item.to as never}
+                href={item.to}
                 className={
                   "flex flex-col items-center justify-center py-2 text-xs gap-1 " +
                   (active ? "text-primary" : "text-muted-foreground")
@@ -146,7 +146,7 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
               >
                 <Icon className="h-5 w-5" />
                 <span className="truncate max-w-[64px]">{item.label}</span>
-              </Link>
+              </a>
             );
           })}
         </nav>
