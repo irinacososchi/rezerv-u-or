@@ -36,7 +36,7 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
         console.log("Auth user:", user);
         if (cancelled) return;
         if (!user) {
-          navigate({ to: "/autentificare" });
+          navigate({ to: "/login" });
           return;
         }
         const { data: profile } = await supabase
@@ -54,7 +54,7 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
         setOwnerName(profile.full_name ?? "Proprietar");
       } catch (err) {
         console.error("Auth check failed:", err);
-        if (!cancelled) navigate({ to: "/autentificare" });
+        if (!cancelled) navigate({ to: "/login" });
       } finally {
         if (!cancelled) setChecking(false);
       }
