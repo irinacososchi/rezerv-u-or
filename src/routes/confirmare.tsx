@@ -108,10 +108,6 @@ function ConfirmarePage() {
       setLoading(false);
       return;
     }
-      setNotFound(true);
-      setLoading(false);
-      return;
-    }
     let cancelled = false;
     (async () => {
       const { data, error } = await supabase
