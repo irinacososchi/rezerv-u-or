@@ -612,6 +612,12 @@ function BookingDetails({
   const [newEndHour, setNewEndHour] = useState(entry.end_time.slice(0, 5));
   const [nota, setNota] = useState("");
 
+  const [recurrenceInfo, setRecurrenceInfo] = useState<{
+    total: number;
+    index: number;
+    id: string;
+  } | null>(null);
+
   // Fetch full booking row (price_per_hour, discount_amount, renter_notes)
   useEffect(() => {
     let cancelled = false;
@@ -619,7 +625,7 @@ function BookingDetails({
       const { data } = await supabase
         .from("bookings")
         .select(
-          "id, start_time, end_time, duration_hours, subtotal, total_amount, price_per_hour, discount_amount, renter_notes, payment_status, status",
+          "id, start_time, end_time, duration_hours, subtotal, total_amount, price_per_hour, discount_amount, renter_notes, payment_status, status, recurrence_id, recurrence_index",
         )
         .eq("id", entry.id)
         .single();
@@ -629,6 +635,24 @@ function BookingDetails({
       setNewStartHour(merged.start_time.slice(0, 5));
       setNewEndHour(merged.end_time.slice(0, 5));
       setNota(merged.renter_notes ?? "");
+
+      if (merged.recurrence_id) {
+        const { data: rec } = await supabase
+          .from("recurrences")
+          .select("id, total_bookings")
+          .eq("id", merged.recurrence_id)
+          .single();
+        if (cancelled) return;
+        if (rec) {
+          setRecurrenceInfo({
+            total: (rec as { total_bookings: number }).total_bookings,
+            index: merged.recurrence_index ?? 1,
+            id: (rec as { id: string }).id,
+          });
+        }
+      } else {
+        setRecurrenceInfo(null);
+      }
     })();
     return () => {
       cancelled = true;
