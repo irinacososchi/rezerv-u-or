@@ -13,6 +13,7 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -21,6 +22,8 @@ import {
   addDays,
   DAY_NAMES_RO,
   MONTH_NAMES_RO,
+  startOfMonth,
+  endOfMonth,
 } from "@/lib/date-utils";
 
 export const Route = createFileRoute("/proprietar/sali/$id/calendar")({
@@ -30,13 +33,18 @@ export const Route = createFileRoute("/proprietar/sali/$id/calendar")({
 const HOUR_START = 8;
 const HOUR_END = 22; // last slot starts at 21:00
 
+const MONTH_LABELS = [
+  "Ianuarie", "Februarie", "Martie", "Aprilie", "Mai", "Iunie",
+  "Iulie", "August", "Septembrie", "Octombrie", "Noiembrie", "Decembrie",
+];
+
 type Room = { id: string; name: string; slug: string; owner_id: string };
 
 type Entry = {
   id: string;
   room_id: string;
-  booking_date: string; // YYYY-MM-DD
-  start_time: string; // HH:MM:SS
+  booking_date: string;
+  start_time: string;
   end_time: string;
   entry_type?: string | null;
   status?: string | null;
@@ -49,9 +57,8 @@ type Entry = {
   total_amount?: number | null;
 };
 
-// Get Monday of the week containing `d`
 function startOfWeek(d: Date): Date {
-  const dow = getDayOfWeek(d); // 1..7
+  const dow = getDayOfWeek(d);
   return addDays(d, -(dow - 1));
 }
 
@@ -75,7 +82,6 @@ function hourLabel(h: number) {
 }
 
 function parseHM(t: string): number {
-  // "HH:MM" or "HH:MM:SS" → fractional hours
   const [h, m] = t.split(":").map((n) => parseInt(n, 10));
   return h + (m || 0) / 60;
 }
@@ -86,7 +92,9 @@ function RoomCalendarPage() {
 
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
+  const [view, setView] = useState<"week" | "month">("week");
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date()));
+  const [monthAnchor, setMonthAnchor] = useState<Date>(() => startOfMonth(new Date()));
   const [entries, setEntries] = useState<Entry[]>([]);
   const [selected, setSelected] = useState<
     | { kind: "booking"; entry: Entry }
@@ -94,15 +102,24 @@ function RoomCalendarPage() {
     | { kind: "empty"; date: string; hour: number }
     | null
   >(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const days = useMemo(
     () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
     [weekStart],
   );
 
+  // Load entries — range depends on view
   const loadEntries = useCallback(async () => {
-    const startISO = formatDateISO(weekStart);
-    const endISO = formatDateISO(addDays(weekStart, 6));
+    let startISO: string;
+    let endISO: string;
+    if (view === "week") {
+      startISO = formatDateISO(weekStart);
+      endISO = formatDateISO(addDays(weekStart, 6));
+    } else {
+      startISO = formatDateISO(startOfMonth(monthAnchor));
+      endISO = formatDateISO(endOfMonth(monthAnchor));
+    }
     const { data, error } = await supabase
       .from("owner_calendar")
       .select("*")
@@ -116,9 +133,8 @@ function RoomCalendarPage() {
       return;
     }
     setEntries((data ?? []) as Entry[]);
-  }, [id, weekStart]);
+  }, [id, view, weekStart, monthAnchor]);
 
-  // Load room + verify ownership
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -126,13 +142,11 @@ function RoomCalendarPage() {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) return;
-
       const { data: r, error } = await supabase
         .from("rooms")
         .select("id, name, slug, owner_id")
         .eq("id", id)
         .single();
-
       if (cancelled) return;
       if (error || !r) {
         toast.error("Sala nu a fost găsită");
@@ -155,7 +169,7 @@ function RoomCalendarPage() {
     if (!loading) loadEntries();
   }, [loading, loadEntries]);
 
-  // Map (dateISO|hour) -> entry occupying that cell
+  // Map (dateISO|hour) -> entry
   const cellMap = useMemo(() => {
     const map = new Map<string, Entry>();
     for (const e of entries) {
@@ -168,17 +182,24 @@ function RoomCalendarPage() {
     return map;
   }, [entries]);
 
+  // Per-day stats for month view
+  const dayStats = useMemo(() => {
+    const m = new Map<string, { bookings: number; blocks: number }>();
+    for (const e of entries) {
+      const k = e.booking_date;
+      const cur = m.get(k) ?? { bookings: 0, blocks: 0 };
+      if (e.entry_type === "blocat") cur.blocks++;
+      else cur.bookings++;
+      m.set(k, cur);
+    }
+    return m;
+  }, [entries]);
+
   function onCellClick(dateISO: string, hour: number) {
     const e = cellMap.get(`${dateISO}|${hour}`);
-    if (!e) {
-      setSelected({ kind: "empty", date: dateISO, hour });
-      return;
-    }
-    if (e.entry_type === "blocat") {
-      setSelected({ kind: "block", entry: e });
-    } else {
-      setSelected({ kind: "booking", entry: e });
-    }
+    if (!e) return setSelected({ kind: "empty", date: dateISO, hour });
+    if (e.entry_type === "blocat") setSelected({ kind: "block", entry: e });
+    else setSelected({ kind: "booking", entry: e });
   }
 
   function cellClass(e: Entry | undefined): string {
@@ -194,6 +215,30 @@ function RoomCalendarPage() {
     return "bg-secondary text-secondary-foreground cursor-pointer";
   }
 
+  function jumpToMonth(monthIdx: number, year: number) {
+    const d = new Date(year, monthIdx, 1);
+    setMonthAnchor(d);
+    setWeekStart(startOfWeek(d));
+    setPickerOpen(false);
+  }
+
+  // Build month grid (always 6 weeks for stable layout)
+  const monthCells = useMemo(() => {
+    const first = startOfMonth(monthAnchor);
+    const start = startOfWeek(first); // Monday on/before 1st
+    return Array.from({ length: 42 }, (_, i) => addDays(start, i));
+  }, [monthAnchor]);
+
+  const headerLabel =
+    view === "week"
+      ? formatRange(weekStart)
+      : `${MONTH_LABELS[monthAnchor.getMonth()]} ${monthAnchor.getFullYear()}`;
+
+  const pickerYears = useMemo(() => {
+    const cy = new Date().getFullYear();
+    return [cy, cy + 1, cy + 2];
+  }, []);
+
   return (
     <OwnerLayout>
       <div className="p-4 md:p-6 space-y-4">
@@ -206,28 +251,110 @@ function RoomCalendarPage() {
             <div className="flex flex-wrap items-center gap-3 justify-between">
               <div>
                 <h1 className="text-xl md:text-2xl font-semibold">{room.name}</h1>
-                <p className="text-sm text-muted-foreground">Calendar săptămânal</p>
+                <p className="text-sm text-muted-foreground">
+                  Calendar {view === "week" ? "săptămânal" : "lunar"}
+                </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setWeekStart((w) => addDays(w, -7))}
+                  onClick={() => {
+                    if (view === "week") setWeekStart((w) => addDays(w, -7));
+                    else
+                      setMonthAnchor(
+                        (m) => new Date(m.getFullYear(), m.getMonth() - 1, 1),
+                      );
+                  }}
                 >
-                  <ChevronLeft className="h-4 w-4 mr-1" /> Săptămâna trecută
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  {view === "week" ? "Săptămâna trecută" : "Luna trecută"}
                 </Button>
-                <div className="text-sm font-medium px-2">{formatRange(weekStart)}</div>
+
+                <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      className="text-sm font-medium px-2 py-1 rounded hover:bg-muted"
+                    >
+                      {headerLabel}
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-64 p-3 space-y-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Lună</Label>
+                      <select
+                        className="w-full border rounded-md h-9 px-2 text-sm bg-background"
+                        defaultValue={
+                          view === "week"
+                            ? weekStart.getMonth()
+                            : monthAnchor.getMonth()
+                        }
+                        id="picker-month"
+                      >
+                        {MONTH_LABELS.map((m, i) => (
+                          <option key={m} value={i}>
+                            {m}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">An</Label>
+                      <select
+                        className="w-full border rounded-md h-9 px-2 text-sm bg-background"
+                        defaultValue={
+                          view === "week"
+                            ? weekStart.getFullYear()
+                            : monthAnchor.getFullYear()
+                        }
+                        id="picker-year"
+                      >
+                        {pickerYears.map((y) => (
+                          <option key={y} value={y}>
+                            {y}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <Button
+                      size="sm"
+                      className="w-full"
+                      onClick={() => {
+                        const ms = (document.getElementById("picker-month") as HTMLSelectElement | null)?.value;
+                        const ys = (document.getElementById("picker-year") as HTMLSelectElement | null)?.value;
+                        if (ms != null && ys != null) {
+                          jumpToMonth(parseInt(ms, 10), parseInt(ys, 10));
+                        }
+                      }}
+                    >
+                      Mergi
+                    </Button>
+                  </PopoverContent>
+                </Popover>
+
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setWeekStart((w) => addDays(w, 7))}
+                  onClick={() => {
+                    if (view === "week") setWeekStart((w) => addDays(w, 7));
+                    else
+                      setMonthAnchor(
+                        (m) => new Date(m.getFullYear(), m.getMonth() + 1, 1),
+                      );
+                  }}
                 >
-                  Săptămâna viitoare <ChevronRight className="h-4 w-4 ml-1" />
+                  {view === "week" ? "Săptămâna viitoare" : "Luna viitoare"}
+                  <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setWeekStart(startOfWeek(new Date()))}
+                  onClick={() => {
+                    const today = new Date();
+                    setWeekStart(startOfWeek(today));
+                    setMonthAnchor(startOfMonth(today));
+                  }}
                 >
                   Astăzi
                 </Button>
@@ -235,50 +362,61 @@ function RoomCalendarPage() {
             </div>
 
             <div className="inline-flex rounded-md border bg-card p-1 text-sm">
-              <button className="px-3 py-1 rounded bg-primary text-primary-foreground">
+              <button
+                className={
+                  "px-3 py-1 rounded " +
+                  (view === "week"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted")
+                }
+                onClick={() => setView("week")}
+              >
                 Săptămână
               </button>
               <button
-                className="px-3 py-1 rounded text-muted-foreground"
-                disabled
-                title="Disponibil în curând"
+                className={
+                  "px-3 py-1 rounded " +
+                  (view === "month"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted")
+                }
+                onClick={() => setView("month")}
               >
                 Lună
               </button>
             </div>
 
-            {/* Grid */}
-            <div className="border rounded-lg bg-card overflow-x-auto">
-              <div className="min-w-[760px]">
-                {/* Header row */}
-                <div
-                  className="grid border-b text-xs"
-                  style={{ gridTemplateColumns: "70px repeat(7, 1fr)" }}
-                >
-                  <div className="p-2 text-muted-foreground"></div>
-                  {days.map((d) => {
-                    const dow = getDayOfWeek(d);
-                    const isToday = formatDateISO(d) === formatDateISO(new Date());
-                    return (
-                      <div
-                        key={formatDateISO(d)}
-                        className={
-                          "p-2 text-center border-l " +
-                          (isToday ? "bg-primary/5" : "")
-                        }
-                      >
-                        <div className="font-medium">{DAY_NAMES_RO[dow]}</div>
-                        <div className="text-muted-foreground">
-                          {d.getDate()} {MONTH_NAMES_RO[d.getMonth()].slice(0, 3)}
+            {view === "week" ? (
+              <div className="border rounded-lg bg-card overflow-x-auto">
+                <div className="min-w-[760px]">
+                  <div
+                    className="grid border-b text-xs"
+                    style={{ gridTemplateColumns: "70px repeat(7, 1fr)" }}
+                  >
+                    <div className="p-2 text-muted-foreground"></div>
+                    {days.map((d) => {
+                      const dow = getDayOfWeek(d);
+                      const isToday = formatDateISO(d) === formatDateISO(new Date());
+                      return (
+                        <div
+                          key={formatDateISO(d)}
+                          className={
+                            "p-2 text-center border-l " + (isToday ? "bg-primary/5" : "")
+                          }
+                        >
+                          <div className="font-medium">{DAY_NAMES_RO[dow]}</div>
+                          <div className="text-muted-foreground">
+                            {d.getDate()} {MONTH_NAMES_RO[d.getMonth()].slice(0, 3)}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
 
-                {/* Hour rows */}
-                {Array.from({ length: HOUR_END - HOUR_START }, (_, i) => HOUR_START + i).map(
-                  (hour) => (
+                  {Array.from(
+                    { length: HOUR_END - HOUR_START },
+                    (_, i) => HOUR_START + i,
+                  ).map((hour) => (
                     <div
                       key={hour}
                       className="grid border-b last:border-b-0"
@@ -313,26 +451,79 @@ function RoomCalendarPage() {
                         );
                       })}
                     </div>
-                  ),
-                )}
+                  ))}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="border rounded-lg bg-card overflow-hidden">
+                <div className="grid grid-cols-7 text-xs border-b">
+                  {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
+                    <div
+                      key={i}
+                      className="p-2 text-center font-medium text-muted-foreground border-l first:border-l-0"
+                    >
+                      {d}
+                    </div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-7">
+                  {monthCells.map((d) => {
+                    const dateISO = formatDateISO(d);
+                    const inMonth = d.getMonth() === monthAnchor.getMonth();
+                    const isToday = dateISO === formatDateISO(new Date());
+                    const stats = dayStats.get(dateISO);
+                    const hasBookings = (stats?.bookings ?? 0) > 0;
+                    const hasBlocks = (stats?.blocks ?? 0) > 0;
+                    return (
+                      <button
+                        type="button"
+                        key={dateISO}
+                        onClick={() => {
+                          setView("week");
+                          setWeekStart(startOfWeek(d));
+                        }}
+                        className={
+                          "min-h-[72px] border-l border-t -ml-px -mt-px text-left p-2 text-xs transition-colors " +
+                          (inMonth ? "" : "bg-muted/30 text-muted-foreground ") +
+                          (hasBookings ? "bg-primary/15 hover:bg-primary/25 " : "hover:bg-muted/60 ") +
+                          (hasBlocks ? "ring-2 ring-orange-300 ring-inset " : "") +
+                          (isToday ? "outline outline-2 outline-primary " : "")
+                        }
+                      >
+                        <div className="flex items-start justify-between">
+                          <span className="font-semibold">{d.getDate()}</span>
+                        </div>
+                        {hasBookings && (
+                          <div className="mt-1 text-[11px]">
+                            {stats!.bookings}{" "}
+                            {stats!.bookings === 1 ? "rezervare" : "rezervări"}
+                          </div>
+                        )}
+                        {hasBlocks && (
+                          <div className="text-[11px] text-orange-700">
+                            {stats!.blocks} blocat
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
-            {/* Legend */}
             <div className="flex flex-wrap gap-3 text-xs text-muted-foreground pt-2">
-              <LegendDot className="bg-primary/20" label="Confirmată" />
-              <LegendDot className="bg-orange-200/70" label="În așteptare" />
+              <LegendDot className="bg-primary/30" label="Confirmată" />
+              <LegendDot className="bg-orange-200/80" label="În așteptare" />
               <LegendDot
                 className="bg-[repeating-linear-gradient(45deg,hsl(var(--muted))_0,hsl(var(--muted))_4px,hsl(var(--muted-foreground)/0.25)_4px,hsl(var(--muted-foreground)/0.25)_8px)]"
                 label="Blocat de proprietar"
               />
-              <LegendDot className="bg-muted/60" label="Finalizată" />
+              <LegendDot className="bg-muted/70" label="Finalizată" />
             </div>
           </>
         )}
       </div>
 
-      {/* Booking modal */}
       <Dialog
         open={selected?.kind === "booking"}
         onOpenChange={(o) => !o && setSelected(null)}
@@ -348,7 +539,6 @@ function RoomCalendarPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Block modal */}
       <Dialog
         open={selected?.kind === "block"}
         onOpenChange={(o) => !o && setSelected(null)}
@@ -364,7 +554,6 @@ function RoomCalendarPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Empty cell → block slot modal */}
       <Dialog
         open={selected?.kind === "empty"}
         onOpenChange={(o) => !o && setSelected(null)}
@@ -527,12 +716,30 @@ function BlockSlotForm({
   onClose: () => void;
   onChanged: () => void;
 }) {
-  const [start, setStart] = useState(`${String(startHour).padStart(2, "0")}:00`);
-  const [end, setEnd] = useState(`${String(startHour + 1).padStart(2, "0")}:00`);
+  const initialStart = Math.min(Math.max(startHour, HOUR_START), HOUR_END - 1);
+  const [start, setStart] = useState(`${String(initialStart).padStart(2, "0")}:00`);
+  const [end, setEnd] = useState(
+    `${String(Math.min(initialStart + 1, HOUR_END)).padStart(2, "0")}:00`,
+  );
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
+  const [blockError, setBlockError] = useState<string | null>(null);
+
+  const startHours = Array.from(
+    { length: HOUR_END - HOUR_START },
+    (_, i) => HOUR_START + i,
+  );
+  const endHours = Array.from(
+    { length: HOUR_END - HOUR_START + 1 },
+    (_, i) => HOUR_START + 1 + i,
+  ).filter((h) => h <= HOUR_END);
 
   async function submit() {
+    setBlockError(null);
+    if (parseInt(end, 10) <= parseInt(start, 10)) {
+      setBlockError("Ora de sfârșit trebuie să fie după ora de început.");
+      return;
+    }
     setBusy(true);
     const { error } = await supabase.rpc("block_slot", {
       p_room_id: roomId,
@@ -542,7 +749,15 @@ function BlockSlotForm({
       p_reason: reason || "Rezervat de proprietar",
     });
     setBusy(false);
-    if (error) return toast.error("Eroare la blocare: " + error.message);
+    if (error) {
+      console.error("block_slot error:", error);
+      if (error.code === "23P01") {
+        setBlockError("Acest interval se suprapune cu o rezervare existentă.");
+      } else {
+        setBlockError(error.message || "Eroare la blocare.");
+      }
+      return;
+    }
     toast.success("Interval blocat");
     onChanged();
     onClose();
@@ -557,16 +772,39 @@ function BlockSlotForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <Label htmlFor="start">Ora start</Label>
-          <Input
+          <select
             id="start"
-            type="time"
             value={start}
             onChange={(e) => setStart(e.target.value)}
-          />
+            className="w-full border rounded-md h-9 px-2 text-sm bg-background"
+          >
+            {startHours.map((h) => {
+              const v = `${String(h).padStart(2, "0")}:00`;
+              return (
+                <option key={h} value={v}>
+                  {v}
+                </option>
+              );
+            })}
+          </select>
         </div>
         <div className="space-y-1">
           <Label htmlFor="end">Ora end</Label>
-          <Input id="end" type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
+          <select
+            id="end"
+            value={end}
+            onChange={(e) => setEnd(e.target.value)}
+            className="w-full border rounded-md h-9 px-2 text-sm bg-background"
+          >
+            {endHours.map((h) => {
+              const v = `${String(h).padStart(2, "0")}:00`;
+              return (
+                <option key={h} value={v}>
+                  {v}
+                </option>
+              );
+            })}
+          </select>
         </div>
         <div className="col-span-2 space-y-1">
           <Label htmlFor="reason">Motiv (opțional)</Label>
@@ -577,6 +815,11 @@ function BlockSlotForm({
             onChange={(e) => setReason(e.target.value)}
           />
         </div>
+        {blockError && (
+          <div className="col-span-2 text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-md px-3 py-2">
+            {blockError}
+          </div>
+        )}
       </div>
       <DialogFooter className="gap-2">
         <Button onClick={submit} disabled={busy}>
