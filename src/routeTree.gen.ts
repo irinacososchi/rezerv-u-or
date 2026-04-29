@@ -21,6 +21,8 @@ import { Route as SaliSlugRouteImport } from './routes/sali.$slug'
 import { Route as RezervaSlugRouteImport } from './routes/rezerva.$slug'
 import { Route as ProprietarSaliRouteImport } from './routes/proprietar.sali'
 import { Route as ProprietarDashboardRouteImport } from './routes/proprietar.dashboard'
+import { Route as ProprietarSaliNouRouteImport } from './routes/proprietar.sali.nou'
+import { Route as ProprietarSaliIdEditRouteImport } from './routes/proprietar.sali.$id.edit'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -82,6 +84,16 @@ const ProprietarDashboardRoute = ProprietarDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => ProprietarRoute,
 } as any)
+const ProprietarSaliNouRoute = ProprietarSaliNouRouteImport.update({
+  id: '/nou',
+  path: '/nou',
+  getParentRoute: () => ProprietarSaliRoute,
+} as any)
+const ProprietarSaliIdEditRoute = ProprietarSaliIdEditRouteImport.update({
+  id: '/$id/edit',
+  path: '/$id/edit',
+  getParentRoute: () => ProprietarSaliRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -91,11 +103,13 @@ export interface FileRoutesByFullPath {
   '/sali': typeof SaliRouteWithChildren
   '/signup': typeof SignupRoute
   '/proprietar/dashboard': typeof ProprietarDashboardRoute
-  '/proprietar/sali': typeof ProprietarSaliRoute
+  '/proprietar/sali': typeof ProprietarSaliRouteWithChildren
   '/rezerva/$slug': typeof RezervaSlugRoute
   '/sali/$slug': typeof SaliSlugRoute
   '/proprietar/': typeof ProprietarIndexRoute
   '/sali/': typeof SaliIndexRoute
+  '/proprietar/sali/nou': typeof ProprietarSaliNouRoute
+  '/proprietar/sali/$id/edit': typeof ProprietarSaliIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -103,11 +117,13 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/proprietar/dashboard': typeof ProprietarDashboardRoute
-  '/proprietar/sali': typeof ProprietarSaliRoute
+  '/proprietar/sali': typeof ProprietarSaliRouteWithChildren
   '/rezerva/$slug': typeof RezervaSlugRoute
   '/sali/$slug': typeof SaliSlugRoute
   '/proprietar': typeof ProprietarIndexRoute
   '/sali': typeof SaliIndexRoute
+  '/proprietar/sali/nou': typeof ProprietarSaliNouRoute
+  '/proprietar/sali/$id/edit': typeof ProprietarSaliIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -118,11 +134,13 @@ export interface FileRoutesById {
   '/sali': typeof SaliRouteWithChildren
   '/signup': typeof SignupRoute
   '/proprietar/dashboard': typeof ProprietarDashboardRoute
-  '/proprietar/sali': typeof ProprietarSaliRoute
+  '/proprietar/sali': typeof ProprietarSaliRouteWithChildren
   '/rezerva/$slug': typeof RezervaSlugRoute
   '/sali/$slug': typeof SaliSlugRoute
   '/proprietar/': typeof ProprietarIndexRoute
   '/sali/': typeof SaliIndexRoute
+  '/proprietar/sali/nou': typeof ProprietarSaliNouRoute
+  '/proprietar/sali/$id/edit': typeof ProprietarSaliIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -139,6 +157,8 @@ export interface FileRouteTypes {
     | '/sali/$slug'
     | '/proprietar/'
     | '/sali/'
+    | '/proprietar/sali/nou'
+    | '/proprietar/sali/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -151,6 +171,8 @@ export interface FileRouteTypes {
     | '/sali/$slug'
     | '/proprietar'
     | '/sali'
+    | '/proprietar/sali/nou'
+    | '/proprietar/sali/$id/edit'
   id:
     | '__root__'
     | '/'
@@ -165,6 +187,8 @@ export interface FileRouteTypes {
     | '/sali/$slug'
     | '/proprietar/'
     | '/sali/'
+    | '/proprietar/sali/nou'
+    | '/proprietar/sali/$id/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -263,18 +287,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProprietarDashboardRouteImport
       parentRoute: typeof ProprietarRoute
     }
+    '/proprietar/sali/nou': {
+      id: '/proprietar/sali/nou'
+      path: '/nou'
+      fullPath: '/proprietar/sali/nou'
+      preLoaderRoute: typeof ProprietarSaliNouRouteImport
+      parentRoute: typeof ProprietarSaliRoute
+    }
+    '/proprietar/sali/$id/edit': {
+      id: '/proprietar/sali/$id/edit'
+      path: '/$id/edit'
+      fullPath: '/proprietar/sali/$id/edit'
+      preLoaderRoute: typeof ProprietarSaliIdEditRouteImport
+      parentRoute: typeof ProprietarSaliRoute
+    }
   }
 }
 
+interface ProprietarSaliRouteChildren {
+  ProprietarSaliNouRoute: typeof ProprietarSaliNouRoute
+  ProprietarSaliIdEditRoute: typeof ProprietarSaliIdEditRoute
+}
+
+const ProprietarSaliRouteChildren: ProprietarSaliRouteChildren = {
+  ProprietarSaliNouRoute: ProprietarSaliNouRoute,
+  ProprietarSaliIdEditRoute: ProprietarSaliIdEditRoute,
+}
+
+const ProprietarSaliRouteWithChildren = ProprietarSaliRoute._addFileChildren(
+  ProprietarSaliRouteChildren,
+)
+
 interface ProprietarRouteChildren {
   ProprietarDashboardRoute: typeof ProprietarDashboardRoute
-  ProprietarSaliRoute: typeof ProprietarSaliRoute
+  ProprietarSaliRoute: typeof ProprietarSaliRouteWithChildren
   ProprietarIndexRoute: typeof ProprietarIndexRoute
 }
 
 const ProprietarRouteChildren: ProprietarRouteChildren = {
   ProprietarDashboardRoute: ProprietarDashboardRoute,
-  ProprietarSaliRoute: ProprietarSaliRoute,
+  ProprietarSaliRoute: ProprietarSaliRouteWithChildren,
   ProprietarIndexRoute: ProprietarIndexRoute,
 }
 
