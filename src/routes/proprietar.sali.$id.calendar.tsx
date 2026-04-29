@@ -136,13 +136,32 @@ function RoomCalendarPage() {
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date()));
   const [monthAnchor, setMonthAnchor] = useState<Date>(() => startOfMonth(new Date()));
   const [entries, setEntries] = useState<Entry[]>([]);
+  const [pricingRules, setPricingRules] = useState<PricingRule[]>([]);
   const [selected, setSelected] = useState<
     | { kind: "booking"; entry: Entry }
     | { kind: "block"; entry: Entry }
-    | { kind: "empty"; date: string; hour: number }
     | null
   >(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+
+  // Cell-click flow: choose → block | booking
+  type CellClickMode = "choose" | "block" | "booking";
+  const [cellModal, setCellModal] = useState<{
+    date: string;
+    hour: number;
+    mode: CellClickMode;
+  } | null>(null);
+
+  // Manual booking form state
+  const [manualStart, setManualStart] = useState("09:00");
+  const [manualEnd, setManualEnd] = useState("10:00");
+  const [manualName, setManualName] = useState("");
+  const [manualPhone, setManualPhone] = useState("");
+  const [manualEmail, setManualEmail] = useState("");
+  const [manualNote, setManualNote] = useState("");
+  const [manualPaymentStatus, setManualPaymentStatus] = useState("neplatit");
+  const [manualError, setManualError] = useState<string | null>(null);
+  const [manualSubmitting, setManualSubmitting] = useState(false);
 
   const days = useMemo(
     () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
