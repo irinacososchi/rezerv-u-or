@@ -643,16 +643,93 @@ function RoomCalendarPage() {
       </Dialog>
 
       <Dialog
-        open={selected?.kind === "empty"}
-        onOpenChange={(o) => !o && setSelected(null)}
+        open={!!cellModal}
+        onOpenChange={(o) => !o && setCellModal(null)}
       >
         <DialogContent>
-          {selected?.kind === "empty" && (
+          {cellModal?.mode === "choose" && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Ce vrei să faci?</DialogTitle>
+                <DialogDescription>
+                  {formatDateRO(parseISODate(cellModal.date))} ·{" "}
+                  {cellModal.hour.toString().padStart(2, "0")}:00
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-3 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setCellModal({ ...cellModal, mode: "booking" })}
+                  className="flex items-start gap-3 rounded-xl border-2 border-primary/30 bg-primary/5 p-4 text-left hover:border-primary transition w-full"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+                    <CalendarPlus className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="font-medium">Adaugă rezervare</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      Rezervă în numele unui client (telefon, email, mesaj)
+                    </div>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCellModal({ ...cellModal, mode: "block" })}
+                  className="flex items-start gap-3 rounded-xl border border-border bg-background p-4 text-left hover:bg-muted/40 transition w-full"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-foreground shrink-0">
+                    <Ban className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="font-medium">Blochează interval</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      Marchează ca indisponibil (curs privat, renovare etc.)
+                    </div>
+                  </div>
+                </button>
+              </div>
+              <DialogFooter>
+                <Button variant="ghost" onClick={() => setCellModal(null)}>
+                  Anulează
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+
+          {cellModal?.mode === "block" && (
             <BlockSlotForm
               roomId={id}
-              date={selected.date}
-              startHour={selected.hour}
-              onClose={() => setSelected(null)}
+              date={cellModal.date}
+              startHour={cellModal.hour}
+              onClose={() => setCellModal(null)}
+              onChanged={loadEntries}
+            />
+          )}
+
+          {cellModal?.mode === "booking" && (
+            <ManualBookingForm
+              roomId={id}
+              date={cellModal.date}
+              pricingRules={pricingRules}
+              manualStart={manualStart}
+              manualEnd={manualEnd}
+              manualName={manualName}
+              manualPhone={manualPhone}
+              manualEmail={manualEmail}
+              manualNote={manualNote}
+              manualPaymentStatus={manualPaymentStatus}
+              manualError={manualError}
+              manualSubmitting={manualSubmitting}
+              setManualStart={setManualStart}
+              setManualEnd={setManualEnd}
+              setManualName={setManualName}
+              setManualPhone={setManualPhone}
+              setManualEmail={setManualEmail}
+              setManualNote={setManualNote}
+              setManualPaymentStatus={setManualPaymentStatus}
+              setManualError={setManualError}
+              setManualSubmitting={setManualSubmitting}
+              onClose={() => setCellModal(null)}
               onChanged={loadEntries}
             />
           )}
