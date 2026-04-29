@@ -309,6 +309,9 @@ function RoomDetailsPage() {
   // Reset slots when date changes
   useEffect(() => {
     setSelectedHours([]);
+    setIsRecurrent(false);
+    setRecurrenceEndDate("");
+    setRecurrenceDates([]);
   }, [selectedDate]);
 
   function toggleHour(h: number) {
