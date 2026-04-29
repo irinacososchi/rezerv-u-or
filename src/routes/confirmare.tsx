@@ -9,6 +9,11 @@ import { supabase } from "@/integrations/supabase/external-client";
 import { formatDateRO, parseISODate } from "@/lib/date-utils";
 
 export const Route = createFileRoute("/confirmare")({
+  validateSearch: (raw: Record<string, unknown>) => ({
+    reference: typeof raw.reference === "string" ? raw.reference : "",
+    recurrent: raw.recurrent === "true",
+    recurrenceCount: Number(raw.recurrenceCount) || 0,
+  }),
   head: () => ({
     meta: [
       { title: "Rezervare confirmată — Rezervări Săli" },
@@ -91,19 +96,13 @@ function downloadICS(b: BookingFull) {
 }
 
 function ConfirmarePage() {
-  const [reference, setReference] = useState<string | null>(null);
+  const search = Route.useSearch();
+  const reference = search.reference;
   const [booking, setBooking] = useState<BookingFull | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    setReference(params.get("reference"));
-  }, []);
-
-  useEffect(() => {
-    if (reference === null) return;
     if (!reference) {
       setNotFound(true);
       setLoading(false);
@@ -174,18 +173,35 @@ function ConfirmarePage() {
             <CheckCircle2 className="h-11 w-11 text-primary-foreground" strokeWidth={2.5} />
           </div>
           <h1 className="mt-6 text-3xl font-bold tracking-tight">
-            {isConfirmed ? "Rezervare confirmată!" : "Cerere trimisă!"}
+            {search.recurrent && search.recurrenceCount > 1
+              ? "Rezervări recurente confirmate!"
+              : isConfirmed
+                ? "Rezervare confirmată!"
+                : "Cerere trimisă!"}
           </h1>
           <p className="mt-3 text-muted-foreground">
-            {isConfirmed
-              ? "Vei primi detaliile pe email și WhatsApp."
-              : "Proprietarul va confirma în curând. Vei fi notificat pe email."}
+            {search.recurrent && search.recurrenceCount > 1
+              ? `${search.recurrenceCount} rezervări săptămânale au fost create cu succes.`
+              : isConfirmed
+                ? "Vei primi detaliile pe email și WhatsApp."
+                : "Proprietarul va confirma în curând. Vei fi notificat pe email."}
           </p>
         </div>
 
         {/* Booking details */}
         <div className="mt-8 rounded-xl border border-border bg-background p-6 shadow-sm">
           <h2 className="text-lg font-semibold">Detalii rezervare</h2>
+
+          {search.recurrenceCount > 1 && (
+            <div className="rounded-md bg-primary/5 border border-primary/20 p-3 text-sm mt-3">
+              <div className="font-medium text-primary">
+                Rezervare recurentă — {search.recurrenceCount} apariții
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Aceeași zi și interval în fiecare săptămână. Vei primi confirmare pe email pentru fiecare apariție.
+              </div>
+            </div>
+          )}
 
           <dl className="mt-5 space-y-3 text-sm">
             <DetailRow

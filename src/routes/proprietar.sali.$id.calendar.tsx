@@ -59,6 +59,8 @@ type Entry = {
   discount_amount?: number | null;
   duration_hours?: number | null;
   renter_notes?: string | null;
+  recurrence_id?: string | null;
+  recurrence_index?: number | null;
 };
 
 function startOfWeek(d: Date): Date {
@@ -445,10 +447,17 @@ function RoomCalendarPage() {
                             }
                           >
                             {showLabel && (
-                              <div className="truncate font-medium">
-                                {e!.entry_type === "blocat"
-                                  ? (e!.reason ?? "Blocat")
-                                  : (e!.renter_name ?? e!.reference ?? "Rezervare")}
+                              <div className="truncate font-medium flex items-center gap-1">
+                                <span className="truncate">
+                                  {e!.entry_type === "blocat"
+                                    ? (e!.reason ?? "Blocat")
+                                    : (e!.renter_name ?? e!.reference ?? "Rezervare")}
+                                </span>
+                                {e!.recurrence_id && (
+                                  <span className="text-[9px] leading-none" title="Rezervare recurentă">
+                                    ↻
+                                  </span>
+                                )}
                               </div>
                             )}
                           </button>
@@ -603,6 +612,12 @@ function BookingDetails({
   const [newEndHour, setNewEndHour] = useState(entry.end_time.slice(0, 5));
   const [nota, setNota] = useState("");
 
+  const [recurrenceInfo, setRecurrenceInfo] = useState<{
+    total: number;
+    index: number;
+    id: string;
+  } | null>(null);
+
   // Fetch full booking row (price_per_hour, discount_amount, renter_notes)
   useEffect(() => {
     let cancelled = false;
@@ -610,7 +625,7 @@ function BookingDetails({
       const { data } = await supabase
         .from("bookings")
         .select(
-          "id, start_time, end_time, duration_hours, subtotal, total_amount, price_per_hour, discount_amount, renter_notes, payment_status, status",
+          "id, start_time, end_time, duration_hours, subtotal, total_amount, price_per_hour, discount_amount, renter_notes, payment_status, status, recurrence_id, recurrence_index",
         )
         .eq("id", entry.id)
         .single();
@@ -620,6 +635,24 @@ function BookingDetails({
       setNewStartHour(merged.start_time.slice(0, 5));
       setNewEndHour(merged.end_time.slice(0, 5));
       setNota(merged.renter_notes ?? "");
+
+      if (merged.recurrence_id) {
+        const { data: rec } = await supabase
+          .from("recurrences")
+          .select("id, total_bookings")
+          .eq("id", merged.recurrence_id)
+          .single();
+        if (cancelled) return;
+        if (rec) {
+          setRecurrenceInfo({
+            total: (rec as { total_bookings: number }).total_bookings,
+            index: merged.recurrence_index ?? 1,
+            id: (rec as { id: string }).id,
+          });
+        }
+      } else {
+        setRecurrenceInfo(null);
+      }
     })();
     return () => {
       cancelled = true;
@@ -687,16 +720,31 @@ function BookingDetails({
     onChanged();
   }
 
-  async function cancelBooking() {
-    if (!confirm("Sigur vrei să anulezi această rezervare?")) return;
+  async function cancelBooking(cancelAll: boolean) {
+    const message = cancelAll && recurrenceInfo
+      ? `Sigur vrei să anulezi TOATE cele ${recurrenceInfo.total} apariții ale acestei rezervări recurente?`
+      : "Sigur vrei să anulezi această rezervare?";
+    if (!confirm(message)) return;
     setBusy(true);
-    const { error } = await supabase
-      .from("bookings")
-      .update({ status: "anulată" })
-      .eq("id", entry.id);
+    let error;
+    if (cancelAll && recurrenceInfo) {
+      ({ error } = await supabase
+        .from("bookings")
+        .update({ status: "anulată" })
+        .eq("recurrence_id", recurrenceInfo.id)
+        .in("status", ["în așteptare", "confirmată"]));
+    } else {
+      ({ error } = await supabase
+        .from("bookings")
+        .update({ status: "anulată" })
+        .eq("id", entry.id));
+    }
     setBusy(false);
-    if (error) return toast.error("Eroare la anulare");
-    toast.success("Rezervare anulată");
+    if (error) {
+      console.error("Cancel error:", error);
+      return toast.error("Eroare la anulare");
+    }
+    toast.success(cancelAll ? "Toate aparițiile au fost anulate" : "Rezervare anulată");
     onChanged();
     onClose();
   }
@@ -712,6 +760,16 @@ function BookingDetails({
           {details.end_time?.slice(0, 5)}
         </DialogDescription>
       </DialogHeader>
+      {recurrenceInfo && (
+        <div className="rounded-md bg-primary/5 border border-primary/20 p-3 text-sm">
+          <div className="font-medium text-primary">
+            Rezervare recurentă · apariția {recurrenceInfo.index} din {recurrenceInfo.total}
+          </div>
+          <div className="text-xs text-muted-foreground mt-1">
+            Săptămânal, același interval
+          </div>
+        </div>
+      )}
       <div className="space-y-2 text-sm">
         <Row label="Chiriaș" value={details.renter_name ?? "—"} />
         <Row label="Email" value={details.renter_email ?? "—"} />
@@ -823,9 +881,29 @@ function BookingDetails({
             </Button>
           )}
           {details.status !== "anulată" && (
-            <Button variant="destructive" onClick={cancelBooking} disabled={busy}>
-              Anulează rezervarea
-            </Button>
+            recurrenceInfo ? (
+              <>
+                <Button
+                  variant="outline"
+                  className="border-destructive text-destructive hover:bg-destructive/10"
+                  onClick={() => cancelBooking(false)}
+                  disabled={busy}
+                >
+                  Anulează doar această apariție
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => cancelBooking(true)}
+                  disabled={busy}
+                >
+                  Anulează TOATE aparițiile ({recurrenceInfo.total})
+                </Button>
+              </>
+            ) : (
+              <Button variant="destructive" onClick={() => cancelBooking(false)} disabled={busy}>
+                Anulează rezervarea
+              </Button>
+            )
           )}
         </div>
         <Button variant="outline" onClick={onClose}>
