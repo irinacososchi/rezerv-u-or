@@ -55,6 +55,10 @@ type Entry = {
   renter_email?: string | null;
   renter_phone?: string | null;
   total_amount?: number | null;
+  price_per_hour?: number | null;
+  discount_amount?: number | null;
+  duration_hours?: number | null;
+  renter_notes?: string | null;
 };
 
 function startOfWeek(d: Date): Date {
