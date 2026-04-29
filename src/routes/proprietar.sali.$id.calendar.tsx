@@ -256,7 +256,21 @@ function RoomCalendarPage() {
 
   function onCellClick(dateISO: string, hour: number) {
     const e = cellMap.get(`${dateISO}|${hour}`);
-    if (!e) return setSelected({ kind: "empty", date: dateISO, hour });
+    if (!e) {
+      // Reset manual form and open chooser
+      const sH = `${String(hour).padStart(2, "0")}:00`;
+      const eH = `${String(Math.min(hour + 1, HOUR_END)).padStart(2, "0")}:00`;
+      setManualStart(sH);
+      setManualEnd(eH);
+      setManualName("");
+      setManualPhone("");
+      setManualEmail("");
+      setManualNote("");
+      setManualPaymentStatus("neplatit");
+      setManualError(null);
+      setCellModal({ date: dateISO, hour, mode: "choose" });
+      return;
+    }
     if (e.entry_type === "blocat") setSelected({ kind: "block", entry: e });
     else setSelected({ kind: "booking", entry: e });
   }
