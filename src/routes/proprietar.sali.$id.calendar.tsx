@@ -184,14 +184,14 @@ function RoomCalendarPage() {
   function cellClass(e: Entry | undefined): string {
     if (!e) return "bg-background hover:bg-muted/60 cursor-pointer";
     if (e.entry_type === "blocat") {
-      return "bg-muted text-muted-foreground cursor-pointer bg-[repeating-linear-gradient(45deg,hsl(var(--muted))_0,hsl(var(--muted))_6px,hsl(var(--muted-foreground)/0.15)_6px,hsl(var(--muted-foreground)/0.15)_12px)]";
+      return "bg-muted text-foreground cursor-pointer bg-[repeating-linear-gradient(45deg,hsl(var(--muted))_0,hsl(var(--muted))_6px,hsl(var(--muted-foreground)/0.15)_6px,hsl(var(--muted-foreground)/0.15)_12px)]";
     }
-    if (e.status === "confirmată") return "bg-primary/20 text-primary-foreground/90 cursor-pointer";
-    if (e.status === "în așteptare") return "bg-orange-200/70 text-orange-900 cursor-pointer";
-    if (e.status === "finalizată") return "bg-muted/60 text-muted-foreground cursor-pointer";
+    if (e.status === "confirmată") return "bg-primary/30 text-foreground cursor-pointer";
+    if (e.status === "în așteptare") return "bg-orange-200/80 text-orange-950 cursor-pointer";
+    if (e.status === "finalizată") return "bg-muted/70 text-foreground cursor-pointer";
     if (e.status === "anulată" || e.status === "refuzată")
-      return "bg-destructive/10 text-destructive cursor-pointer";
-    return "bg-secondary cursor-pointer";
+      return "bg-destructive/15 text-destructive cursor-pointer";
+    return "bg-secondary text-secondary-foreground cursor-pointer";
   }
 
   return (
