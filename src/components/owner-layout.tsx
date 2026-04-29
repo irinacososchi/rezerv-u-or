@@ -88,7 +88,7 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
             return (
               <Link
                 key={item.to}
-                to={item.to}
+                to={item.to as never}
                 className={
                   "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors " +
                   (active
@@ -138,7 +138,7 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
             return (
               <Link
                 key={item.to}
-                to={item.to}
+                to={item.to as never}
                 className={
                   "flex flex-col items-center justify-center py-2 text-xs gap-1 " +
                   (active ? "text-primary" : "text-muted-foreground")
