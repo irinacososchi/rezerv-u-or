@@ -32,6 +32,7 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
       const {
         data: { user },
       } = await supabase.auth.getUser();
+      console.log("Auth user:", user);
       if (cancelled) return;
       if (!user) {
         navigate({ to: "/login" });
@@ -42,6 +43,7 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
         .select("role, full_name")
         .eq("id", user.id)
         .single();
+      console.log("Profile:", profile);
 
       if (cancelled) return;
       if (!profile || !["owner", "admin"].includes(profile.role)) {

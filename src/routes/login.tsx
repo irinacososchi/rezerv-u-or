@@ -29,10 +29,27 @@ function LoginPage() {
     setError(null);
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
     if (error) {
+      setLoading(false);
       setError(error.message);
       return;
+    }
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+      setLoading(false);
+      if (profile?.role === "owner" || profile?.role === "admin") {
+        navigate({ to: "/proprietar/dashboard" });
+        return;
+      }
+    } else {
+      setLoading(false);
     }
     navigate({ to: "/" });
   };
