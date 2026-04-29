@@ -85,6 +85,23 @@ type Voucher = {
 };
 
 // ---------- Helpers ----------
+function generateWeeklyDates(startDateStr: string, endDateStr: string): string[] {
+  if (!endDateStr) return [startDateStr];
+  const dates: string[] = [];
+  const [sy, sm, sd] = startDateStr.split("-").map((n) => parseInt(n, 10));
+  const [ey, em, ed] = endDateStr.split("-").map((n) => parseInt(n, 10));
+  const end = new Date(ey, em - 1, ed);
+  const current = new Date(sy, sm - 1, sd);
+  while (current <= end) {
+    const y = current.getFullYear();
+    const m = String(current.getMonth() + 1).padStart(2, "0");
+    const d = String(current.getDate()).padStart(2, "0");
+    dates.push(`${y}-${m}-${d}`);
+    current.setDate(current.getDate() + 7);
+  }
+  return dates;
+}
+
 function isValidEmail(s: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 }
