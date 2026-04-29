@@ -59,6 +59,8 @@ type Entry = {
   discount_amount?: number | null;
   duration_hours?: number | null;
   renter_notes?: string | null;
+  recurrence_id?: string | null;
+  recurrence_index?: number | null;
 };
 
 function startOfWeek(d: Date): Date {
