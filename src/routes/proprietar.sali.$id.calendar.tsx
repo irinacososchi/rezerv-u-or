@@ -955,7 +955,7 @@ function BookingDetails({
               </select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Ora end</Label>
+              <Label className="text-xs">Ora final</Label>
               <select
                 value={newEndHour}
                 onChange={(e) => setNewEndHour(e.target.value)}
@@ -1196,7 +1196,7 @@ function BlockSlotForm({
           </select>
         </div>
         <div className="space-y-1">
-          <Label htmlFor="end">Ora end</Label>
+          <Label htmlFor="end">Ora final</Label>
           <select
             id="end"
             value={end}
@@ -1396,7 +1396,7 @@ function ManualBookingForm({
             </select>
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Ora end</Label>
+            <Label className="text-xs">Ora final</Label>
             <select
               value={manualEnd}
               onChange={(e) => setManualEnd(e.target.value)}
