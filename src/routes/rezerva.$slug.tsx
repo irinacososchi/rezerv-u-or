@@ -294,8 +294,7 @@ function CheckoutPage() {
     if (!isValidEmail(email)) return setSubmitError("Email invalid.");
     if (!isValidPhone(phone)) return setSubmitError("Telefon invalid (minim 10 cifre).");
     if (needsInvoice) {
-      if (!invoiceName.trim()) return setSubmitError("Completează numele pentru factură.");
-      if (!invoiceAddress.trim()) return setSubmitError("Completează adresa de facturare.");
+      // Facturarea va fi disponibilă în viitor — validare dezactivată momentan.
     }
 
     setSubmitting(true);
@@ -673,48 +672,25 @@ function CheckoutPage() {
               </div>
             </section>
 
-            {/* Factură */}
-            <section className="rounded-xl border border-border bg-background p-6 shadow-sm">
-              <label className="flex cursor-pointer items-center gap-3">
-                <Checkbox
-                  checked={needsInvoice}
-                  onCheckedChange={(c) => setNeedsInvoice(c === true)}
-                  className="cursor-pointer"
-                />
-                <span className="text-sm font-medium">Am nevoie de factură</span>
-              </label>
-
-              {needsInvoice && (
-                <div className="mt-4 grid gap-4">
-                  <div>
-                    <Label htmlFor="invoice-name">Nume / firmă *</Label>
-                    <Input
-                      id="invoice-name"
-                      value={invoiceName}
-                      onChange={(e) => setInvoiceName(e.target.value)}
-                      maxLength={200}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="invoice-vat">CUI (opțional)</Label>
-                    <Input
-                      id="invoice-vat"
-                      value={invoiceVat}
-                      onChange={(e) => setInvoiceVat(e.target.value)}
-                      maxLength={50}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="invoice-address">Adresă facturare *</Label>
-                    <Input
-                      id="invoice-address"
-                      value={invoiceAddress}
-                      onChange={(e) => setInvoiceAddress(e.target.value)}
-                      maxLength={300}
-                    />
-                  </div>
-                </div>
-              )}
+            {/* Factură — în curând */}
+            <section
+              aria-disabled="true"
+              className="rounded-xl border border-border bg-muted/30 p-6 shadow-sm opacity-60 pointer-events-none select-none"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <label className="flex items-center gap-3">
+                  <Checkbox checked={false} disabled />
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Am nevoie de factură
+                  </span>
+                </label>
+                <span className="rounded-full border border-border bg-background px-2 py-0.5 text-xs text-muted-foreground">
+                  În curând
+                </span>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Emiterea facturilor va fi disponibilă într-o versiune viitoare.
+              </p>
             </section>
 
             {submitError && (
