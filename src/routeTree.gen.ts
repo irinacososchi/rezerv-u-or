@@ -23,6 +23,7 @@ import { Route as ProprietarSaliRouteImport } from './routes/proprietar.sali'
 import { Route as ProprietarDashboardRouteImport } from './routes/proprietar.dashboard'
 import { Route as ProprietarSaliIndexRouteImport } from './routes/proprietar.sali.index'
 import { Route as ProprietarSaliNouRouteImport } from './routes/proprietar.sali.nou'
+import { Route as ProprietarSaliIdRouteImport } from './routes/proprietar.sali.$id'
 import { Route as ProprietarSaliIdEditRouteImport } from './routes/proprietar.sali.$id.edit'
 import { Route as ProprietarSaliIdCalendarRouteImport } from './routes/proprietar.sali.$id.calendar'
 
@@ -96,16 +97,21 @@ const ProprietarSaliNouRoute = ProprietarSaliNouRouteImport.update({
   path: '/nou',
   getParentRoute: () => ProprietarSaliRoute,
 } as any)
-const ProprietarSaliIdEditRoute = ProprietarSaliIdEditRouteImport.update({
-  id: '/$id/edit',
-  path: '/$id/edit',
+const ProprietarSaliIdRoute = ProprietarSaliIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
   getParentRoute: () => ProprietarSaliRoute,
+} as any)
+const ProprietarSaliIdEditRoute = ProprietarSaliIdEditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
+  getParentRoute: () => ProprietarSaliIdRoute,
 } as any)
 const ProprietarSaliIdCalendarRoute =
   ProprietarSaliIdCalendarRouteImport.update({
-    id: '/$id/calendar',
-    path: '/$id/calendar',
-    getParentRoute: () => ProprietarSaliRoute,
+    id: '/calendar',
+    path: '/calendar',
+    getParentRoute: () => ProprietarSaliIdRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/sali/$slug': typeof SaliSlugRoute
   '/proprietar/': typeof ProprietarIndexRoute
   '/sali/': typeof SaliIndexRoute
+  '/proprietar/sali/$id': typeof ProprietarSaliIdRouteWithChildren
   '/proprietar/sali/nou': typeof ProprietarSaliNouRoute
   '/proprietar/sali/': typeof ProprietarSaliIndexRoute
   '/proprietar/sali/$id/calendar': typeof ProprietarSaliIdCalendarRoute
@@ -136,6 +143,7 @@ export interface FileRoutesByTo {
   '/sali/$slug': typeof SaliSlugRoute
   '/proprietar': typeof ProprietarIndexRoute
   '/sali': typeof SaliIndexRoute
+  '/proprietar/sali/$id': typeof ProprietarSaliIdRouteWithChildren
   '/proprietar/sali/nou': typeof ProprietarSaliNouRoute
   '/proprietar/sali': typeof ProprietarSaliIndexRoute
   '/proprietar/sali/$id/calendar': typeof ProprietarSaliIdCalendarRoute
@@ -155,6 +163,7 @@ export interface FileRoutesById {
   '/sali/$slug': typeof SaliSlugRoute
   '/proprietar/': typeof ProprietarIndexRoute
   '/sali/': typeof SaliIndexRoute
+  '/proprietar/sali/$id': typeof ProprietarSaliIdRouteWithChildren
   '/proprietar/sali/nou': typeof ProprietarSaliNouRoute
   '/proprietar/sali/': typeof ProprietarSaliIndexRoute
   '/proprietar/sali/$id/calendar': typeof ProprietarSaliIdCalendarRoute
@@ -175,6 +184,7 @@ export interface FileRouteTypes {
     | '/sali/$slug'
     | '/proprietar/'
     | '/sali/'
+    | '/proprietar/sali/$id'
     | '/proprietar/sali/nou'
     | '/proprietar/sali/'
     | '/proprietar/sali/$id/calendar'
@@ -190,6 +200,7 @@ export interface FileRouteTypes {
     | '/sali/$slug'
     | '/proprietar'
     | '/sali'
+    | '/proprietar/sali/$id'
     | '/proprietar/sali/nou'
     | '/proprietar/sali'
     | '/proprietar/sali/$id/calendar'
@@ -208,6 +219,7 @@ export interface FileRouteTypes {
     | '/sali/$slug'
     | '/proprietar/'
     | '/sali/'
+    | '/proprietar/sali/$id'
     | '/proprietar/sali/nou'
     | '/proprietar/sali/'
     | '/proprietar/sali/$id/calendar'
@@ -324,35 +336,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProprietarSaliNouRouteImport
       parentRoute: typeof ProprietarSaliRoute
     }
+    '/proprietar/sali/$id': {
+      id: '/proprietar/sali/$id'
+      path: '/$id'
+      fullPath: '/proprietar/sali/$id'
+      preLoaderRoute: typeof ProprietarSaliIdRouteImport
+      parentRoute: typeof ProprietarSaliRoute
+    }
     '/proprietar/sali/$id/edit': {
       id: '/proprietar/sali/$id/edit'
-      path: '/$id/edit'
+      path: '/edit'
       fullPath: '/proprietar/sali/$id/edit'
       preLoaderRoute: typeof ProprietarSaliIdEditRouteImport
-      parentRoute: typeof ProprietarSaliRoute
+      parentRoute: typeof ProprietarSaliIdRoute
     }
     '/proprietar/sali/$id/calendar': {
       id: '/proprietar/sali/$id/calendar'
-      path: '/$id/calendar'
+      path: '/calendar'
       fullPath: '/proprietar/sali/$id/calendar'
       preLoaderRoute: typeof ProprietarSaliIdCalendarRouteImport
-      parentRoute: typeof ProprietarSaliRoute
+      parentRoute: typeof ProprietarSaliIdRoute
     }
   }
 }
 
-interface ProprietarSaliRouteChildren {
-  ProprietarSaliNouRoute: typeof ProprietarSaliNouRoute
-  ProprietarSaliIndexRoute: typeof ProprietarSaliIndexRoute
+interface ProprietarSaliIdRouteChildren {
   ProprietarSaliIdCalendarRoute: typeof ProprietarSaliIdCalendarRoute
   ProprietarSaliIdEditRoute: typeof ProprietarSaliIdEditRoute
 }
 
-const ProprietarSaliRouteChildren: ProprietarSaliRouteChildren = {
-  ProprietarSaliNouRoute: ProprietarSaliNouRoute,
-  ProprietarSaliIndexRoute: ProprietarSaliIndexRoute,
+const ProprietarSaliIdRouteChildren: ProprietarSaliIdRouteChildren = {
   ProprietarSaliIdCalendarRoute: ProprietarSaliIdCalendarRoute,
   ProprietarSaliIdEditRoute: ProprietarSaliIdEditRoute,
+}
+
+const ProprietarSaliIdRouteWithChildren =
+  ProprietarSaliIdRoute._addFileChildren(ProprietarSaliIdRouteChildren)
+
+interface ProprietarSaliRouteChildren {
+  ProprietarSaliIdRoute: typeof ProprietarSaliIdRouteWithChildren
+  ProprietarSaliNouRoute: typeof ProprietarSaliNouRoute
+  ProprietarSaliIndexRoute: typeof ProprietarSaliIndexRoute
+}
+
+const ProprietarSaliRouteChildren: ProprietarSaliRouteChildren = {
+  ProprietarSaliIdRoute: ProprietarSaliIdRouteWithChildren,
+  ProprietarSaliNouRoute: ProprietarSaliNouRoute,
+  ProprietarSaliIndexRoute: ProprietarSaliIndexRoute,
 }
 
 const ProprietarSaliRouteWithChildren = ProprietarSaliRoute._addFileChildren(
