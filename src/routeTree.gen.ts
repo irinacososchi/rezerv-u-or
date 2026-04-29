@@ -21,6 +21,7 @@ import { Route as SaliSlugRouteImport } from './routes/sali.$slug'
 import { Route as RezervaSlugRouteImport } from './routes/rezerva.$slug'
 import { Route as ProprietarSaliRouteImport } from './routes/proprietar.sali'
 import { Route as ProprietarDashboardRouteImport } from './routes/proprietar.dashboard'
+import { Route as ProprietarSaliIndexRouteImport } from './routes/proprietar.sali.index'
 import { Route as ProprietarSaliNouRouteImport } from './routes/proprietar.sali.nou'
 import { Route as ProprietarSaliIdEditRouteImport } from './routes/proprietar.sali.$id.edit'
 
@@ -84,6 +85,11 @@ const ProprietarDashboardRoute = ProprietarDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => ProprietarRoute,
 } as any)
+const ProprietarSaliIndexRoute = ProprietarSaliIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ProprietarSaliRoute,
+} as any)
 const ProprietarSaliNouRoute = ProprietarSaliNouRouteImport.update({
   id: '/nou',
   path: '/nou',
@@ -109,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/proprietar/': typeof ProprietarIndexRoute
   '/sali/': typeof SaliIndexRoute
   '/proprietar/sali/nou': typeof ProprietarSaliNouRoute
+  '/proprietar/sali/': typeof ProprietarSaliIndexRoute
   '/proprietar/sali/$id/edit': typeof ProprietarSaliIdEditRoute
 }
 export interface FileRoutesByTo {
@@ -117,12 +124,12 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/proprietar/dashboard': typeof ProprietarDashboardRoute
-  '/proprietar/sali': typeof ProprietarSaliRouteWithChildren
   '/rezerva/$slug': typeof RezervaSlugRoute
   '/sali/$slug': typeof SaliSlugRoute
   '/proprietar': typeof ProprietarIndexRoute
   '/sali': typeof SaliIndexRoute
   '/proprietar/sali/nou': typeof ProprietarSaliNouRoute
+  '/proprietar/sali': typeof ProprietarSaliIndexRoute
   '/proprietar/sali/$id/edit': typeof ProprietarSaliIdEditRoute
 }
 export interface FileRoutesById {
@@ -140,6 +147,7 @@ export interface FileRoutesById {
   '/proprietar/': typeof ProprietarIndexRoute
   '/sali/': typeof SaliIndexRoute
   '/proprietar/sali/nou': typeof ProprietarSaliNouRoute
+  '/proprietar/sali/': typeof ProprietarSaliIndexRoute
   '/proprietar/sali/$id/edit': typeof ProprietarSaliIdEditRoute
 }
 export interface FileRouteTypes {
@@ -158,6 +166,7 @@ export interface FileRouteTypes {
     | '/proprietar/'
     | '/sali/'
     | '/proprietar/sali/nou'
+    | '/proprietar/sali/'
     | '/proprietar/sali/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -166,12 +175,12 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/proprietar/dashboard'
-    | '/proprietar/sali'
     | '/rezerva/$slug'
     | '/sali/$slug'
     | '/proprietar'
     | '/sali'
     | '/proprietar/sali/nou'
+    | '/proprietar/sali'
     | '/proprietar/sali/$id/edit'
   id:
     | '__root__'
@@ -188,6 +197,7 @@ export interface FileRouteTypes {
     | '/proprietar/'
     | '/sali/'
     | '/proprietar/sali/nou'
+    | '/proprietar/sali/'
     | '/proprietar/sali/$id/edit'
   fileRoutesById: FileRoutesById
 }
@@ -287,6 +297,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProprietarDashboardRouteImport
       parentRoute: typeof ProprietarRoute
     }
+    '/proprietar/sali/': {
+      id: '/proprietar/sali/'
+      path: '/'
+      fullPath: '/proprietar/sali/'
+      preLoaderRoute: typeof ProprietarSaliIndexRouteImport
+      parentRoute: typeof ProprietarSaliRoute
+    }
     '/proprietar/sali/nou': {
       id: '/proprietar/sali/nou'
       path: '/nou'
@@ -306,11 +323,13 @@ declare module '@tanstack/react-router' {
 
 interface ProprietarSaliRouteChildren {
   ProprietarSaliNouRoute: typeof ProprietarSaliNouRoute
+  ProprietarSaliIndexRoute: typeof ProprietarSaliIndexRoute
   ProprietarSaliIdEditRoute: typeof ProprietarSaliIdEditRoute
 }
 
 const ProprietarSaliRouteChildren: ProprietarSaliRouteChildren = {
   ProprietarSaliNouRoute: ProprietarSaliNouRoute,
+  ProprietarSaliIndexRoute: ProprietarSaliIndexRoute,
   ProprietarSaliIdEditRoute: ProprietarSaliIdEditRoute,
 }
 
