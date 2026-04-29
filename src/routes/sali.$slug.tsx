@@ -628,12 +628,75 @@ function RoomDetailsPage() {
                   </div>
                 )}
 
+                {summary && (
+                  <div className="mt-4 border-t border-border pt-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={isRecurrent}
+                        onChange={(e) => {
+                          setIsRecurrent(e.target.checked);
+                          setRecurrenceEndDate("");
+                          setRecurrenceDates([]);
+                        }}
+                        className="accent-primary"
+                      />
+                      <span className="text-sm font-medium">
+                        Rezervă recurent (săptămânal)
+                      </span>
+                    </label>
+
+                    {isRecurrent && (
+                      <div className="mt-3 space-y-3">
+                        <div>
+                          <label className="text-xs text-muted-foreground">
+                            Repetă până la:
+                          </label>
+                          <input
+                            type="date"
+                            value={recurrenceEndDate}
+                            min={formatDateISO(addDays(selectedDate!, 7))}
+                            max={formatDateISO(addDays(new Date(), 365 * 2))}
+                            onChange={(e) => {
+                              setRecurrenceEndDate(e.target.value);
+                              setRecurrenceDates(
+                                generateWeeklyDates(selectedDate!, e.target.value),
+                              );
+                            }}
+                            className="mt-1 w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm"
+                          />
+                        </div>
+
+                        {recurrenceDates.length > 0 && (
+                          <div className="rounded-md bg-primary/5 border border-primary/20 p-3 text-sm">
+                            <div className="font-medium text-primary">
+                              {recurrenceDates.length + 1} rezervări săptămânale
+                            </div>
+                            <div className="mt-1 text-xs text-muted-foreground">
+                              {summary.start}–{summary.end} în fiecare{" "}
+                              {DAY_NAMES_RO[getDayOfWeek(selectedDate!)]}
+                            </div>
+                            <div className="mt-1 text-xs text-muted-foreground">
+                              Din {selectedDate!.toLocaleDateString("ro-RO")} până în{" "}
+                              {new Date(recurrenceEndDate).toLocaleDateString("ro-RO")}
+                            </div>
+                            <div className="mt-2 font-semibold text-primary">
+                              Total: {(recurrenceDates.length + 1) * summary.total} {currency}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <Button
                   className="mt-5 w-full cursor-pointer"
                   size="lg"
                   disabled={!summary || !summary.contiguous}
                   onClick={() => {
                     if (!summary || !summary.contiguous || !selectedDate || !room) return;
+                    const recurrentActive = isRecurrent && recurrenceDates.length > 0;
                     navigate({
                       to: "/rezerva/$slug",
                       params: { slug: room.slug },
@@ -643,6 +706,9 @@ function RoomDetailsPage() {
                         end: summary.end,
                         duration: summary.duration,
                         total: summary.total,
+                        recurrent: recurrentActive ? "true" : "false",
+                        recurrenceEnd: recurrentActive ? recurrenceEndDate : "",
+                        recurrenceCount: recurrentActive ? recurrenceDates.length + 1 : 0,
                       },
                     });
                   }}
