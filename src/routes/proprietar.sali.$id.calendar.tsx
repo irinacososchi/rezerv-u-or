@@ -447,10 +447,17 @@ function RoomCalendarPage() {
                             }
                           >
                             {showLabel && (
-                              <div className="truncate font-medium">
-                                {e!.entry_type === "blocat"
-                                  ? (e!.reason ?? "Blocat")
-                                  : (e!.renter_name ?? e!.reference ?? "Rezervare")}
+                              <div className="truncate font-medium flex items-center gap-1">
+                                <span className="truncate">
+                                  {e!.entry_type === "blocat"
+                                    ? (e!.reason ?? "Blocat")
+                                    : (e!.renter_name ?? e!.reference ?? "Rezervare")}
+                                </span>
+                                {e!.recurrence_id && (
+                                  <span className="text-[9px] leading-none" title="Rezervare recurentă">
+                                    ↻
+                                  </span>
+                                )}
                               </div>
                             )}
                           </button>
