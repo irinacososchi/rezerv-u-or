@@ -14,17 +14,51 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarPlus, Ban } from "lucide-react";
 import { toast } from "sonner";
 import {
   getDayOfWeek,
   formatDateISO,
+  formatDateRO,
+  parseISODate,
   addDays,
   DAY_NAMES_RO,
   MONTH_NAMES_RO,
   startOfMonth,
   endOfMonth,
 } from "@/lib/date-utils";
+
+type PricingRule = {
+  id: string;
+  price_per_hour: number;
+  days_of_week: number[];
+  start_time: string | null;
+  end_time: string | null;
+  priority: number;
+  is_active: boolean;
+};
+
+function calculatePriceForDate(
+  dateISO: string,
+  startHHMM: string,
+  pricingRules: PricingRule[],
+): number {
+  const date = parseISODate(dateISO);
+  const dayOfWeek = getDayOfWeek(date);
+  const slotTime = `${startHHMM}:00`;
+  const matching = pricingRules
+    .filter((rule) => {
+      if (!rule.is_active) return false;
+      const dayMatch = (rule.days_of_week ?? []).includes(dayOfWeek);
+      const timeMatch =
+        !rule.start_time ||
+        !rule.end_time ||
+        (slotTime >= rule.start_time && slotTime < rule.end_time);
+      return dayMatch && timeMatch;
+    })
+    .sort((a, b) => b.priority - a.priority);
+  return Number(matching[0]?.price_per_hour ?? 0);
+}
 
 export const Route = createFileRoute("/proprietar/sali/$id/calendar")({
   component: RoomCalendarPage,
