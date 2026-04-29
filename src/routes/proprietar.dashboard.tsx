@@ -307,8 +307,8 @@ function DashboardPage() {
                       <span className="font-mono text-[10px] text-muted-foreground">{b.reference ?? ""}</span>
                     </CardHeader>
                     <CardContent className="p-4 pt-2 space-y-2">
-                      <p className="text-sm">{b.booking_date} · {formatTimeRange(b.start_time, b.end_time)}</p>
-                      <p className="text-sm font-semibold text-primary">{formatRON(b.total)}</p>
+                      <p className="text-sm">{formatDateShort(b.booking_date)} · {formatTimeRange(b.start_time, b.end_time)}</p>
+                      <p className="text-sm font-semibold text-primary">{formatRON(totalOf(b))}</p>
                       <div className="flex gap-2 flex-wrap">
                         <StatusBadge status={b.status} />
                         <PaymentBadge status={b.payment_status} />
