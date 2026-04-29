@@ -294,8 +294,7 @@ function CheckoutPage() {
     if (!isValidEmail(email)) return setSubmitError("Email invalid.");
     if (!isValidPhone(phone)) return setSubmitError("Telefon invalid (minim 10 cifre).");
     if (needsInvoice) {
-      if (!invoiceName.trim()) return setSubmitError("Completează numele pentru factură.");
-      if (!invoiceAddress.trim()) return setSubmitError("Completează adresa de facturare.");
+      // Facturarea va fi disponibilă în viitor — validare dezactivată momentan.
     }
 
     setSubmitting(true);
