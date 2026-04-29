@@ -135,6 +135,9 @@ function RoomDetailsPage() {
   });
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedHours, setSelectedHours] = useState<number[]>([]);
+  const [isRecurrent, setIsRecurrent] = useState(false);
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
+  const [recurrenceDates, setRecurrenceDates] = useState<Date[]>([]);
 
   // ---------- Fetch ----------
   useEffect(() => {
