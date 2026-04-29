@@ -96,20 +96,18 @@ function downloadICS(b: BookingFull) {
 }
 
 function ConfirmarePage() {
-  const [reference, setReference] = useState<string | null>(null);
+  const search = Route.useSearch();
+  const reference = search.reference;
   const [booking, setBooking] = useState<BookingFull | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    setReference(params.get("reference"));
-  }, []);
-
-  useEffect(() => {
-    if (reference === null) return;
     if (!reference) {
+      setNotFound(true);
+      setLoading(false);
+      return;
+    }
       setNotFound(true);
       setLoading(false);
       return;
