@@ -22,6 +22,9 @@ type CheckoutSearch = {
   end: string;
   duration: number;
   total: number;
+  recurrent: string;
+  recurrenceEnd: string;
+  recurrenceCount: number;
 };
 
 export const Route = createFileRoute("/rezerva/$slug")({
@@ -31,6 +34,9 @@ export const Route = createFileRoute("/rezerva/$slug")({
     end: typeof raw.end === "string" ? raw.end : "",
     duration: Number(raw.duration) || 0,
     total: Number(raw.total) || 0,
+    recurrent: typeof raw.recurrent === "string" ? raw.recurrent : "false",
+    recurrenceEnd: typeof raw.recurrenceEnd === "string" ? raw.recurrenceEnd : "",
+    recurrenceCount: Number(raw.recurrenceCount) || 0,
   }),
   loader: ({ params }) => ({ slug: params.slug }),
   head: () => ({
