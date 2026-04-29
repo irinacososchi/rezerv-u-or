@@ -227,7 +227,7 @@ function DashboardPage() {
                       <p className="text-sm text-muted-foreground">
                         {b.room_name} · {formatDateRO(parseISODate(b.booking_date))} · {formatTimeRange(b.start_time, b.end_time)}
                       </p>
-                      <p className="text-sm font-semibold text-primary">{formatRON(b.total)}</p>
+                      <p className="text-sm font-semibold text-primary">{formatRON(totalOf(b))}</p>
                     </div>
                     <div className="flex gap-2">
                       <Button
