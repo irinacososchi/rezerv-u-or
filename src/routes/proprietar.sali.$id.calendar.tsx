@@ -217,6 +217,14 @@ function RoomCalendarPage() {
         return;
       }
       setRoom(r as Room);
+
+      // Load pricing rules
+      const { data: rules } = await supabase
+        .from("pricing_rules")
+        .select("id, price_per_hour, days_of_week, start_time, end_time, priority, is_active")
+        .eq("room_id", id);
+      if (!cancelled) setPricingRules((rules ?? []) as PricingRule[]);
+
       setLoading(false);
     })();
     return () => {
