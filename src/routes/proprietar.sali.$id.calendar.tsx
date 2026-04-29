@@ -720,16 +720,31 @@ function BookingDetails({
     onChanged();
   }
 
-  async function cancelBooking() {
-    if (!confirm("Sigur vrei să anulezi această rezervare?")) return;
+  async function cancelBooking(cancelAll: boolean) {
+    const message = cancelAll && recurrenceInfo
+      ? `Sigur vrei să anulezi TOATE cele ${recurrenceInfo.total} apariții ale acestei rezervări recurente?`
+      : "Sigur vrei să anulezi această rezervare?";
+    if (!confirm(message)) return;
     setBusy(true);
-    const { error } = await supabase
-      .from("bookings")
-      .update({ status: "anulată" })
-      .eq("id", entry.id);
+    let error;
+    if (cancelAll && recurrenceInfo) {
+      ({ error } = await supabase
+        .from("bookings")
+        .update({ status: "anulată" })
+        .eq("recurrence_id", recurrenceInfo.id)
+        .in("status", ["în așteptare", "confirmată"]));
+    } else {
+      ({ error } = await supabase
+        .from("bookings")
+        .update({ status: "anulată" })
+        .eq("id", entry.id));
+    }
     setBusy(false);
-    if (error) return toast.error("Eroare la anulare");
-    toast.success("Rezervare anulată");
+    if (error) {
+      console.error("Cancel error:", error);
+      return toast.error("Eroare la anulare");
+    }
+    toast.success(cancelAll ? "Toate aparițiile au fost anulate" : "Rezervare anulată");
     onChanged();
     onClose();
   }
