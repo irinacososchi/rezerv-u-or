@@ -300,34 +300,78 @@ function CheckoutPage() {
 
     setSubmitting(true);
 
-    // Re-check availability
     const startTime = `${search.start}:00`;
     const endTime = `${search.end}:00`;
-    const { data: overlap } = await supabase
-      .from("bookings")
-      .select("id, start_time, end_time, status")
-      .eq("room_id", room.id)
-      .eq("booking_date", search.date)
-      .not("status", "in", '("refuzată","anulată","expirată")');
-
-    const conflict = (overlap ?? []).some((b: { start_time: string; end_time: string }) => {
-      return b.start_time < endTime && b.end_time > startTime;
-    });
-    if (conflict) {
-      setSubmitting(false);
-      setSubmitError("Acest interval a fost rezervat între timp. Te rugăm să alegi alt interval.");
-      return;
-    }
-
     const pricePerHour = activeRule?.price_per_hour ?? subtotal / Math.max(1, search.duration);
     const pricingLabel = activeRule?.label ?? null;
 
-    const insertPayload: Record<string, unknown> = {
+    const isRecurrent = search.recurrent === "true" && !!search.recurrenceEnd;
+    const allDates = isRecurrent
+      ? generateWeeklyDates(search.date, search.recurrenceEnd)
+      : [search.date];
+
+    // Re-check availability for ALL dates
+    const { data: overlap } = await supabase
+      .from("bookings")
+      .select("booking_date, start_time, end_time")
+      .eq("room_id", room.id)
+      .in("booking_date", allDates)
+      .not("status", "in", '("refuzată","anulată","expirată","blocată")');
+
+    const conflictDates = (overlap ?? [])
+      .filter((b: { start_time: string; end_time: string }) =>
+        b.start_time < endTime && b.end_time > startTime,
+      )
+      .map((b: { booking_date: string }) => b.booking_date);
+
+    if (conflictDates.length > 0) {
+      setSubmitting(false);
+      const list = conflictDates
+        .map((d) => parseISODate(d).toLocaleDateString("ro-RO"))
+        .join(", ");
+      setSubmitError(
+        allDates.length === 1
+          ? "Acest interval a fost rezervat între timp. Te rugăm să alegi alt interval."
+          : `Următoarele date sunt deja ocupate: ${list}. Te rugăm să alegi alt interval.`,
+      );
+      return;
+    }
+
+    let recurrenceId: string | null = null;
+    if (isRecurrent && allDates.length > 1) {
+      const dayOfWeek = getDayOfWeek(dateObj);
+      const { data: rec, error: recError } = await supabase
+        .from("recurrences")
+        .insert({
+          room_id: room.id,
+          created_by_email: email.trim(),
+          frequency: "saptamanal",
+          day_of_week: dayOfWeek,
+          start_time: startTime,
+          end_time: endTime,
+          first_date: allDates[0],
+          last_date: allDates[allDates.length - 1],
+          total_bookings: allDates.length,
+        })
+        .select()
+        .single();
+
+      if (recError || !rec) {
+        setSubmitting(false);
+        setSubmitError("Eroare la crearea rezervării recurente.");
+        return;
+      }
+      recurrenceId = (rec as { id: string }).id;
+    }
+
+    const bookingsToInsert = allDates.map((date, idx) => ({
       room_id: room.id,
+      recurrence_id: recurrenceId,
+      recurrence_index: recurrenceId ? idx + 1 : null,
       guest_name: name.trim(),
       guest_email: email.trim(),
       guest_phone: phone.trim(),
-      booking_date: search.date,
+      booking_date: date,
       start_time: startTime,
       end_time: endTime,
       duration_hours: search.duration,
@@ -345,27 +389,38 @@ function CheckoutPage() {
       invoice_name: needsInvoice ? invoiceName.trim() : null,
       invoice_vat: needsInvoice ? invoiceVat.trim() || null : null,
       invoice_address: needsInvoice ? invoiceAddress.trim() : null,
-    };
+    }));
 
-    const { data, error } = await supabase
+    const { data: inserted, error } = await supabase
       .from("bookings")
-      .insert(insertPayload)
-      .select()
-      .single();
+      .insert(bookingsToInsert)
+      .select("reference, booking_date");
 
     setSubmitting(false);
 
     if (error) {
       if (error.code === "23P01") {
-        setSubmitError("Acest interval a fost rezervat între timp. Te rugăm să alegi alt interval.");
+        setSubmitError("Una dintre date a fost rezervată între timp. Te rugăm să verifici disponibilitatea.");
       } else {
+        console.error("Booking insert error:", error);
         setSubmitError("A apărut o eroare. Te rugăm să încerci din nou.");
       }
       return;
     }
 
-    const reference = (data as { reference?: string; id: string })?.reference ?? (data as { id: string }).id;
-    navigate({ to: "/confirmare", search: { reference } as never });
+    const sorted = [...(inserted ?? [])].sort((a, b) =>
+      a.booking_date.localeCompare(b.booking_date),
+    );
+    const reference = (sorted[0] as { reference?: string } | undefined)?.reference ?? "";
+
+    navigate({
+      to: "/confirmare",
+      search: {
+        reference,
+        recurrent: isRecurrent ? "true" : "false",
+        recurrenceCount: isRecurrent ? allDates.length : 0,
+      } as never,
+    });
   }
 
   // ---------- Render ----------
