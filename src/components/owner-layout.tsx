@@ -9,6 +9,8 @@ import {
   Ticket,
   Settings,
   LogOut,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 
 const navItems = [
@@ -20,11 +22,22 @@ const navItems = [
   { to: "/proprietar/cont", icon: Settings, label: "Cont" },
 ] as const;
 
+const SIDEBAR_STORAGE_KEY = "owner-sidebar-collapsed";
+
 export function OwnerLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [ownerName, setOwnerName] = useState("");
   const [checking, setChecking] = useState(true);
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "1";
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(SIDEBAR_STORAGE_KEY, collapsed ? "1" : "0");
+  }, [collapsed]);
 
   useEffect(() => {
     let cancelled = false;
@@ -33,7 +46,6 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
         const {
           data: { user },
         } = await supabase.auth.getUser();
-        console.log("Auth user:", user);
         if (cancelled) return;
         if (!user) {
           navigate({ to: "/login" });
@@ -44,7 +56,6 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
           .select("role, full_name")
           .eq("id", user.id)
           .single();
-        console.log("Profile:", profile);
 
         if (cancelled) return;
         if (!profile || !["owner", "admin"].includes(profile.role)) {
@@ -81,13 +92,38 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
   const isActive = (to: string) =>
     location.pathname === to || location.pathname.startsWith(to + "/");
 
+  const sidebarWidth = collapsed ? "md:w-16" : "md:w-64";
+  const contentMargin = collapsed ? "md:ml-16" : "md:ml-64";
+
   return (
     <div className="min-h-screen flex bg-background">
       {/* Sidebar desktop */}
-      <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 border-r bg-card">
-        <div className="px-6 py-5 border-b">
-          <p className="text-base font-semibold">Rezervări Săli</p>
-          <p className="text-sm text-muted-foreground truncate">{ownerName}</p>
+      <aside
+        className={`hidden md:flex ${sidebarWidth} md:flex-col md:fixed md:inset-y-0 border-r bg-card transition-[width] duration-200`}
+      >
+        <div
+          className={`border-b flex items-center ${
+            collapsed ? "justify-center px-2 py-4" : "justify-between px-4 py-5 gap-2"
+          }`}
+        >
+          {!collapsed && (
+            <div className="min-w-0">
+              <p className="text-base font-semibold truncate">Rezervări Săli</p>
+              <p className="text-sm text-muted-foreground truncate">{ownerName}</p>
+            </div>
+          )}
+          <button
+            onClick={() => setCollapsed((v) => !v)}
+            aria-label={collapsed ? "Extinde meniul" : "Restrânge meniul"}
+            title={collapsed ? "Extinde meniul" : "Restrânge meniul"}
+            className="p-2 rounded-md hover:bg-muted text-muted-foreground"
+          >
+            {collapsed ? (
+              <PanelLeftOpen className="h-4 w-4" />
+            ) : (
+              <PanelLeftClose className="h-4 w-4" />
+            )}
+          </button>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
@@ -97,15 +133,17 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
               <a
                 key={item.to}
                 href={item.to}
+                title={collapsed ? item.label : undefined}
                 className={
-                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors " +
+                  "flex items-center gap-3 rounded-md text-sm transition-colors " +
+                  (collapsed ? "justify-center px-2 py-2 " : "px-3 py-2 ") +
                   (active
                     ? "bg-primary/10 text-primary font-medium"
                     : "text-foreground hover:bg-muted")
                 }
               >
-                <Icon className="h-4 w-4" />
-                {item.label}
+                <Icon className="h-4 w-4 shrink-0" />
+                {!collapsed && <span className="truncate">{item.label}</span>}
               </a>
             );
           })}
@@ -113,16 +151,20 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
         <div className="px-3 py-4 border-t">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-foreground hover:bg-muted transition-colors"
+            title={collapsed ? "Deconectare" : undefined}
+            className={
+              "w-full flex items-center gap-3 rounded-md text-sm text-foreground hover:bg-muted transition-colors " +
+              (collapsed ? "justify-center px-2 py-2" : "px-3 py-2")
+            }
           >
-            <LogOut className="h-4 w-4" />
-            Deconectare
+            <LogOut className="h-4 w-4 shrink-0" />
+            {!collapsed && <span>Deconectare</span>}
           </button>
         </div>
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 md:ml-64 flex flex-col min-h-screen">
+      <div className={`flex-1 ${contentMargin} flex flex-col min-h-screen transition-[margin] duration-200`}>
         {/* Mobile header */}
         <header className="md:hidden flex items-center justify-between px-4 py-3 border-b bg-card sticky top-0 z-10">
           <p className="font-semibold">Rezervări Săli</p>
