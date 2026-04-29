@@ -24,6 +24,7 @@ type BookingFull = {
   start_time: string;
   end_time: string;
   total: number | null;
+  total_amount: number | null;
   status: string;
   payment_status: string | null;
   payment_method: string | null;
@@ -62,9 +63,17 @@ function formatTimeRange(start: string, end: string) {
   return `${start.slice(0, 5)}–${end.slice(0, 5)}`;
 }
 
-function formatRON(v: number | null) {
+function formatRON(v: number | null | undefined) {
   if (v == null) return "—";
   return `${Number(v).toLocaleString("ro-RO")} RON`;
+}
+
+function formatDateShort(iso: string) {
+  return new Date(iso).toLocaleDateString("ro-RO", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function totalOf(b: BookingFull) {
+  return b.total_amount ?? b.total ?? null;
 }
 
 function DashboardPage() {
@@ -218,7 +227,7 @@ function DashboardPage() {
                       <p className="text-sm text-muted-foreground">
                         {b.room_name} · {formatDateRO(parseISODate(b.booking_date))} · {formatTimeRange(b.start_time, b.end_time)}
                       </p>
-                      <p className="text-sm font-semibold text-primary">{formatRON(b.total)}</p>
+                      <p className="text-sm font-semibold text-primary">{formatRON(totalOf(b))}</p>
                     </div>
                     <div className="flex gap-2">
                       <Button
@@ -275,9 +284,9 @@ function DashboardPage() {
                         <td className="px-3 py-2 font-mono text-xs">{b.reference ?? "—"}</td>
                         <td className="px-3 py-2">{b.room_name}</td>
                         <td className="px-3 py-2">{b.renter_name ?? b.renter_email ?? "—"}</td>
-                        <td className="px-3 py-2">{b.booking_date}</td>
+                        <td className="px-3 py-2">{formatDateShort(b.booking_date)}</td>
                         <td className="px-3 py-2">{formatTimeRange(b.start_time, b.end_time)}</td>
-                        <td className="px-3 py-2 font-medium">{formatRON(b.total)}</td>
+                        <td className="px-3 py-2 font-medium">{formatRON(totalOf(b))}</td>
                         <td className="px-3 py-2"><StatusBadge status={b.status} /></td>
                         <td className="px-3 py-2"><PaymentBadge status={b.payment_status} /></td>
                       </tr>
@@ -298,8 +307,8 @@ function DashboardPage() {
                       <span className="font-mono text-[10px] text-muted-foreground">{b.reference ?? ""}</span>
                     </CardHeader>
                     <CardContent className="p-4 pt-2 space-y-2">
-                      <p className="text-sm">{b.booking_date} · {formatTimeRange(b.start_time, b.end_time)}</p>
-                      <p className="text-sm font-semibold text-primary">{formatRON(b.total)}</p>
+                      <p className="text-sm">{formatDateShort(b.booking_date)} · {formatTimeRange(b.start_time, b.end_time)}</p>
+                      <p className="text-sm font-semibold text-primary">{formatRON(totalOf(b))}</p>
                       <div className="flex gap-2 flex-wrap">
                         <StatusBadge status={b.status} />
                         <PaymentBadge status={b.payment_status} />
