@@ -21,6 +21,7 @@ import { Route as SaliSlugRouteImport } from './routes/sali.$slug'
 import { Route as RezervaSlugRouteImport } from './routes/rezerva.$slug'
 import { Route as ProprietarSaliRouteImport } from './routes/proprietar.sali'
 import { Route as ProprietarDashboardRouteImport } from './routes/proprietar.dashboard'
+import { Route as ProprietarCalendarRouteImport } from './routes/proprietar.calendar'
 import { Route as ProprietarSaliIndexRouteImport } from './routes/proprietar.sali.index'
 import { Route as ProprietarSaliNouRouteImport } from './routes/proprietar.sali.nou'
 import { Route as ProprietarSaliIdRouteImport } from './routes/proprietar.sali.$id'
@@ -87,6 +88,11 @@ const ProprietarDashboardRoute = ProprietarDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => ProprietarRoute,
 } as any)
+const ProprietarCalendarRoute = ProprietarCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => ProprietarRoute,
+} as any)
 const ProprietarSaliIndexRoute = ProprietarSaliIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/proprietar': typeof ProprietarRouteWithChildren
   '/sali': typeof SaliRouteWithChildren
   '/signup': typeof SignupRoute
+  '/proprietar/calendar': typeof ProprietarCalendarRoute
   '/proprietar/dashboard': typeof ProprietarDashboardRoute
   '/proprietar/sali': typeof ProprietarSaliRouteWithChildren
   '/rezerva/$slug': typeof RezervaSlugRoute
@@ -138,6 +145,7 @@ export interface FileRoutesByTo {
   '/confirmare': typeof ConfirmareRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/proprietar/calendar': typeof ProprietarCalendarRoute
   '/proprietar/dashboard': typeof ProprietarDashboardRoute
   '/rezerva/$slug': typeof RezervaSlugRoute
   '/sali/$slug': typeof SaliSlugRoute
@@ -157,6 +165,7 @@ export interface FileRoutesById {
   '/proprietar': typeof ProprietarRouteWithChildren
   '/sali': typeof SaliRouteWithChildren
   '/signup': typeof SignupRoute
+  '/proprietar/calendar': typeof ProprietarCalendarRoute
   '/proprietar/dashboard': typeof ProprietarDashboardRoute
   '/proprietar/sali': typeof ProprietarSaliRouteWithChildren
   '/rezerva/$slug': typeof RezervaSlugRoute
@@ -178,6 +187,7 @@ export interface FileRouteTypes {
     | '/proprietar'
     | '/sali'
     | '/signup'
+    | '/proprietar/calendar'
     | '/proprietar/dashboard'
     | '/proprietar/sali'
     | '/rezerva/$slug'
@@ -195,6 +205,7 @@ export interface FileRouteTypes {
     | '/confirmare'
     | '/login'
     | '/signup'
+    | '/proprietar/calendar'
     | '/proprietar/dashboard'
     | '/rezerva/$slug'
     | '/sali/$slug'
@@ -213,6 +224,7 @@ export interface FileRouteTypes {
     | '/proprietar'
     | '/sali'
     | '/signup'
+    | '/proprietar/calendar'
     | '/proprietar/dashboard'
     | '/proprietar/sali'
     | '/rezerva/$slug'
@@ -322,6 +334,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProprietarDashboardRouteImport
       parentRoute: typeof ProprietarRoute
     }
+    '/proprietar/calendar': {
+      id: '/proprietar/calendar'
+      path: '/calendar'
+      fullPath: '/proprietar/calendar'
+      preLoaderRoute: typeof ProprietarCalendarRouteImport
+      parentRoute: typeof ProprietarRoute
+    }
     '/proprietar/sali/': {
       id: '/proprietar/sali/'
       path: '/'
@@ -390,12 +409,14 @@ const ProprietarSaliRouteWithChildren = ProprietarSaliRoute._addFileChildren(
 )
 
 interface ProprietarRouteChildren {
+  ProprietarCalendarRoute: typeof ProprietarCalendarRoute
   ProprietarDashboardRoute: typeof ProprietarDashboardRoute
   ProprietarSaliRoute: typeof ProprietarSaliRouteWithChildren
   ProprietarIndexRoute: typeof ProprietarIndexRoute
 }
 
 const ProprietarRouteChildren: ProprietarRouteChildren = {
+  ProprietarCalendarRoute: ProprietarCalendarRoute,
   ProprietarDashboardRoute: ProprietarDashboardRoute,
   ProprietarSaliRoute: ProprietarSaliRouteWithChildren,
   ProprietarIndexRoute: ProprietarIndexRoute,
