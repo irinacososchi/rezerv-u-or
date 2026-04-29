@@ -881,9 +881,29 @@ function BookingDetails({
             </Button>
           )}
           {details.status !== "anulată" && (
-            <Button variant="destructive" onClick={cancelBooking} disabled={busy}>
-              Anulează rezervarea
-            </Button>
+            recurrenceInfo ? (
+              <>
+                <Button
+                  variant="outline"
+                  className="border-destructive text-destructive hover:bg-destructive/10"
+                  onClick={() => cancelBooking(false)}
+                  disabled={busy}
+                >
+                  Anulează doar această apariție
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => cancelBooking(true)}
+                  disabled={busy}
+                >
+                  Anulează TOATE aparițiile ({recurrenceInfo.total})
+                </Button>
+              </>
+            ) : (
+              <Button variant="destructive" onClick={() => cancelBooking(false)} disabled={busy}>
+                Anulează rezervarea
+              </Button>
+            )
           )}
         </div>
         <Button variant="outline" onClick={onClose}>
