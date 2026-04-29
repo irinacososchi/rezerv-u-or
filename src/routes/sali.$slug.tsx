@@ -114,6 +114,19 @@ function getPriceForSlot(
   return Number(matching[0]?.price_per_hour ?? 0);
 }
 
+function generateWeeklyDates(selectedDate: Date, endDateStr: string): Date[] {
+  if (!endDateStr) return [];
+  const end = new Date(endDateStr);
+  const dates: Date[] = [];
+  const current = new Date(selectedDate);
+  current.setDate(current.getDate() + 7);
+  while (current <= end) {
+    dates.push(new Date(current));
+    current.setDate(current.getDate() + 7);
+  }
+  return dates;
+}
+
 // ---------- Page ----------
 function RoomDetailsPage() {
   const { slug } = Route.useParams() as { slug: string };
