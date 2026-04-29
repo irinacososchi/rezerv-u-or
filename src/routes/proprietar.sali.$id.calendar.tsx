@@ -597,18 +597,94 @@ function BookingDetails({
   onChanged: () => void;
 }) {
   const [busy, setBusy] = useState(false);
+  const [details, setDetails] = useState<Entry>(entry);
+  const [editingTime, setEditingTime] = useState(false);
+  const [newStartHour, setNewStartHour] = useState(entry.start_time.slice(0, 5));
+  const [newEndHour, setNewEndHour] = useState(entry.end_time.slice(0, 5));
+  const [nota, setNota] = useState("");
 
-  async function markPaid() {
+  // Fetch full booking row (price_per_hour, discount_amount, renter_notes)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("bookings")
+        .select(
+          "id, start_time, end_time, duration_hours, subtotal, total_amount, price_per_hour, discount_amount, renter_notes, payment_status, status",
+        )
+        .eq("id", entry.id)
+        .single();
+      if (cancelled || !data) return;
+      const merged = { ...entry, ...data } as Entry;
+      setDetails(merged);
+      setNewStartHour(merged.start_time.slice(0, 5));
+      setNewEndHour(merged.end_time.slice(0, 5));
+      setNota(merged.renter_notes ?? "");
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [entry]);
+
+  const hourOptions = Array.from(
+    { length: HOUR_END - HOUR_START + 1 },
+    (_, i) => HOUR_START + i,
+  );
+
+  async function saveTime() {
+    const sh = parseInt(newStartHour, 10);
+    const eh = parseInt(newEndHour, 10);
+    if (eh <= sh) return toast.error("Ora de sfârșit trebuie să fie după start.");
+    const newDuration = eh - sh;
+    const pph = details.price_per_hour ?? 0;
+    const disc = details.discount_amount ?? 0;
+    const newSubtotal = pph * newDuration;
     setBusy(true);
     const { error } = await supabase
       .from("bookings")
-      .update({ payment_status: "platit" })
+      .update({
+        start_time: `${newStartHour}:00`,
+        end_time: `${newEndHour}:00`,
+        duration_hours: newDuration,
+        subtotal: newSubtotal,
+        total_amount: newSubtotal - disc,
+      })
       .eq("id", entry.id);
     setBusy(false);
-    if (error) return toast.error("Eroare la marcare ca plătit");
-    toast.success("Marcat ca plătit");
+    if (error) {
+      console.error(error);
+      return toast.error(error.message || "Eroare la salvare interval");
+    }
+    toast.success("Salvat cu succes.");
+    setEditingTime(false);
     onChanged();
     onClose();
+  }
+
+  async function togglePayment() {
+    const next = details.payment_status === "platit" ? "neplatit" : "platit";
+    setBusy(true);
+    const { error } = await supabase
+      .from("bookings")
+      .update({ payment_status: next })
+      .eq("id", entry.id);
+    setBusy(false);
+    if (error) return toast.error("Eroare la actualizare plată");
+    setDetails((d) => ({ ...d, payment_status: next }));
+    toast.success("Salvat cu succes.");
+    onChanged();
+  }
+
+  async function saveNote() {
+    setBusy(true);
+    const { error } = await supabase
+      .from("bookings")
+      .update({ renter_notes: nota })
+      .eq("id", entry.id);
+    setBusy(false);
+    if (error) return toast.error("Eroare la salvarea notei");
+    toast.success("Salvat cu succes.");
+    onChanged();
   }
 
   async function cancelBooking() {
@@ -625,36 +701,133 @@ function BookingDetails({
     onClose();
   }
 
+  const isPaid = details.payment_status === "platit";
+
   return (
     <>
       <DialogHeader>
         <DialogTitle>Detalii rezervare</DialogTitle>
         <DialogDescription>
-          {entry.booking_date} · {entry.start_time?.slice(0, 5)}–{entry.end_time?.slice(0, 5)}
+          {details.booking_date} · {details.start_time?.slice(0, 5)}–
+          {details.end_time?.slice(0, 5)}
         </DialogDescription>
       </DialogHeader>
       <div className="space-y-2 text-sm">
-        <Row label="Chiriaș" value={entry.renter_name ?? "—"} />
-        <Row label="Email" value={entry.renter_email ?? "—"} />
-        <Row label="Telefon" value={entry.renter_phone ?? "—"} />
-        <Row label="Referință" value={entry.reference ?? entry.id.slice(0, 8)} />
-        <Row label="Status" value={entry.status ?? "—"} />
-        <Row label="Plată" value={entry.payment_status ?? "—"} />
-        {entry.total_amount != null && (
-          <Row label="Total" value={`${entry.total_amount} RON`} />
+        <Row label="Chiriaș" value={details.renter_name ?? "—"} />
+        <Row label="Email" value={details.renter_email ?? "—"} />
+        <Row label="Telefon" value={details.renter_phone ?? "—"} />
+        <Row label="Referință" value={details.reference ?? details.id.slice(0, 8)} />
+        <Row label="Status" value={details.status ?? "—"} />
+        <Row label="Plată" value={details.payment_status ?? "—"} />
+        {details.total_amount != null && (
+          <Row label="Total" value={`${details.total_amount} RON`} />
         )}
       </div>
-      <DialogFooter className="gap-2">
-        {entry.payment_status === "neplatit" && (
-          <Button onClick={markPaid} disabled={busy}>
-            Marchează ca plătit
+
+      {editingTime && (
+        <div className="border rounded-md p-3 space-y-3 bg-muted/30">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Ora start</Label>
+              <select
+                value={newStartHour}
+                onChange={(e) => setNewStartHour(e.target.value)}
+                className="w-full border rounded-md h-9 px-2 text-sm bg-background"
+              >
+                {hourOptions.slice(0, -1).map((h) => {
+                  const v = `${String(h).padStart(2, "0")}:00`;
+                  return (
+                    <option key={h} value={v}>
+                      {v}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Ora end</Label>
+              <select
+                value={newEndHour}
+                onChange={(e) => setNewEndHour(e.target.value)}
+                className="w-full border rounded-md h-9 px-2 text-sm bg-background"
+              >
+                {hourOptions.slice(1).map((h) => {
+                  const v = `${String(h).padStart(2, "0")}:00`;
+                  return (
+                    <option key={h} value={v}>
+                      {v}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setEditingTime(false)}
+              disabled={busy}
+            >
+              Renunță
+            </Button>
+            <Button size="sm" onClick={saveTime} disabled={busy}>
+              Salvează interval
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-1">
+        <Label className="text-xs" htmlFor="nota">
+          Notă internă
+        </Label>
+        <div className="flex gap-2">
+          <Input
+            id="nota"
+            value={nota}
+            onChange={(e) => setNota(e.target.value)}
+            placeholder="Notă vizibilă doar pentru tine"
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={saveNote}
+            disabled={busy}
+          >
+            Salvează nota
           </Button>
-        )}
-        {entry.status !== "anulată" && (
-          <Button variant="destructive" onClick={cancelBooking} disabled={busy}>
-            Anulează rezervarea
+        </div>
+      </div>
+
+      <DialogFooter className="gap-2 sm:justify-between flex-wrap">
+        <div className="flex gap-2 flex-wrap">
+          <Button
+            variant="outline"
+            onClick={() => setEditingTime((v) => !v)}
+            disabled={busy}
+          >
+            {editingTime ? "Ascunde editor" : "Modifică intervalul"}
           </Button>
-        )}
+          {isPaid ? (
+            <Button variant="outline" onClick={togglePayment} disabled={busy}>
+              Marchează ca neplatit
+            </Button>
+          ) : (
+            <Button
+              onClick={togglePayment}
+              disabled={busy}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              Marchează ca plătit
+            </Button>
+          )}
+          {details.status !== "anulată" && (
+            <Button variant="destructive" onClick={cancelBooking} disabled={busy}>
+              Anulează rezervarea
+            </Button>
+          )}
+        </div>
         <Button variant="outline" onClick={onClose}>
           Închide
         </Button>
