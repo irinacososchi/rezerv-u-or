@@ -29,29 +29,35 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     async function checkAuth() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      console.log("Auth user:", user);
-      if (cancelled) return;
-      if (!user) {
-        navigate({ to: "/login" });
-        return;
-      }
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role, full_name")
-        .eq("id", user.id)
-        .single();
-      console.log("Profile:", profile);
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        console.log("Auth user:", user);
+        if (cancelled) return;
+        if (!user) {
+          navigate({ to: "/autentificare" });
+          return;
+        }
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role, full_name")
+          .eq("id", user.id)
+          .single();
+        console.log("Profile:", profile);
 
-      if (cancelled) return;
-      if (!profile || !["owner", "admin"].includes(profile.role)) {
-        navigate({ to: "/" });
-        return;
+        if (cancelled) return;
+        if (!profile || !["owner", "admin"].includes(profile.role)) {
+          navigate({ to: "/" });
+          return;
+        }
+        setOwnerName(profile.full_name ?? "Proprietar");
+      } catch (err) {
+        console.error("Auth check failed:", err);
+        if (!cancelled) navigate({ to: "/autentificare" });
+      } finally {
+        if (!cancelled) setChecking(false);
       }
-      setOwnerName(profile.full_name ?? "Proprietar");
-      setChecking(false);
     }
     checkAuth();
     return () => {
