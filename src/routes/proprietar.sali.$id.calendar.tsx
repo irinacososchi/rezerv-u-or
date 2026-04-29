@@ -14,17 +14,51 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarPlus, Ban } from "lucide-react";
 import { toast } from "sonner";
 import {
   getDayOfWeek,
   formatDateISO,
+  formatDateRO,
+  parseISODate,
   addDays,
   DAY_NAMES_RO,
   MONTH_NAMES_RO,
   startOfMonth,
   endOfMonth,
 } from "@/lib/date-utils";
+
+type PricingRule = {
+  id: string;
+  price_per_hour: number;
+  days_of_week: number[];
+  start_time: string | null;
+  end_time: string | null;
+  priority: number;
+  is_active: boolean;
+};
+
+function calculatePriceForDate(
+  dateISO: string,
+  startHHMM: string,
+  pricingRules: PricingRule[],
+): number {
+  const date = parseISODate(dateISO);
+  const dayOfWeek = getDayOfWeek(date);
+  const slotTime = `${startHHMM}:00`;
+  const matching = pricingRules
+    .filter((rule) => {
+      if (!rule.is_active) return false;
+      const dayMatch = (rule.days_of_week ?? []).includes(dayOfWeek);
+      const timeMatch =
+        !rule.start_time ||
+        !rule.end_time ||
+        (slotTime >= rule.start_time && slotTime < rule.end_time);
+      return dayMatch && timeMatch;
+    })
+    .sort((a, b) => b.priority - a.priority);
+  return Number(matching[0]?.price_per_hour ?? 0);
+}
 
 export const Route = createFileRoute("/proprietar/sali/$id/calendar")({
   component: RoomCalendarPage,
@@ -102,13 +136,32 @@ function RoomCalendarPage() {
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date()));
   const [monthAnchor, setMonthAnchor] = useState<Date>(() => startOfMonth(new Date()));
   const [entries, setEntries] = useState<Entry[]>([]);
+  const [pricingRules, setPricingRules] = useState<PricingRule[]>([]);
   const [selected, setSelected] = useState<
     | { kind: "booking"; entry: Entry }
     | { kind: "block"; entry: Entry }
-    | { kind: "empty"; date: string; hour: number }
     | null
   >(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+
+  // Cell-click flow: choose → block | booking
+  type CellClickMode = "choose" | "block" | "booking";
+  const [cellModal, setCellModal] = useState<{
+    date: string;
+    hour: number;
+    mode: CellClickMode;
+  } | null>(null);
+
+  // Manual booking form state
+  const [manualStart, setManualStart] = useState("09:00");
+  const [manualEnd, setManualEnd] = useState("10:00");
+  const [manualName, setManualName] = useState("");
+  const [manualPhone, setManualPhone] = useState("");
+  const [manualEmail, setManualEmail] = useState("");
+  const [manualNote, setManualNote] = useState("");
+  const [manualPaymentStatus, setManualPaymentStatus] = useState("neplatit");
+  const [manualError, setManualError] = useState<string | null>(null);
+  const [manualSubmitting, setManualSubmitting] = useState(false);
 
   const days = useMemo(
     () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
@@ -164,6 +217,14 @@ function RoomCalendarPage() {
         return;
       }
       setRoom(r as Room);
+
+      // Load pricing rules
+      const { data: rules } = await supabase
+        .from("pricing_rules")
+        .select("id, price_per_hour, days_of_week, start_time, end_time, priority, is_active")
+        .eq("room_id", id);
+      if (!cancelled) setPricingRules((rules ?? []) as PricingRule[]);
+
       setLoading(false);
     })();
     return () => {
@@ -203,7 +264,21 @@ function RoomCalendarPage() {
 
   function onCellClick(dateISO: string, hour: number) {
     const e = cellMap.get(`${dateISO}|${hour}`);
-    if (!e) return setSelected({ kind: "empty", date: dateISO, hour });
+    if (!e) {
+      // Reset manual form and open chooser
+      const sH = `${String(hour).padStart(2, "0")}:00`;
+      const eH = `${String(Math.min(hour + 1, HOUR_END)).padStart(2, "0")}:00`;
+      setManualStart(sH);
+      setManualEnd(eH);
+      setManualName("");
+      setManualPhone("");
+      setManualEmail("");
+      setManualNote("");
+      setManualPaymentStatus("neplatit");
+      setManualError(null);
+      setCellModal({ date: dateISO, hour, mode: "choose" });
+      return;
+    }
     if (e.entry_type === "blocat") setSelected({ kind: "block", entry: e });
     else setSelected({ kind: "booking", entry: e });
   }
@@ -568,16 +643,93 @@ function RoomCalendarPage() {
       </Dialog>
 
       <Dialog
-        open={selected?.kind === "empty"}
-        onOpenChange={(o) => !o && setSelected(null)}
+        open={!!cellModal}
+        onOpenChange={(o) => !o && setCellModal(null)}
       >
         <DialogContent>
-          {selected?.kind === "empty" && (
+          {cellModal?.mode === "choose" && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Ce vrei să faci?</DialogTitle>
+                <DialogDescription>
+                  {formatDateRO(parseISODate(cellModal.date))} ·{" "}
+                  {cellModal.hour.toString().padStart(2, "0")}:00
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-3 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setCellModal({ ...cellModal, mode: "booking" })}
+                  className="flex items-start gap-3 rounded-xl border-2 border-primary/30 bg-primary/5 p-4 text-left hover:border-primary transition w-full"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+                    <CalendarPlus className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="font-medium">Adaugă rezervare</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      Rezervă în numele unui client (telefon, email, mesaj)
+                    </div>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCellModal({ ...cellModal, mode: "block" })}
+                  className="flex items-start gap-3 rounded-xl border border-border bg-background p-4 text-left hover:bg-muted/40 transition w-full"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-foreground shrink-0">
+                    <Ban className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="font-medium">Blochează interval</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      Marchează ca indisponibil (curs privat, renovare etc.)
+                    </div>
+                  </div>
+                </button>
+              </div>
+              <DialogFooter>
+                <Button variant="ghost" onClick={() => setCellModal(null)}>
+                  Anulează
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+
+          {cellModal?.mode === "block" && (
             <BlockSlotForm
               roomId={id}
-              date={selected.date}
-              startHour={selected.hour}
-              onClose={() => setSelected(null)}
+              date={cellModal.date}
+              startHour={cellModal.hour}
+              onClose={() => setCellModal(null)}
+              onChanged={loadEntries}
+            />
+          )}
+
+          {cellModal?.mode === "booking" && (
+            <ManualBookingForm
+              roomId={id}
+              date={cellModal.date}
+              pricingRules={pricingRules}
+              manualStart={manualStart}
+              manualEnd={manualEnd}
+              manualName={manualName}
+              manualPhone={manualPhone}
+              manualEmail={manualEmail}
+              manualNote={manualNote}
+              manualPaymentStatus={manualPaymentStatus}
+              manualError={manualError}
+              manualSubmitting={manualSubmitting}
+              setManualStart={setManualStart}
+              setManualEnd={setManualEnd}
+              setManualName={setManualName}
+              setManualPhone={setManualPhone}
+              setManualEmail={setManualEmail}
+              setManualNote={setManualNote}
+              setManualPaymentStatus={setManualPaymentStatus}
+              setManualError={setManualError}
+              setManualSubmitting={setManualSubmitting}
+              onClose={() => setCellModal(null)}
               onChanged={loadEntries}
             />
           )}
@@ -1094,5 +1246,255 @@ function Row({ label, value }: { label: string; value: string }) {
       <span className="text-muted-foreground">{label}</span>
       <span className="font-medium text-right truncate">{value}</span>
     </div>
+  );
+}
+
+function ManualBookingForm({
+  roomId,
+  date,
+  pricingRules,
+  manualStart,
+  manualEnd,
+  manualName,
+  manualPhone,
+  manualEmail,
+  manualNote,
+  manualPaymentStatus,
+  manualError,
+  manualSubmitting,
+  setManualStart,
+  setManualEnd,
+  setManualName,
+  setManualPhone,
+  setManualEmail,
+  setManualNote,
+  setManualPaymentStatus,
+  setManualError,
+  setManualSubmitting,
+  onClose,
+  onChanged,
+}: {
+  roomId: string;
+  date: string;
+  pricingRules: PricingRule[];
+  manualStart: string;
+  manualEnd: string;
+  manualName: string;
+  manualPhone: string;
+  manualEmail: string;
+  manualNote: string;
+  manualPaymentStatus: string;
+  manualError: string | null;
+  manualSubmitting: boolean;
+  setManualStart: (v: string) => void;
+  setManualEnd: (v: string) => void;
+  setManualName: (v: string) => void;
+  setManualPhone: (v: string) => void;
+  setManualEmail: (v: string) => void;
+  setManualNote: (v: string) => void;
+  setManualPaymentStatus: (v: string) => void;
+  setManualError: (v: string | null) => void;
+  setManualSubmitting: (v: boolean) => void;
+  onClose: () => void;
+  onChanged: () => void;
+}) {
+  const startHours = Array.from(
+    { length: HOUR_END - HOUR_START },
+    (_, i) => HOUR_START + i,
+  );
+  const endHours = Array.from(
+    { length: HOUR_END - HOUR_START },
+    (_, i) => HOUR_START + 1 + i,
+  );
+
+  const sH = parseInt(manualStart, 10);
+  const eH = parseInt(manualEnd, 10);
+  const validRange = eH > sH;
+  const duration = validRange ? eH - sH : 0;
+  const pricePerHour = calculatePriceForDate(date, manualStart.slice(0, 2), pricingRules);
+  const total = duration * pricePerHour;
+
+  async function handleManualBooking() {
+    if (!manualName.trim()) {
+      setManualError("Completează numele clientului.");
+      return;
+    }
+    if (!manualPhone.trim()) {
+      setManualError("Completează telefonul.");
+      return;
+    }
+    if (!validRange) {
+      setManualError("Ora de sfârșit trebuie să fie după ora de început.");
+      return;
+    }
+
+    setManualSubmitting(true);
+    setManualError(null);
+
+    const startTime = `${manualStart}:00`;
+    const endTime = `${manualEnd}:00`;
+
+    const { error } = await supabase.from("bookings").insert({
+      room_id: roomId,
+      guest_name: manualName.trim(),
+      guest_email: manualEmail.trim() || `noemail+${Date.now()}@rezervari.intern`,
+      guest_phone: manualPhone.trim(),
+      booking_date: date,
+      start_time: startTime,
+      end_time: endTime,
+      duration_hours: duration,
+      price_per_hour: pricePerHour,
+      subtotal: total,
+      discount_amount: 0,
+      total_amount: total,
+      status: "confirmată",
+      payment_method: "la_sala",
+      payment_status: manualPaymentStatus,
+      renter_notes: manualNote.trim() || null,
+    });
+
+    setManualSubmitting(false);
+
+    if (error) {
+      if (error.code === "23P01") {
+        setManualError("Intervalul se suprapune cu o rezervare existentă.");
+      } else {
+        setManualError("Eroare: " + error.message);
+      }
+      return;
+    }
+
+    toast.success("Rezervare adăugată");
+    onChanged();
+    onClose();
+  }
+
+  return (
+    <>
+      <DialogHeader>
+        <DialogTitle>Rezervare nouă</DialogTitle>
+        <DialogDescription>{formatDateRO(parseISODate(date))}</DialogDescription>
+      </DialogHeader>
+
+      <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label className="text-xs">Ora start</Label>
+            <select
+              value={manualStart}
+              onChange={(e) => setManualStart(e.target.value)}
+              className="w-full rounded-md border border-border h-9 px-2 text-sm bg-background"
+            >
+              {startHours.map((h) => {
+                const v = `${String(h).padStart(2, "0")}:00`;
+                return (
+                  <option key={h} value={v}>
+                    {v}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Ora end</Label>
+            <select
+              value={manualEnd}
+              onChange={(e) => setManualEnd(e.target.value)}
+              className="w-full rounded-md border border-border h-9 px-2 text-sm bg-background"
+            >
+              {endHours.map((h) => {
+                const v = `${String(h).padStart(2, "0")}:00`;
+                return (
+                  <option key={h} value={v}>
+                    {v}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <Label className="text-xs">Nume client *</Label>
+          <Input
+            value={manualName}
+            onChange={(e) => setManualName(e.target.value)}
+            placeholder="ex: Ana Ionescu"
+          />
+        </div>
+
+        <div className="space-y-1">
+          <Label className="text-xs">Telefon *</Label>
+          <Input
+            value={manualPhone}
+            onChange={(e) => setManualPhone(e.target.value)}
+            placeholder="07xxxxxxxx"
+          />
+        </div>
+
+        <div className="space-y-1">
+          <Label className="text-xs">Email (opțional)</Label>
+          <Input
+            type="email"
+            value={manualEmail}
+            onChange={(e) => setManualEmail(e.target.value)}
+            placeholder="client@email.ro"
+          />
+        </div>
+
+        {validRange && (
+          <div className="rounded-md bg-muted/40 border border-border p-3 text-sm space-y-1">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Durată</span>
+              <span className="font-medium">{duration} ore</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Preț/oră</span>
+              <span className="font-medium">{pricePerHour} RON</span>
+            </div>
+            <div className="flex justify-between border-t pt-1 mt-1">
+              <span className="text-muted-foreground">Total</span>
+              <span className="font-semibold">{total} RON</span>
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-1">
+          <Label className="text-xs">Status plată</Label>
+          <select
+            value={manualPaymentStatus}
+            onChange={(e) => setManualPaymentStatus(e.target.value)}
+            className="w-full rounded-md border border-border h-9 px-2 text-sm bg-background"
+          >
+            <option value="neplatit">Neplatit</option>
+            <option value="platit">Plătit</option>
+          </select>
+        </div>
+
+        <div className="space-y-1">
+          <Label className="text-xs">Notă (opțional)</Label>
+          <Input
+            value={manualNote}
+            onChange={(e) => setManualNote(e.target.value)}
+            placeholder="ex: A sunat joi seara"
+          />
+        </div>
+
+        {manualError && (
+          <div className="text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-md px-3 py-2">
+            {manualError}
+          </div>
+        )}
+      </div>
+
+      <DialogFooter className="gap-2">
+        <Button variant="outline" onClick={onClose} disabled={manualSubmitting}>
+          Anulează
+        </Button>
+        <Button onClick={handleManualBooking} disabled={manualSubmitting}>
+          {manualSubmitting ? "Se salvează..." : "Confirmă rezervarea"}
+        </Button>
+      </DialogFooter>
+    </>
   );
 }
