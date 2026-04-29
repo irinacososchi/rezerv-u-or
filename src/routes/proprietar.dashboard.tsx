@@ -63,9 +63,17 @@ function formatTimeRange(start: string, end: string) {
   return `${start.slice(0, 5)}–${end.slice(0, 5)}`;
 }
 
-function formatRON(v: number | null) {
+function formatRON(v: number | null | undefined) {
   if (v == null) return "—";
   return `${Number(v).toLocaleString("ro-RO")} RON`;
+}
+
+function formatDateShort(iso: string) {
+  return new Date(iso).toLocaleDateString("ro-RO", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function totalOf(b: BookingFull) {
+  return b.total_amount ?? b.total ?? null;
 }
 
 function DashboardPage() {
