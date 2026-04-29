@@ -24,6 +24,7 @@ type BookingFull = {
   start_time: string;
   end_time: string;
   total: number | null;
+  total_amount: number | null;
   status: string;
   payment_status: string | null;
   payment_method: string | null;
