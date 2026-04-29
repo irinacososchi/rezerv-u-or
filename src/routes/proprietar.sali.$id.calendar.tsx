@@ -1248,3 +1248,253 @@ function Row({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+function ManualBookingForm({
+  roomId,
+  date,
+  pricingRules,
+  manualStart,
+  manualEnd,
+  manualName,
+  manualPhone,
+  manualEmail,
+  manualNote,
+  manualPaymentStatus,
+  manualError,
+  manualSubmitting,
+  setManualStart,
+  setManualEnd,
+  setManualName,
+  setManualPhone,
+  setManualEmail,
+  setManualNote,
+  setManualPaymentStatus,
+  setManualError,
+  setManualSubmitting,
+  onClose,
+  onChanged,
+}: {
+  roomId: string;
+  date: string;
+  pricingRules: PricingRule[];
+  manualStart: string;
+  manualEnd: string;
+  manualName: string;
+  manualPhone: string;
+  manualEmail: string;
+  manualNote: string;
+  manualPaymentStatus: string;
+  manualError: string | null;
+  manualSubmitting: boolean;
+  setManualStart: (v: string) => void;
+  setManualEnd: (v: string) => void;
+  setManualName: (v: string) => void;
+  setManualPhone: (v: string) => void;
+  setManualEmail: (v: string) => void;
+  setManualNote: (v: string) => void;
+  setManualPaymentStatus: (v: string) => void;
+  setManualError: (v: string | null) => void;
+  setManualSubmitting: (v: boolean) => void;
+  onClose: () => void;
+  onChanged: () => void;
+}) {
+  const startHours = Array.from(
+    { length: HOUR_END - HOUR_START },
+    (_, i) => HOUR_START + i,
+  );
+  const endHours = Array.from(
+    { length: HOUR_END - HOUR_START },
+    (_, i) => HOUR_START + 1 + i,
+  );
+
+  const sH = parseInt(manualStart, 10);
+  const eH = parseInt(manualEnd, 10);
+  const validRange = eH > sH;
+  const duration = validRange ? eH - sH : 0;
+  const pricePerHour = calculatePriceForDate(date, manualStart.slice(0, 2), pricingRules);
+  const total = duration * pricePerHour;
+
+  async function handleManualBooking() {
+    if (!manualName.trim()) {
+      setManualError("Completează numele clientului.");
+      return;
+    }
+    if (!manualPhone.trim()) {
+      setManualError("Completează telefonul.");
+      return;
+    }
+    if (!validRange) {
+      setManualError("Ora de sfârșit trebuie să fie după ora de început.");
+      return;
+    }
+
+    setManualSubmitting(true);
+    setManualError(null);
+
+    const startTime = `${manualStart}:00`;
+    const endTime = `${manualEnd}:00`;
+
+    const { error } = await supabase.from("bookings").insert({
+      room_id: roomId,
+      guest_name: manualName.trim(),
+      guest_email: manualEmail.trim() || `noemail+${Date.now()}@rezervari.intern`,
+      guest_phone: manualPhone.trim(),
+      booking_date: date,
+      start_time: startTime,
+      end_time: endTime,
+      duration_hours: duration,
+      price_per_hour: pricePerHour,
+      subtotal: total,
+      discount_amount: 0,
+      total_amount: total,
+      status: "confirmată",
+      payment_method: "la_sala",
+      payment_status: manualPaymentStatus,
+      renter_notes: manualNote.trim() || null,
+    });
+
+    setManualSubmitting(false);
+
+    if (error) {
+      if (error.code === "23P01") {
+        setManualError("Intervalul se suprapune cu o rezervare existentă.");
+      } else {
+        setManualError("Eroare: " + error.message);
+      }
+      return;
+    }
+
+    toast.success("Rezervare adăugată");
+    onChanged();
+    onClose();
+  }
+
+  return (
+    <>
+      <DialogHeader>
+        <DialogTitle>Rezervare nouă</DialogTitle>
+        <DialogDescription>{formatDateRO(parseISODate(date))}</DialogDescription>
+      </DialogHeader>
+
+      <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label className="text-xs">Ora start</Label>
+            <select
+              value={manualStart}
+              onChange={(e) => setManualStart(e.target.value)}
+              className="w-full rounded-md border border-border h-9 px-2 text-sm bg-background"
+            >
+              {startHours.map((h) => {
+                const v = `${String(h).padStart(2, "0")}:00`;
+                return (
+                  <option key={h} value={v}>
+                    {v}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Ora end</Label>
+            <select
+              value={manualEnd}
+              onChange={(e) => setManualEnd(e.target.value)}
+              className="w-full rounded-md border border-border h-9 px-2 text-sm bg-background"
+            >
+              {endHours.map((h) => {
+                const v = `${String(h).padStart(2, "0")}:00`;
+                return (
+                  <option key={h} value={v}>
+                    {v}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <Label className="text-xs">Nume client *</Label>
+          <Input
+            value={manualName}
+            onChange={(e) => setManualName(e.target.value)}
+            placeholder="ex: Ana Ionescu"
+          />
+        </div>
+
+        <div className="space-y-1">
+          <Label className="text-xs">Telefon *</Label>
+          <Input
+            value={manualPhone}
+            onChange={(e) => setManualPhone(e.target.value)}
+            placeholder="07xxxxxxxx"
+          />
+        </div>
+
+        <div className="space-y-1">
+          <Label className="text-xs">Email (opțional)</Label>
+          <Input
+            type="email"
+            value={manualEmail}
+            onChange={(e) => setManualEmail(e.target.value)}
+            placeholder="client@email.ro"
+          />
+        </div>
+
+        {validRange && (
+          <div className="rounded-md bg-muted/40 border border-border p-3 text-sm space-y-1">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Durată</span>
+              <span className="font-medium">{duration} ore</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Preț/oră</span>
+              <span className="font-medium">{pricePerHour} RON</span>
+            </div>
+            <div className="flex justify-between border-t pt-1 mt-1">
+              <span className="text-muted-foreground">Total</span>
+              <span className="font-semibold">{total} RON</span>
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-1">
+          <Label className="text-xs">Status plată</Label>
+          <select
+            value={manualPaymentStatus}
+            onChange={(e) => setManualPaymentStatus(e.target.value)}
+            className="w-full rounded-md border border-border h-9 px-2 text-sm bg-background"
+          >
+            <option value="neplatit">Neplatit</option>
+            <option value="platit">Plătit</option>
+          </select>
+        </div>
+
+        <div className="space-y-1">
+          <Label className="text-xs">Notă (opțional)</Label>
+          <Input
+            value={manualNote}
+            onChange={(e) => setManualNote(e.target.value)}
+            placeholder="ex: A sunat joi seara"
+          />
+        </div>
+
+        {manualError && (
+          <div className="text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-md px-3 py-2">
+            {manualError}
+          </div>
+        )}
+      </div>
+
+      <DialogFooter className="gap-2">
+        <Button variant="outline" onClick={onClose} disabled={manualSubmitting}>
+          Anulează
+        </Button>
+        <Button onClick={handleManualBooking} disabled={manualSubmitting}>
+          {manualSubmitting ? "Se salvează..." : "Confirmă rezervarea"}
+        </Button>
+      </DialogFooter>
+    </>
+  );
+}
