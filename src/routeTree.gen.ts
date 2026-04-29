@@ -11,12 +11,15 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SaliRouteImport } from './routes/sali'
+import { Route as ProprietarRouteImport } from './routes/proprietar'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ConfirmareRouteImport } from './routes/confirmare'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SaliIndexRouteImport } from './routes/sali.index'
+import { Route as ProprietarIndexRouteImport } from './routes/proprietar.index'
 import { Route as SaliSlugRouteImport } from './routes/sali.$slug'
 import { Route as RezervaSlugRouteImport } from './routes/rezerva.$slug'
+import { Route as ProprietarDashboardRouteImport } from './routes/proprietar.dashboard'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -26,6 +29,11 @@ const SignupRoute = SignupRouteImport.update({
 const SaliRoute = SaliRouteImport.update({
   id: '/sali',
   path: '/sali',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProprietarRoute = ProprietarRouteImport.update({
+  id: '/proprietar',
+  path: '/proprietar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -48,6 +56,11 @@ const SaliIndexRoute = SaliIndexRouteImport.update({
   path: '/',
   getParentRoute: () => SaliRoute,
 } as any)
+const ProprietarIndexRoute = ProprietarIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ProprietarRoute,
+} as any)
 const SaliSlugRoute = SaliSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
@@ -58,15 +71,23 @@ const RezervaSlugRoute = RezervaSlugRouteImport.update({
   path: '/rezerva/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProprietarDashboardRoute = ProprietarDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => ProprietarRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/confirmare': typeof ConfirmareRoute
   '/login': typeof LoginRoute
+  '/proprietar': typeof ProprietarRouteWithChildren
   '/sali': typeof SaliRouteWithChildren
   '/signup': typeof SignupRoute
+  '/proprietar/dashboard': typeof ProprietarDashboardRoute
   '/rezerva/$slug': typeof RezervaSlugRoute
   '/sali/$slug': typeof SaliSlugRoute
+  '/proprietar/': typeof ProprietarIndexRoute
   '/sali/': typeof SaliIndexRoute
 }
 export interface FileRoutesByTo {
@@ -74,8 +95,10 @@ export interface FileRoutesByTo {
   '/confirmare': typeof ConfirmareRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/proprietar/dashboard': typeof ProprietarDashboardRoute
   '/rezerva/$slug': typeof RezervaSlugRoute
   '/sali/$slug': typeof SaliSlugRoute
+  '/proprietar': typeof ProprietarIndexRoute
   '/sali': typeof SaliIndexRoute
 }
 export interface FileRoutesById {
@@ -83,10 +106,13 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/confirmare': typeof ConfirmareRoute
   '/login': typeof LoginRoute
+  '/proprietar': typeof ProprietarRouteWithChildren
   '/sali': typeof SaliRouteWithChildren
   '/signup': typeof SignupRoute
+  '/proprietar/dashboard': typeof ProprietarDashboardRoute
   '/rezerva/$slug': typeof RezervaSlugRoute
   '/sali/$slug': typeof SaliSlugRoute
+  '/proprietar/': typeof ProprietarIndexRoute
   '/sali/': typeof SaliIndexRoute
 }
 export interface FileRouteTypes {
@@ -95,10 +121,13 @@ export interface FileRouteTypes {
     | '/'
     | '/confirmare'
     | '/login'
+    | '/proprietar'
     | '/sali'
     | '/signup'
+    | '/proprietar/dashboard'
     | '/rezerva/$slug'
     | '/sali/$slug'
+    | '/proprietar/'
     | '/sali/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -106,18 +135,23 @@ export interface FileRouteTypes {
     | '/confirmare'
     | '/login'
     | '/signup'
+    | '/proprietar/dashboard'
     | '/rezerva/$slug'
     | '/sali/$slug'
+    | '/proprietar'
     | '/sali'
   id:
     | '__root__'
     | '/'
     | '/confirmare'
     | '/login'
+    | '/proprietar'
     | '/sali'
     | '/signup'
+    | '/proprietar/dashboard'
     | '/rezerva/$slug'
     | '/sali/$slug'
+    | '/proprietar/'
     | '/sali/'
   fileRoutesById: FileRoutesById
 }
@@ -125,6 +159,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConfirmareRoute: typeof ConfirmareRoute
   LoginRoute: typeof LoginRoute
+  ProprietarRoute: typeof ProprietarRouteWithChildren
   SaliRoute: typeof SaliRouteWithChildren
   SignupRoute: typeof SignupRoute
   RezervaSlugRoute: typeof RezervaSlugRoute
@@ -144,6 +179,13 @@ declare module '@tanstack/react-router' {
       path: '/sali'
       fullPath: '/sali'
       preLoaderRoute: typeof SaliRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/proprietar': {
+      id: '/proprietar'
+      path: '/proprietar'
+      fullPath: '/proprietar'
+      preLoaderRoute: typeof ProprietarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -174,6 +216,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SaliIndexRouteImport
       parentRoute: typeof SaliRoute
     }
+    '/proprietar/': {
+      id: '/proprietar/'
+      path: '/'
+      fullPath: '/proprietar/'
+      preLoaderRoute: typeof ProprietarIndexRouteImport
+      parentRoute: typeof ProprietarRoute
+    }
     '/sali/$slug': {
       id: '/sali/$slug'
       path: '/$slug'
@@ -188,8 +237,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RezervaSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/proprietar/dashboard': {
+      id: '/proprietar/dashboard'
+      path: '/dashboard'
+      fullPath: '/proprietar/dashboard'
+      preLoaderRoute: typeof ProprietarDashboardRouteImport
+      parentRoute: typeof ProprietarRoute
+    }
   }
 }
+
+interface ProprietarRouteChildren {
+  ProprietarDashboardRoute: typeof ProprietarDashboardRoute
+  ProprietarIndexRoute: typeof ProprietarIndexRoute
+}
+
+const ProprietarRouteChildren: ProprietarRouteChildren = {
+  ProprietarDashboardRoute: ProprietarDashboardRoute,
+  ProprietarIndexRoute: ProprietarIndexRoute,
+}
+
+const ProprietarRouteWithChildren = ProprietarRoute._addFileChildren(
+  ProprietarRouteChildren,
+)
 
 interface SaliRouteChildren {
   SaliSlugRoute: typeof SaliSlugRoute
@@ -207,6 +277,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConfirmareRoute: ConfirmareRoute,
   LoginRoute: LoginRoute,
+  ProprietarRoute: ProprietarRouteWithChildren,
   SaliRoute: SaliRouteWithChildren,
   SignupRoute: SignupRoute,
   RezervaSlugRoute: RezervaSlugRoute,
