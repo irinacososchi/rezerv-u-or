@@ -760,6 +760,16 @@ function BookingDetails({
           {details.end_time?.slice(0, 5)}
         </DialogDescription>
       </DialogHeader>
+      {recurrenceInfo && (
+        <div className="rounded-md bg-primary/5 border border-primary/20 p-3 text-sm">
+          <div className="font-medium text-primary">
+            Rezervare recurentă · apariția {recurrenceInfo.index} din {recurrenceInfo.total}
+          </div>
+          <div className="text-xs text-muted-foreground mt-1">
+            Săptămânal, același interval
+          </div>
+        </div>
+      )}
       <div className="space-y-2 text-sm">
         <Row label="Chiriaș" value={details.renter_name ?? "—"} />
         <Row label="Email" value={details.renter_email ?? "—"} />
