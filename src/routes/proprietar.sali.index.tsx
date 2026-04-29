@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/proprietar/sali")({
+export const Route = createFileRoute("/proprietar/sali/")({
   component: RoomsPage,
 });
 
