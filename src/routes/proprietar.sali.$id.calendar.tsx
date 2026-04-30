@@ -1347,6 +1347,36 @@ function BlockSlotForm({
             onChange={(e) => setReason(e.target.value)}
           />
         </div>
+        <div className="col-span-2 space-y-2 pt-2 border-t">
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isRecurrent}
+              onChange={(e) => {
+                setIsRecurrent(e.target.checked);
+                setRecurrenceEndDate("");
+              }}
+              className="accent-primary h-4 w-4"
+            />
+            Repetă săptămânal
+          </label>
+          {isRecurrent && (
+            <div className="space-y-1 pl-6">
+              <Label className="text-xs">Până la:</Label>
+              <Input
+                type="date"
+                value={recurrenceEndDate}
+                min={date}
+                onChange={(e) => setRecurrenceEndDate(e.target.value)}
+              />
+              {recurrenceDates.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {recurrenceDates.length} blocări săptămânale
+                </p>
+              )}
+            </div>
+          )}
+        </div>
         {blockError && (
           <div className="col-span-2 text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-md px-3 py-2">
             {blockError}
