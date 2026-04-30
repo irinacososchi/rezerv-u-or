@@ -379,6 +379,40 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
     navigate({ to: "/proprietar/sali" });
   }
 
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    if (!isEdit || !roomId) return;
+    const confirmed = window.confirm(
+      "Ești sigur că vrei să ștergi această sală? Toate rezervările viitoare vor fi anulate. Această acțiune nu poate fi anulată.",
+    );
+    if (!confirmed) return;
+
+    setDeleting(true);
+    const today = new Date().toISOString().split("T")[0];
+
+    const { error: bookingsErr } = await supabase
+      .from("bookings")
+      .update({ status: "anulată" })
+      .eq("room_id", roomId)
+      .gte("booking_date", today)
+      .in("status", ["în așteptare", "confirmată"]);
+    if (bookingsErr) console.error(bookingsErr);
+
+    const { error: roomErr } = await supabase
+      .from("rooms")
+      .update({ is_active: false })
+      .eq("id", roomId);
+
+    setDeleting(false);
+    if (roomErr) {
+      toast.error("Nu am putut șterge sala.");
+      return;
+    }
+    toast.success("Sala a fost ștearsă.");
+    navigate({ to: "/proprietar/sali" });
+  }
+
   if (loading) {
     return (
       <OwnerLayout>
