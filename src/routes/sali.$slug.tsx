@@ -267,10 +267,19 @@ function RoomDetailsPage() {
     return d;
   }, []);
 
+  // Min advance days from room config (default 0 = same-day allowed with 2h buffer)
+  const minAdvanceDays = Math.max(0, room?.advance_booking_days ?? 0);
+  const SAME_DAY_BUFFER_HOURS = 2;
+
+  // Earliest bookable date (start of day)
+  const minBookingDate = useMemo(() => {
+    return addDays(today0, minAdvanceDays);
+  }, [today0, minAdvanceDays]);
+
   function isDayDisabled(date: Date): boolean {
     const dayStart = new Date(date);
     dayStart.setHours(0, 0, 0, 0);
-    if (dayStart < today0) return true;
+    if (dayStart < minBookingDate) return true;
     const iso = formatDateISO(date);
     if (blockedDates.has(iso)) return true;
     const dow = getDayOfWeek(date);
@@ -280,7 +289,7 @@ function RoomDetailsPage() {
 
   // Slots for selected day
   const slots = useMemo(() => {
-    if (!selectedDate) return [] as { hour: number; busy: boolean; price: number }[];
+    if (!selectedDate) return [] as { hour: number; busy: boolean; tooSoon: boolean; price: number }[];
     const dow = getDayOfWeek(selectedDate);
     const sched = scheduleByDay.get(dow);
     if (!sched) return [];
@@ -289,7 +298,22 @@ function RoomDetailsPage() {
     const iso = formatDateISO(selectedDate);
     const dayBookings = bookings.filter((b) => b.booking_date === iso);
 
-    const result: { hour: number; busy: boolean; price: number }[] = [];
+    // Compute earliest allowed slot start time (in hours, on selectedDate)
+    // Only relevant for same-day bookings (minAdvanceDays === 0 and selectedDate === today)
+    const now = new Date();
+    const isToday = isSameDay(selectedDate, now);
+    let earliestStartHour = -Infinity;
+    if (minAdvanceDays === 0 && isToday) {
+      // Slot must start at least SAME_DAY_BUFFER_HOURS after now
+      const cutoffMs = now.getTime() + SAME_DAY_BUFFER_HOURS * 60 * 60 * 1000;
+      const cutoff = new Date(cutoffMs);
+      // Slot starts at top of hour h on selectedDate; require slotStart >= cutoff
+      // earliest h: ceil((cutoff hours + minutes/60))
+      earliestStartHour =
+        cutoff.getHours() + (cutoff.getMinutes() > 0 || cutoff.getSeconds() > 0 ? 1 : 0);
+    }
+
+    const result: { hour: number; busy: boolean; tooSoon: boolean; price: number }[] = [];
     for (let h = open; h < close; h++) {
       const slotStart = h;
       const slotEnd = h + 1;
@@ -298,14 +322,16 @@ function RoomDetailsPage() {
         const be = hourFromTime(b.end_time);
         return slotStart < be && slotEnd > bs;
       });
+      const tooSoon = h < earliestStartHour;
       result.push({
         hour: h,
         busy,
+        tooSoon,
         price: getPriceForSlot(selectedDate, h, pricing),
       });
     }
     return result;
-  }, [selectedDate, scheduleByDay, bookings, pricing]);
+  }, [selectedDate, scheduleByDay, bookings, pricing, minAdvanceDays]);
 
   // Reset slots when date changes
   useEffect(() => {
