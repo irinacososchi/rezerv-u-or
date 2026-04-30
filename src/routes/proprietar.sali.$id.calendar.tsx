@@ -144,6 +144,38 @@ function RoomCalendarPage() {
   >(null);
   const [pickerOpen, setPickerOpen] = useState(false);
 
+  // Room switcher dropdown
+  const [allRooms, setAllRooms] = useState<{ id: string; name: string }[]>([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    async function loadRooms() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("rooms")
+        .select("id, name")
+        .eq("owner_id", user.id)
+        .eq("is_active", true)
+        .order("name");
+      setAllRooms(data ?? []);
+    }
+    loadRooms();
+  }, []);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
   // Cell-click flow: choose → block | booking
   type CellClickMode = "choose" | "block" | "booking";
   const [cellModal, setCellModal] = useState<{
