@@ -379,6 +379,40 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
     navigate({ to: "/proprietar/sali" });
   }
 
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    if (!isEdit || !roomId) return;
+    const confirmed = window.confirm(
+      "Ești sigur că vrei să ștergi această sală? Toate rezervările viitoare vor fi anulate. Această acțiune nu poate fi anulată.",
+    );
+    if (!confirmed) return;
+
+    setDeleting(true);
+    const today = new Date().toISOString().split("T")[0];
+
+    const { error: bookingsErr } = await supabase
+      .from("bookings")
+      .update({ status: "anulată" })
+      .eq("room_id", roomId)
+      .gte("booking_date", today)
+      .in("status", ["în așteptare", "confirmată"]);
+    if (bookingsErr) console.error(bookingsErr);
+
+    const { error: roomErr } = await supabase
+      .from("rooms")
+      .update({ is_active: false })
+      .eq("id", roomId);
+
+    setDeleting(false);
+    if (roomErr) {
+      toast.error("Nu am putut șterge sala.");
+      return;
+    }
+    toast.success("Sala a fost ștearsă.");
+    navigate({ to: "/proprietar/sali" });
+  }
+
   if (loading) {
     return (
       <OwnerLayout>
@@ -805,17 +839,36 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
 
         {/* Sticky save bar */}
         <div className="fixed bottom-0 inset-x-0 md:left-64 bg-card/95 backdrop-blur border-t z-20">
-          <div className="max-w-4xl mx-auto p-4 flex items-center justify-end gap-3">
-            <Button
-              variant="outline"
-              onClick={() => navigate({ to: "/proprietar/sali" })}
-              disabled={saving}
-            >
-              Anulează
-            </Button>
-            <Button onClick={handleSave} disabled={saving}>
-              {saving ? "Se salvează..." : "Salvează sala"}
-            </Button>
+          <div className="max-w-4xl mx-auto p-4 flex items-center justify-between gap-3 flex-wrap">
+            <div>
+              {isEdit && (
+                <Button
+                  variant="outline"
+                  onClick={handleDelete}
+                  disabled={saving || deleting}
+                  className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {deleting ? "Se șterge..." : "Șterge sala"}
+                </Button>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={() => navigate({ to: "/proprietar/sali" })}
+                disabled={saving || deleting}
+              >
+                Anulează
+              </Button>
+              <Button onClick={handleSave} disabled={saving || deleting}>
+                {saving
+                  ? "Se salvează..."
+                  : isEdit
+                    ? "Salvează modificările"
+                    : "Adaugă sala"}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
