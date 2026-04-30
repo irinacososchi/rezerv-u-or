@@ -1453,6 +1453,9 @@ function ManualBookingForm({
   onClose: () => void;
   onChanged: () => void;
 }) {
+  const [isRecurrent, setIsRecurrent] = useState(false);
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
+
   const startHours = Array.from(
     { length: HOUR_END - HOUR_START },
     (_, i) => HOUR_START + i,
@@ -1469,6 +1472,9 @@ function ManualBookingForm({
   const pricePerHour = calculatePriceForDate(date, manualStart.slice(0, 2), pricingRules);
   const total = duration * pricePerHour;
 
+  const recurrenceDates =
+    isRecurrent && recurrenceEndDate ? generateWeeklyDates(date, recurrenceEndDate) : [];
+
   async function handleManualBooking() {
     if (!manualName.trim()) {
       setManualError("Completează numele clientului.");
@@ -1482,6 +1488,10 @@ function ManualBookingForm({
       setManualError("Ora de sfârșit trebuie să fie după ora de început.");
       return;
     }
+    if (isRecurrent && !recurrenceEndDate) {
+      setManualError("Selectează data de sfârșit pentru recurență.");
+      return;
+    }
 
     setManualSubmitting(true);
     setManualError(null);
@@ -1489,37 +1499,91 @@ function ManualBookingForm({
     const startTime = `${manualStart}:00`;
     const endTime = `${manualEnd}:00`;
 
-    const { error } = await supabase.from("bookings").insert({
-      room_id: roomId,
-      guest_name: manualName.trim(),
-      guest_email: manualEmail.trim() || `noemail+${Date.now()}@rezervari.intern`,
-      guest_phone: manualPhone.trim(),
-      booking_date: date,
-      start_time: startTime,
-      end_time: endTime,
-      duration_hours: duration,
-      price_per_hour: pricePerHour,
-      subtotal: total,
-      discount_amount: 0,
-      total_amount: total,
-      status: "confirmată",
-      payment_method: "la_sala",
-      payment_status: manualPaymentStatus,
-      renter_notes: manualNote.trim() || null,
-    });
+    const allDates =
+      isRecurrent && recurrenceEndDate ? generateWeeklyDates(date, recurrenceEndDate) : [date];
+
+    // Create recurrence group if recurrent
+    let recurrenceId: string | null = null;
+    if (isRecurrent && allDates.length > 1) {
+      const dayOfWeek = getDayOfWeek(parseISODate(date));
+      const { data: rec, error: recError } = await supabase
+        .from("recurrences")
+        .insert({
+          room_id: roomId,
+          created_by_email: manualEmail.trim() || `noemail+${Date.now()}@rezervari.intern`,
+          frequency: "saptamanal",
+          day_of_week: dayOfWeek,
+          start_time: startTime,
+          end_time: endTime,
+          first_date: allDates[0],
+          last_date: allDates[allDates.length - 1],
+          total_bookings: allDates.length,
+        })
+        .select()
+        .single();
+
+      if (recError) {
+        setManualError("Eroare la crearea grupului de recurență: " + recError.message);
+        setManualSubmitting(false);
+        return;
+      }
+      recurrenceId = (rec as { id: string }).id;
+    }
+
+    const skipped: string[] = [];
+    const inserted: string[] = [];
+
+    for (const [idx, d] of allDates.entries()) {
+      const { error } = await supabase.from("bookings").insert({
+        room_id: roomId,
+        recurrence_id: recurrenceId,
+        recurrence_index: recurrenceId ? idx + 1 : null,
+        guest_name: manualName.trim(),
+        guest_email: manualEmail.trim() || `noemail+${Date.now()}@rezervari.intern`,
+        guest_phone: manualPhone.trim(),
+        booking_date: d,
+        start_time: startTime,
+        end_time: endTime,
+        duration_hours: duration,
+        price_per_hour: pricePerHour,
+        subtotal: total,
+        discount_amount: 0,
+        total_amount: total,
+        status: "confirmată",
+        payment_method: "la_sala",
+        payment_status: manualPaymentStatus,
+        renter_notes: manualNote.trim() || null,
+      });
+
+      if (error) {
+        if (error.code === "23P01") {
+          skipped.push(formatShortRO(d));
+        } else {
+          setManualError("Eroare: " + error.message);
+          setManualSubmitting(false);
+          return;
+        }
+      } else {
+        inserted.push(d);
+      }
+    }
 
     setManualSubmitting(false);
 
-    if (error) {
-      if (error.code === "23P01") {
-        setManualError("Intervalul se suprapune cu o rezervare existentă.");
-      } else {
-        setManualError("Eroare: " + error.message);
-      }
+    if (inserted.length === 0) {
+      setManualError("Toate intervalele selectate sunt deja ocupate.");
       return;
     }
 
-    toast.success("Rezervare adăugată");
+    if (skipped.length > 0) {
+      toast.warning(
+        `${inserted.length} rezervări create. Sărite (ocupate): ${skipped.join(", ")}`,
+      );
+    } else {
+      toast.success(
+        allDates.length > 1 ? `${inserted.length} rezervări adăugate` : "Rezervare adăugată",
+      );
+    }
     onChanged();
     onClose();
   }
