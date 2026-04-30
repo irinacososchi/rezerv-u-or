@@ -307,21 +307,21 @@ function CereriPage() {
             </select>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <label className="text-xs text-muted-foreground">Interval dată</label>
-            <div className="mt-1 flex gap-1 items-center">
+            <div className="mt-1 flex gap-1 items-center min-w-0">
               <input
                 type="date"
                 value={filterDateFrom}
                 onChange={(e) => setFilterDateFrom(e.target.value)}
-                className="flex-1 rounded-md border border-border px-2 py-1.5 text-sm bg-background"
+                className="flex-1 min-w-0 w-full rounded-md border border-border px-2 py-1.5 text-sm bg-background"
               />
-              <span className="text-muted-foreground text-xs">—</span>
+              <span className="text-muted-foreground text-xs shrink-0">—</span>
               <input
                 type="date"
                 value={filterDateTo}
                 onChange={(e) => setFilterDateTo(e.target.value)}
-                className="flex-1 rounded-md border border-border px-2 py-1.5 text-sm bg-background"
+                className="flex-1 min-w-0 w-full rounded-md border border-border px-2 py-1.5 text-sm bg-background"
               />
             </div>
           </div>
