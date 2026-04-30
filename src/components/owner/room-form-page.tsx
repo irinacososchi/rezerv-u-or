@@ -610,6 +610,9 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
             </CardContent>
           </Card>
 
+          {/* Section 1.5 — Photos */}
+          <RoomPhotosUploader roomId={roomId} />
+
           {/* Section 2 — Amenities */}
           <Card>
             <CardHeader>
