@@ -668,8 +668,13 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
 
           {/* Section 5 — Pricing rules */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Reguli de preț</CardTitle>
+            <CardHeader className="flex flex-row items-start justify-between gap-3">
+              <div className="space-y-1">
+                <CardTitle>Preț</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Introduceți tarifele (ex: Tarif de weekend/seara/zi).
+                </p>
+              </div>
               <Button type="button" size="sm" onClick={addPricingRule}>
                 <Plus className="h-4 w-4" /> Adaugă regulă
               </Button>
@@ -686,7 +691,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
                     className="rounded-lg border p-4 space-y-3 bg-muted/20"
                   >
                     <div className="grid md:grid-cols-3 gap-3">
-                      <Field label="Label (ex: Tarif zi)">
+                      <Field label="Tip Tarif">
                         <Input
                           value={rule.label}
                           onChange={(e) =>
