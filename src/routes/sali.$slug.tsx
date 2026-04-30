@@ -625,6 +625,11 @@ function RoomDetailsPage() {
                         Selectează ore consecutive pentru un interval continuu.
                       </p>
                     )}
+                    {summary.contiguous && summary.total === 0 && pricing.length === 0 && (
+                      <p className="mt-2 text-xs text-amber-600">
+                        Sala nu are tarife configurate. Proprietarul trebuie să adauge reguli de preț.
+                      </p>
+                    )}
                   </div>
                 )}
 
