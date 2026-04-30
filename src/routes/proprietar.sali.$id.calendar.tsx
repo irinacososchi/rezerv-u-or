@@ -126,6 +126,22 @@ function parseHM(t: string): number {
   return h + (m || 0) / 60;
 }
 
+function generateWeeklyDates(startDateStr: string, endDateStr: string): string[] {
+  const dates: string[] = [];
+  const end = parseISODate(endDateStr);
+  let current = parseISODate(startDateStr);
+  while (current <= end) {
+    dates.push(formatDateISO(current));
+    current = addDays(current, 7);
+  }
+  return dates;
+}
+
+function formatShortRO(dateISO: string): string {
+  const d = parseISODate(dateISO);
+  return `${d.getDate()} ${MONTH_NAMES_RO[d.getMonth()].slice(0, 3)}`;
+}
+
 function RoomCalendarPage() {
   const { id } = useParams({ from: "/proprietar/sali/$id/calendar" });
   const navigate = useNavigate();
