@@ -465,7 +465,8 @@ function RoomCalendarPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    if (view === "week") setWeekStart((w) => addDays(w, -7));
+                    if (view === "day") setSelectedDay((d) => addDays(d, -1));
+                    else if (view === "week") setWeekStart((w) => addDays(w, -7));
                     else
                       setMonthAnchor(
                         (m) => new Date(m.getFullYear(), m.getMonth() - 1, 1),
@@ -473,7 +474,9 @@ function RoomCalendarPage() {
                   }}
                 >
                   <ChevronLeft className="h-4 w-4 mr-1" />
-                  {view === "week" ? "Săptămâna trecută" : "Luna trecută"}
+                  <span className="hidden sm:inline">
+                    {view === "day" ? "Ziua trecută" : view === "week" ? "Săptămâna trecută" : "Luna trecută"}
+                  </span>
                 </Button>
 
                 <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
