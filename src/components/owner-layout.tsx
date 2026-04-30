@@ -12,6 +12,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
+import logoUrl from "@/assets/rzrv-logo.png";
 
 const navItems = [
   { to: "/proprietar/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -107,8 +108,8 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
           }`}
         >
           {!collapsed && (
-            <div className="min-w-0">
-              <p className="text-base font-semibold truncate">Rezervări Săli</p>
+            <div className="min-w-0 flex items-center gap-2">
+              <img src={logoUrl} alt="RZRV" className="h-7 w-auto shrink-0" />
               <p className="text-sm text-muted-foreground truncate">{ownerName}</p>
             </div>
           )}
@@ -167,7 +168,7 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
       <div className={`flex-1 ${contentMargin} flex flex-col min-h-screen transition-[margin] duration-200`}>
         {/* Mobile header */}
         <header className="md:hidden flex items-center justify-between px-4 py-3 border-b bg-card sticky top-0 z-10">
-          <p className="font-semibold">Rezervări Săli</p>
+          <img src={logoUrl} alt="RZRV" className="h-7 w-auto" />
           <button
             onClick={handleLogout}
             aria-label="Deconectare"
