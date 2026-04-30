@@ -90,8 +90,19 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const isActive = (to: string) =>
-    location.pathname === to || location.pathname.startsWith(to + "/");
+  const isActive = (to: string) => {
+    if (to === "/proprietar/calendar") {
+      return location.pathname.includes("/calendar");
+    }
+    if (to === "/proprietar/sali") {
+      // Don't match /proprietar/sali/$id/calendar as "Sălile mele"
+      return (
+        location.pathname === to ||
+        (location.pathname.startsWith(to + "/") && !location.pathname.includes("/calendar"))
+      );
+    }
+    return location.pathname === to || location.pathname.startsWith(to + "/");
+  };
 
   const sidebarWidth = collapsed ? "md:w-16" : "md:w-64";
   const contentMargin = collapsed ? "md:ml-16" : "md:ml-64";
