@@ -362,11 +362,50 @@ function RoomCalendarPage() {
         ) : (
           <>
             <div className="flex flex-wrap items-center gap-3 justify-between">
-              <div>
-                <h1 className="text-xl md:text-2xl font-semibold">{room.name}</h1>
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setDropdownOpen((v) => !v)}
+                  className="flex items-center gap-2 group"
+                >
+                  <h1 className="text-xl md:text-2xl font-semibold group-hover:text-primary transition">
+                    {room.name}
+                  </h1>
+                  {allRooms.length > 1 && (
+                    <ChevronDown
+                      className={`h-5 w-5 text-muted-foreground transition ${
+                        dropdownOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  )}
+                </button>
                 <p className="text-sm text-muted-foreground">
                   Calendar {view === "week" ? "săptămânal" : "lunar"}
                 </p>
+
+                {dropdownOpen && allRooms.length > 1 && (
+                  <div className="absolute left-0 top-full mt-2 w-64 bg-card border rounded-xl shadow-lg z-20 overflow-hidden">
+                    {allRooms.map((r) => (
+                      <a
+                        key={r.id}
+                        href={`/proprietar/sali/${r.id}/calendar`}
+                        className={`flex items-center gap-2 px-4 py-2.5 text-sm transition ${
+                          r.id === id
+                            ? "bg-primary/10 text-primary font-medium"
+                            : "text-foreground hover:bg-muted/40 hover:text-primary"
+                        }`}
+                        onClick={() => setDropdownOpen(false)}
+                      >
+                        {r.id === id ? (
+                          <Check className="h-4 w-4 shrink-0" />
+                        ) : (
+                          <span className="h-4 w-4 shrink-0" />
+                        )}
+                        <span className="truncate">{r.name}</span>
+                      </a>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="flex items-center gap-2 flex-wrap">
                 <Button
