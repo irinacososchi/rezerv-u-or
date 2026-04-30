@@ -179,8 +179,8 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
         min_booking_hours:
           r.min_booking_hours != null ? String(r.min_booking_hours) : "1",
         free_cancellation_hours:
-          r.free_cancellation_hours != null
-            ? String(r.free_cancellation_hours)
+          r.cancellation_hours != null
+            ? String(r.cancellation_hours)
             : "24",
         rules_and_notes: (r.rules_and_notes as string) ?? "",
         is_active: r.is_active !== false,
@@ -320,7 +320,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
       booking_type: form.booking_type,
       advance_booking_days: Number(form.advance_booking_days) || 30,
       min_booking_hours: Number(form.min_booking_hours) || 1,
-      free_cancellation_hours: Number(form.free_cancellation_hours) || 24,
+      cancellation_hours: Number(form.free_cancellation_hours) || 24,
       rules_and_notes: form.rules_and_notes || null,
       is_active: form.is_active,
     };
