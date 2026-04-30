@@ -252,7 +252,10 @@ function RoomCalendarPage() {
   const loadEntries = useCallback(async () => {
     let startISO: string;
     let endISO: string;
-    if (view === "week") {
+    if (view === "day") {
+      startISO = formatDateISO(selectedDay);
+      endISO = startISO;
+    } else if (view === "week") {
       startISO = formatDateISO(weekStart);
       endISO = formatDateISO(addDays(weekStart, 6));
     } else {
@@ -272,7 +275,7 @@ function RoomCalendarPage() {
       return;
     }
     setEntries((data ?? []) as Entry[]);
-  }, [id, view, weekStart, monthAnchor]);
+  }, [id, view, weekStart, monthAnchor, selectedDay]);
 
   useEffect(() => {
     let cancelled = false;
