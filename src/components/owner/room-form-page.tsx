@@ -325,6 +325,15 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
       toast.error("URL-ul ales este deja folosit. Te rugăm să alegi altul.");
       return;
     }
+    const validPricing = pricing.filter(
+      (r) => r.is_active && Number(r.price_per_hour) > 0 && r.days_of_week.length > 0,
+    );
+    if (validPricing.length === 0) {
+      toast.error(
+        "Adaugă cel puțin un tarif activ, cu preț mai mare ca 0 și cel puțin o zi selectată.",
+      );
+      return;
+    }
 
     setSaving(true);
     const {
