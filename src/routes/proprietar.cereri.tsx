@@ -5,6 +5,9 @@ import { OwnerLayout } from "@/components/owner-layout";
 import { supabase } from "@/integrations/supabase/external-client";
 
 export const Route = createFileRoute("/proprietar/cereri")({
+  validateSearch: (s: Record<string, unknown>) => ({
+    q: typeof s.q === "string" ? s.q : "",
+  }),
   head: () => ({
     meta: [
       { title: "Cereri rezervări — Proprietar" },
