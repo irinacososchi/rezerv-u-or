@@ -224,11 +224,15 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
       setSchedule(
         DAYS.map((d) => {
           const s = byDay.get(d);
+          const open = toHHMM(s?.open_time);
+          const close = toHHMM(s?.close_time);
+          // Treat legacy "00:00" placeholders (saved when day was unavailable) as missing
+          const isPlaceholder = open === "00:00" && close === "00:00";
           return {
             day_of_week: d,
             is_available: s?.is_available ?? false,
-            open_time: toHHMM(s?.open_time) || "09:00",
-            close_time: toHHMM(s?.close_time) || "21:00",
+            open_time: !open || isPlaceholder ? "09:00" : open,
+            close_time: !close || isPlaceholder ? "21:00" : close,
           };
         }),
       );
@@ -399,8 +403,10 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
       room_id: savedId,
       day_of_week: s.day_of_week,
       is_available: s.is_available,
-      open_time: s.is_available ? `${s.open_time}:00` : "00:00:00",
-      close_time: s.is_available ? `${s.close_time}:00` : "00:00:00",
+      // Always persist the user's chosen times so reopening the form preserves them
+      // even when a day is marked as unavailable.
+      open_time: `${s.open_time}:00`,
+      close_time: `${s.close_time}:00`,
     }));
     const { error: schedErr } = await supabase
       .from("weekly_schedule")

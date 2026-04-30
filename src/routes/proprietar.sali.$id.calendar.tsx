@@ -142,6 +142,19 @@ function formatShortRO(dateISO: string): string {
   return `${d.getDate()} ${MONTH_NAMES_RO[d.getMonth()].slice(0, 3)}`;
 }
 
+// Returns true if a slot (date + start time HH:MM) is in the past relative to now.
+function isSlotInPast(dateISO: string, startHHMM: string): boolean {
+  const d = parseISODate(dateISO);
+  const [h, m] = startHHMM.split(":").map((n) => parseInt(n, 10));
+  d.setHours(h, m || 0, 0, 0);
+  return d.getTime() < Date.now();
+}
+
+// Returns dates (ISO) from `dates` whose start time is in the past.
+function pastDates(dates: string[], startHHMM: string): string[] {
+  return dates.filter((d) => isSlotInPast(d, startHHMM));
+}
+
 function RoomCalendarPage() {
   const { id } = useParams({ from: "/proprietar/sali/$id/calendar" });
   const navigate = useNavigate();
@@ -1251,6 +1264,17 @@ function BlockSlotForm({
     const allDates =
       isRecurrent && recurrenceEndDate ? generateWeeklyDates(date, recurrenceEndDate) : [date];
 
+    // Warn if any of the slots are in the past
+    const past = pastDates(allDates, start);
+    if (past.length > 0) {
+      const list = past.slice(0, 5).map(formatShortRO).join(", ");
+      const more = past.length > 5 ? ` și încă ${past.length - 5}` : "";
+      const ok = window.confirm(
+        `Atenție: ${past.length} ${past.length === 1 ? "interval este" : "intervale sunt"} în trecut (${list}${more}).\n\nVrei să continui și să le blochezi?`,
+      );
+      if (!ok) return;
+    }
+
     setBusy(true);
     const skipped: string[] = [];
     const inserted: string[] = [];
@@ -1495,14 +1519,25 @@ function ManualBookingForm({
       return;
     }
 
-    setManualSubmitting(true);
-    setManualError(null);
-
     const startTime = `${manualStart}:00`;
     const endTime = `${manualEnd}:00`;
 
     const allDates =
       isRecurrent && recurrenceEndDate ? generateWeeklyDates(date, recurrenceEndDate) : [date];
+
+    // Warn if any of the slots are in the past
+    const past = pastDates(allDates, manualStart);
+    if (past.length > 0) {
+      const list = past.slice(0, 5).map(formatShortRO).join(", ");
+      const more = past.length > 5 ? ` și încă ${past.length - 5}` : "";
+      const ok = window.confirm(
+        `Atenție: ${past.length} ${past.length === 1 ? "interval este" : "intervale sunt"} în trecut (${list}${more}).\n\nVrei să continui și să adaugi rezervarea în trecut?`,
+      );
+      if (!ok) return;
+    }
+
+    setManualSubmitting(true);
+    setManualError(null);
 
     // Create recurrence group if recurrent
     let recurrenceId: string | null = null;
