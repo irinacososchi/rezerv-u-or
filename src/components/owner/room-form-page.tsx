@@ -179,8 +179,8 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
         min_booking_hours:
           r.min_booking_hours != null ? String(r.min_booking_hours) : "1",
         free_cancellation_hours:
-          r.free_cancellation_hours != null
-            ? String(r.free_cancellation_hours)
+          r.cancellation_hours != null
+            ? String(r.cancellation_hours)
             : "24",
         rules_and_notes: (r.rules_and_notes as string) ?? "",
         is_active: r.is_active !== false,
