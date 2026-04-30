@@ -489,16 +489,65 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
                   maxLength={120}
                 />
               </Field>
-              <Field label="Slug (URL) *">
-                <Input
-                  value={form.slug}
-                  onChange={(e) => {
-                    setSlugTouched(true);
-                    update("slug", slugify(e.target.value));
-                  }}
-                  maxLength={80}
-                />
-              </Field>
+              <div>
+                <Label>URL sală *</Label>
+                <p className="text-xs text-muted-foreground mb-2 mt-1">
+                  Acesta este linkul pe care îl vei trimite clienților tăi.
+                </p>
+
+                <div className="flex items-center rounded-lg border border-border overflow-hidden focus-within:ring-2 focus-within:ring-primary/30">
+                  <div className="flex items-center gap-1 bg-muted/60 px-3 py-2.5 text-sm text-muted-foreground border-r border-border whitespace-nowrap select-none">
+                    rzrv.ro/sali/
+                  </div>
+
+                  <input
+                    value={form.slug}
+                    onChange={(e) => {
+                      setSlugTouched(true);
+                      const val = e.target.value
+                        .toLowerCase()
+                        .replace(/[^a-z0-9-]/g, "")
+                        .replace(/--+/g, "-");
+                      update("slug", val);
+                      setSlugAvailable(null);
+                    }}
+                    onBlur={() => checkSlugAvailability(form.slug)}
+                    placeholder="studio-dans-floreasca"
+                    className="flex-1 bg-background px-3 py-2.5 text-sm outline-none"
+                    maxLength={80}
+                  />
+
+                  <div className="px-3">
+                    {checkingSlug && (
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                    {!checkingSlug && slugAvailable === true && form.slug.length >= 3 && (
+                      <Check className="h-4 w-4 text-primary" />
+                    )}
+                    {!checkingSlug && slugAvailable === false && (
+                      <X className="h-4 w-4 text-destructive" />
+                    )}
+                  </div>
+                </div>
+
+                {slugAvailable === false && (
+                  <p className="mt-1.5 text-xs text-destructive flex items-center gap-1">
+                    <X className="h-3 w-3" />
+                    Acest URL este deja folosit. Încearcă altul.
+                  </p>
+                )}
+                {slugAvailable === true && form.slug.length >= 3 && (
+                  <p className="mt-1.5 text-xs text-primary flex items-center gap-1">
+                    <Check className="h-3 w-3" />
+                    URL disponibil — rzrv.ro/sali/{form.slug}
+                  </p>
+                )}
+                {!form.slug && (
+                  <p className="mt-1.5 text-xs text-muted-foreground">
+                    Se completează automat din numele sălii.
+                  </p>
+                )}
+              </div>
               <Field label="Descriere">
                 <Textarea
                   value={form.description}
