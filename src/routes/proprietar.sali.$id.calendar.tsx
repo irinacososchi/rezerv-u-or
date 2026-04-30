@@ -1218,6 +1218,8 @@ function BlockSlotForm({
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [blockError, setBlockError] = useState<string | null>(null);
+  const [isRecurrent, setIsRecurrent] = useState(false);
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
 
   const startHours = Array.from(
     { length: HOUR_END - HOUR_START },
@@ -1228,31 +1230,67 @@ function BlockSlotForm({
     (_, i) => HOUR_START + 1 + i,
   ).filter((h) => h <= HOUR_END);
 
+  const recurrenceDates =
+    isRecurrent && recurrenceEndDate
+      ? generateWeeklyDates(date, recurrenceEndDate)
+      : [];
+
   async function submit() {
     setBlockError(null);
     if (parseInt(end, 10) <= parseInt(start, 10)) {
       setBlockError("Ora de sfârșit trebuie să fie după ora de început.");
       return;
     }
-    setBusy(true);
-    const { error } = await supabase.rpc("block_slot", {
-      p_room_id: roomId,
-      p_date: date,
-      p_start_time: start,
-      p_end_time: end,
-      p_reason: reason || "Rezervat de proprietar",
-    });
-    setBusy(false);
-    if (error) {
-      console.error("block_slot error:", error);
-      if (error.code === "23P01") {
-        setBlockError("Acest interval se suprapune cu o rezervare existentă.");
-      } else {
-        setBlockError(error.message || "Eroare la blocare.");
-      }
+    if (isRecurrent && !recurrenceEndDate) {
+      setBlockError("Selectează data de sfârșit pentru recurență.");
       return;
     }
-    toast.success("Interval blocat");
+
+    const allDates =
+      isRecurrent && recurrenceEndDate ? generateWeeklyDates(date, recurrenceEndDate) : [date];
+
+    setBusy(true);
+    const skipped: string[] = [];
+    const inserted: string[] = [];
+
+    for (const d of allDates) {
+      const { error } = await supabase.rpc("block_slot", {
+        p_room_id: roomId,
+        p_date: d,
+        p_start_time: start,
+        p_end_time: end,
+        p_reason: reason || "Rezervat de proprietar",
+      });
+      if (error) {
+        if (error.code === "23P01") {
+          skipped.push(formatShortRO(d));
+        } else {
+          console.error("block_slot error:", error);
+          setBusy(false);
+          setBlockError(error.message || "Eroare la blocare.");
+          return;
+        }
+      } else {
+        inserted.push(d);
+      }
+    }
+
+    setBusy(false);
+
+    if (inserted.length === 0) {
+      setBlockError("Toate intervalele sunt deja ocupate.");
+      return;
+    }
+
+    if (skipped.length > 0) {
+      toast.warning(
+        `${inserted.length} blocări create. Sărite (ocupate): ${skipped.join(", ")}`,
+      );
+    } else {
+      toast.success(
+        allDates.length > 1 ? `${inserted.length} intervale blocate` : "Interval blocat",
+      );
+    }
     onChanged();
     onClose();
   }
