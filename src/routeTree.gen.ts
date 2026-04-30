@@ -20,6 +20,7 @@ import { Route as SaliIndexRouteImport } from './routes/sali.index'
 import { Route as ProprietarIndexRouteImport } from './routes/proprietar.index'
 import { Route as SaliSlugRouteImport } from './routes/sali.$slug'
 import { Route as RezervaSlugRouteImport } from './routes/rezerva.$slug'
+import { Route as ProprietarVouchereRouteImport } from './routes/proprietar.vouchere'
 import { Route as ProprietarSaliRouteImport } from './routes/proprietar.sali'
 import { Route as ProprietarDashboardRouteImport } from './routes/proprietar.dashboard'
 import { Route as ProprietarContRouteImport } from './routes/proprietar.cont'
@@ -85,6 +86,11 @@ const RezervaSlugRoute = RezervaSlugRouteImport.update({
   path: '/rezerva/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProprietarVouchereRoute = ProprietarVouchereRouteImport.update({
+  id: '/vouchere',
+  path: '/vouchere',
+  getParentRoute: () => ProprietarRoute,
+} as any)
 const ProprietarSaliRoute = ProprietarSaliRouteImport.update({
   id: '/sali',
   path: '/sali',
@@ -144,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/proprietar/cont': typeof ProprietarContRoute
   '/proprietar/dashboard': typeof ProprietarDashboardRoute
   '/proprietar/sali': typeof ProprietarSaliRouteWithChildren
+  '/proprietar/vouchere': typeof ProprietarVouchereRoute
   '/rezerva/$slug': typeof RezervaSlugRoute
   '/sali/$slug': typeof SaliSlugRoute
   '/proprietar/': typeof ProprietarIndexRoute
@@ -163,6 +170,7 @@ export interface FileRoutesByTo {
   '/proprietar/calendar': typeof ProprietarCalendarRoute
   '/proprietar/cont': typeof ProprietarContRoute
   '/proprietar/dashboard': typeof ProprietarDashboardRoute
+  '/proprietar/vouchere': typeof ProprietarVouchereRoute
   '/rezerva/$slug': typeof RezervaSlugRoute
   '/sali/$slug': typeof SaliSlugRoute
   '/proprietar': typeof ProprietarIndexRoute
@@ -186,6 +194,7 @@ export interface FileRoutesById {
   '/proprietar/cont': typeof ProprietarContRoute
   '/proprietar/dashboard': typeof ProprietarDashboardRoute
   '/proprietar/sali': typeof ProprietarSaliRouteWithChildren
+  '/proprietar/vouchere': typeof ProprietarVouchereRoute
   '/rezerva/$slug': typeof RezervaSlugRoute
   '/sali/$slug': typeof SaliSlugRoute
   '/proprietar/': typeof ProprietarIndexRoute
@@ -210,6 +219,7 @@ export interface FileRouteTypes {
     | '/proprietar/cont'
     | '/proprietar/dashboard'
     | '/proprietar/sali'
+    | '/proprietar/vouchere'
     | '/rezerva/$slug'
     | '/sali/$slug'
     | '/proprietar/'
@@ -229,6 +239,7 @@ export interface FileRouteTypes {
     | '/proprietar/calendar'
     | '/proprietar/cont'
     | '/proprietar/dashboard'
+    | '/proprietar/vouchere'
     | '/rezerva/$slug'
     | '/sali/$slug'
     | '/proprietar'
@@ -251,6 +262,7 @@ export interface FileRouteTypes {
     | '/proprietar/cont'
     | '/proprietar/dashboard'
     | '/proprietar/sali'
+    | '/proprietar/vouchere'
     | '/rezerva/$slug'
     | '/sali/$slug'
     | '/proprietar/'
@@ -352,6 +364,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RezervaSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/proprietar/vouchere': {
+      id: '/proprietar/vouchere'
+      path: '/vouchere'
+      fullPath: '/proprietar/vouchere'
+      preLoaderRoute: typeof ProprietarVouchereRouteImport
+      parentRoute: typeof ProprietarRoute
+    }
     '/proprietar/sali': {
       id: '/proprietar/sali'
       path: '/sali'
@@ -452,6 +471,7 @@ interface ProprietarRouteChildren {
   ProprietarContRoute: typeof ProprietarContRoute
   ProprietarDashboardRoute: typeof ProprietarDashboardRoute
   ProprietarSaliRoute: typeof ProprietarSaliRouteWithChildren
+  ProprietarVouchereRoute: typeof ProprietarVouchereRoute
   ProprietarIndexRoute: typeof ProprietarIndexRoute
 }
 
@@ -460,6 +480,7 @@ const ProprietarRouteChildren: ProprietarRouteChildren = {
   ProprietarContRoute: ProprietarContRoute,
   ProprietarDashboardRoute: ProprietarDashboardRoute,
   ProprietarSaliRoute: ProprietarSaliRouteWithChildren,
+  ProprietarVouchereRoute: ProprietarVouchereRoute,
   ProprietarIndexRoute: ProprietarIndexRoute,
 }
 
