@@ -142,6 +142,19 @@ function formatShortRO(dateISO: string): string {
   return `${d.getDate()} ${MONTH_NAMES_RO[d.getMonth()].slice(0, 3)}`;
 }
 
+// Returns true if a slot (date + start time HH:MM) is in the past relative to now.
+function isSlotInPast(dateISO: string, startHHMM: string): boolean {
+  const d = parseISODate(dateISO);
+  const [h, m] = startHHMM.split(":").map((n) => parseInt(n, 10));
+  d.setHours(h, m || 0, 0, 0);
+  return d.getTime() < Date.now();
+}
+
+// Returns dates (ISO) from `dates` whose start time is in the past.
+function pastDates(dates: string[], startHHMM: string): string[] {
+  return dates.filter((d) => isSlotInPast(d, startHHMM));
+}
+
 function RoomCalendarPage() {
   const { id } = useParams({ from: "/proprietar/sali/$id/calendar" });
   const navigate = useNavigate();
