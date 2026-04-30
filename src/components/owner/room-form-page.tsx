@@ -224,11 +224,15 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
       setSchedule(
         DAYS.map((d) => {
           const s = byDay.get(d);
+          const open = toHHMM(s?.open_time);
+          const close = toHHMM(s?.close_time);
+          // Treat legacy "00:00" placeholders (saved when day was unavailable) as missing
+          const isPlaceholder = open === "00:00" && close === "00:00";
           return {
             day_of_week: d,
             is_available: s?.is_available ?? false,
-            open_time: toHHMM(s?.open_time) || "09:00",
-            close_time: toHHMM(s?.close_time) || "21:00",
+            open_time: !open || isPlaceholder ? "09:00" : open,
+            close_time: !close || isPlaceholder ? "21:00" : close,
           };
         }),
       );
