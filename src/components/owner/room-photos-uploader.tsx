@@ -193,8 +193,9 @@ export function RoomPhotosUploader({ roomId }: Props) {
   async function removePhoto(photo: RoomPhoto) {
     if (!window.confirm("Sigur ștergi această poză?")) return;
     setBusyId(photo.id);
-    if (photo.storage_path) {
-      await supabase.storage.from(BUCKET).remove([photo.storage_path]);
+    const path = extractStoragePath(photo.storage_url);
+    if (path) {
+      await supabase.storage.from(BUCKET).remove([path]);
     }
     const { error } = await supabase.from("room_photos").delete().eq("id", photo.id);
 
