@@ -91,7 +91,7 @@ const EMPTY_FORM: FormState = {
   has_air_conditioning: false,
   extra_equipment: "",
   booking_type: "instant",
-  advance_booking_days: "30",
+  advance_booking_days: "0",
   min_booking_hours: "1",
   free_cancellation_hours: "24",
   rules_and_notes: "",
@@ -365,7 +365,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
       has_air_conditioning: form.has_air_conditioning,
       extra_equipment: form.extra_equipment || null,
       booking_type: form.booking_type,
-      advance_booking_days: Number(form.advance_booking_days) || 30,
+      advance_booking_days: Math.max(0, Number(form.advance_booking_days) || 0),
       min_booking_hours: Number(form.min_booking_hours) || 1,
       cancellation_hours: Number(form.free_cancellation_hours) || 24,
       rules_and_notes: form.rules_and_notes || null,
@@ -721,13 +721,17 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
                 </div>
               </Field>
               <div className="grid md:grid-cols-3 gap-4">
-                <Field label="Zile rezervare în avans">
+                <Field label="Zile minime în avans">
                   <Input
                     type="number"
-                    min="1"
+                    min="0"
+                    step="1"
                     value={form.advance_booking_days}
                     onChange={(e) => update("advance_booking_days", e.target.value)}
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    0 = rezervare în aceeași zi (cu minim 2h înainte de start). 1+ = rezervarea trebuie făcută cu cel puțin atâtea zile în avans.
+                  </p>
                 </Field>
                 <Field label="Ore minime rezervare">
                   <Input
