@@ -433,7 +433,7 @@ function RoomCalendarPage() {
                   )}
                 </button>
                 <p className="text-sm text-muted-foreground">
-                  Calendar {view === "week" ? "săptămânal" : "lunar"}
+                  Calendar {view === "day" ? "zilnic" : view === "week" ? "săptămânal" : "lunar"}
                 </p>
 
                 {dropdownOpen && allRooms.length > 1 && (
