@@ -12,6 +12,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
+import logoUrl from "@/assets/rzrv-logo.png";
 
 const navItems = [
   { to: "/proprietar/dashboard", icon: LayoutDashboard, label: "Dashboard" },
