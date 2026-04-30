@@ -194,7 +194,11 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 pb-20 md:pb-0">{children}</main>
+        <main className="flex-1 pb-20 md:pb-0 min-w-0 overflow-x-hidden">
+          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            {children}
+          </div>
+        </main>
 
         {/* Mobile bottom nav */}
         <nav className="md:hidden fixed bottom-0 inset-x-0 bg-card border-t grid grid-cols-5 z-10">
