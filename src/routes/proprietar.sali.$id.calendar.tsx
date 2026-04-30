@@ -545,14 +545,17 @@ function RoomCalendarPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    if (view === "week") setWeekStart((w) => addDays(w, 7));
+                    if (view === "day") setSelectedDay((d) => addDays(d, 1));
+                    else if (view === "week") setWeekStart((w) => addDays(w, 7));
                     else
                       setMonthAnchor(
                         (m) => new Date(m.getFullYear(), m.getMonth() + 1, 1),
                       );
                   }}
                 >
-                  {view === "week" ? "Săptămâna viitoare" : "Luna viitoare"}
+                  <span className="hidden sm:inline">
+                    {view === "day" ? "Ziua viitoare" : view === "week" ? "Săptămâna viitoare" : "Luna viitoare"}
+                  </span>
                   <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
                 <Button
@@ -560,6 +563,8 @@ function RoomCalendarPage() {
                   size="sm"
                   onClick={() => {
                     const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    setSelectedDay(today);
                     setWeekStart(startOfWeek(today));
                     setMonthAnchor(startOfMonth(today));
                   }}
@@ -569,7 +574,8 @@ function RoomCalendarPage() {
               </div>
             </div>
 
-            <div className="inline-flex rounded-md border bg-card p-1 text-sm">
+            {/* Desktop: Săptămână / Lună */}
+            <div className="hidden lg:inline-flex rounded-md border bg-card p-1 text-sm">
               <button
                 className={
                   "px-3 py-1 rounded " +
@@ -592,6 +598,24 @@ function RoomCalendarPage() {
               >
                 Lună
               </button>
+            </div>
+
+            {/* Mobile: Zi / Săptămână / Lună */}
+            <div className="inline-flex lg:hidden rounded-md border bg-card p-1 text-sm">
+              {(["day", "week", "month"] as const).map((v) => (
+                <button
+                  key={v}
+                  className={
+                    "px-3 py-1 rounded " +
+                    (view === v
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-muted")
+                  }
+                  onClick={() => setView(v)}
+                >
+                  {v === "day" ? "Zi" : v === "week" ? "Săpt." : "Lună"}
+                </button>
+              ))}
             </div>
 
             {view === "week" ? (
