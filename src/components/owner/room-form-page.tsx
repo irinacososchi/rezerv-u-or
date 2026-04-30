@@ -20,7 +20,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Trash2, ArrowLeft, Loader2, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { DAY_NAMES_RO } from "@/lib/date-utils";
-import { RoomPhotosUploader } from "@/components/owner/room-photos-uploader";
+import {
+  RoomPhotosUploader,
+  uploadPendingPhotos,
+  type PendingPhoto,
+} from "@/components/owner/room-photos-uploader";
 
 const DAYS = [1, 2, 3, 4, 5, 6, 7] as const;
 
