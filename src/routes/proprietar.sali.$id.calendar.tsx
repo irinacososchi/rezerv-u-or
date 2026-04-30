@@ -1011,7 +1011,9 @@ function BookingDetails({
       )}
       <div className="space-y-2 text-sm">
         <Row label="Chiriaș" value={details.renter_name ?? "—"} />
-        <Row label="Email" value={details.renter_email ?? "—"} />
+        {details.renter_email && !details.renter_email.startsWith("noemail+") && (
+          <Row label="Email" value={details.renter_email} />
+        )}
         <Row label="Telefon" value={details.renter_phone ?? "—"} />
         <Row label="Referință" value={details.reference ?? details.id.slice(0, 8)} />
         <Row label="Status" value={details.status ?? "—"} />
