@@ -310,23 +310,30 @@ function DashboardPage() {
               {/* Mobile cards */}
               <div className="md:hidden space-y-3">
                 {recentList.map((b) => (
-                  <Card key={b.id}>
-                    <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between space-y-0">
-                      <div>
-                        <CardTitle className="text-sm">{b.room_name}</CardTitle>
-                        <p className="text-xs text-muted-foreground mt-1">{b.renter_name ?? b.renter_email ?? "—"}</p>
-                      </div>
-                      <span className="font-mono text-[10px] text-muted-foreground">{b.reference ?? ""}</span>
-                    </CardHeader>
-                    <CardContent className="p-4 pt-2 space-y-2">
-                      <p className="text-sm">{formatDateShort(b.booking_date)} · {formatTimeRange(b.start_time, b.end_time)}</p>
-                      <p className="text-sm font-semibold text-primary">{formatRON(totalOf(b))}</p>
-                      <div className="flex gap-2 flex-wrap">
-                        <StatusBadge status={b.status} />
-                        <PaymentBadge status={b.payment_status} />
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <Link
+                    key={b.id}
+                    to="/proprietar/cereri"
+                    search={{ q: b.reference ?? "" }}
+                    className="block"
+                  >
+                    <Card className="hover:bg-muted/50 transition-colors">
+                      <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between space-y-0">
+                        <div>
+                          <CardTitle className="text-sm">{b.room_name}</CardTitle>
+                          <p className="text-xs text-muted-foreground mt-1">{b.renter_name ?? b.renter_email ?? "—"}</p>
+                        </div>
+                        <span className="font-mono text-[10px] text-primary">{b.reference ?? ""}</span>
+                      </CardHeader>
+                      <CardContent className="p-4 pt-2 space-y-2">
+                        <p className="text-sm">{formatDateShort(b.booking_date)} · {formatTimeRange(b.start_time, b.end_time)}</p>
+                        <p className="text-sm font-semibold text-primary">{formatRON(totalOf(b))}</p>
+                        <div className="flex gap-2 flex-wrap">
+                          <StatusBadge status={b.status} />
+                          <PaymentBadge status={b.payment_status} />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 ))}
               </div>
             </>
