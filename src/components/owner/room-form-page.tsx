@@ -721,13 +721,17 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
                 </div>
               </Field>
               <div className="grid md:grid-cols-3 gap-4">
-                <Field label="Zile rezervare în avans">
+                <Field label="Zile minime în avans">
                   <Input
                     type="number"
-                    min="1"
+                    min="0"
+                    step="1"
                     value={form.advance_booking_days}
                     onChange={(e) => update("advance_booking_days", e.target.value)}
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    0 = rezervare în aceeași zi (cu minim 2h înainte de start). 1+ = rezervarea trebuie făcută cu cel puțin atâtea zile în avans.
+                  </p>
                 </Field>
                 <Field label="Ore minime rezervare">
                   <Input
