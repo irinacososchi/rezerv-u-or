@@ -24,6 +24,7 @@ import { Route as ProprietarVouchereRouteImport } from './routes/proprietar.vouc
 import { Route as ProprietarSaliRouteImport } from './routes/proprietar.sali'
 import { Route as ProprietarDashboardRouteImport } from './routes/proprietar.dashboard'
 import { Route as ProprietarContRouteImport } from './routes/proprietar.cont'
+import { Route as ProprietarCereriRouteImport } from './routes/proprietar.cereri'
 import { Route as ProprietarCalendarRouteImport } from './routes/proprietar.calendar'
 import { Route as ProprietarSaliIndexRouteImport } from './routes/proprietar.sali.index'
 import { Route as ProprietarSaliNouRouteImport } from './routes/proprietar.sali.nou'
@@ -106,6 +107,11 @@ const ProprietarContRoute = ProprietarContRouteImport.update({
   path: '/cont',
   getParentRoute: () => ProprietarRoute,
 } as any)
+const ProprietarCereriRoute = ProprietarCereriRouteImport.update({
+  id: '/cereri',
+  path: '/cereri',
+  getParentRoute: () => ProprietarRoute,
+} as any)
 const ProprietarCalendarRoute = ProprietarCalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
@@ -147,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/sali': typeof SaliRouteWithChildren
   '/signup': typeof SignupRoute
   '/proprietar/calendar': typeof ProprietarCalendarRoute
+  '/proprietar/cereri': typeof ProprietarCereriRoute
   '/proprietar/cont': typeof ProprietarContRoute
   '/proprietar/dashboard': typeof ProprietarDashboardRoute
   '/proprietar/sali': typeof ProprietarSaliRouteWithChildren
@@ -168,6 +175,7 @@ export interface FileRoutesByTo {
   '/reset-parola': typeof ResetParolaRoute
   '/signup': typeof SignupRoute
   '/proprietar/calendar': typeof ProprietarCalendarRoute
+  '/proprietar/cereri': typeof ProprietarCereriRoute
   '/proprietar/cont': typeof ProprietarContRoute
   '/proprietar/dashboard': typeof ProprietarDashboardRoute
   '/proprietar/vouchere': typeof ProprietarVouchereRoute
@@ -191,6 +199,7 @@ export interface FileRoutesById {
   '/sali': typeof SaliRouteWithChildren
   '/signup': typeof SignupRoute
   '/proprietar/calendar': typeof ProprietarCalendarRoute
+  '/proprietar/cereri': typeof ProprietarCereriRoute
   '/proprietar/cont': typeof ProprietarContRoute
   '/proprietar/dashboard': typeof ProprietarDashboardRoute
   '/proprietar/sali': typeof ProprietarSaliRouteWithChildren
@@ -216,6 +225,7 @@ export interface FileRouteTypes {
     | '/sali'
     | '/signup'
     | '/proprietar/calendar'
+    | '/proprietar/cereri'
     | '/proprietar/cont'
     | '/proprietar/dashboard'
     | '/proprietar/sali'
@@ -237,6 +247,7 @@ export interface FileRouteTypes {
     | '/reset-parola'
     | '/signup'
     | '/proprietar/calendar'
+    | '/proprietar/cereri'
     | '/proprietar/cont'
     | '/proprietar/dashboard'
     | '/proprietar/vouchere'
@@ -259,6 +270,7 @@ export interface FileRouteTypes {
     | '/sali'
     | '/signup'
     | '/proprietar/calendar'
+    | '/proprietar/cereri'
     | '/proprietar/cont'
     | '/proprietar/dashboard'
     | '/proprietar/sali'
@@ -392,6 +404,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProprietarContRouteImport
       parentRoute: typeof ProprietarRoute
     }
+    '/proprietar/cereri': {
+      id: '/proprietar/cereri'
+      path: '/cereri'
+      fullPath: '/proprietar/cereri'
+      preLoaderRoute: typeof ProprietarCereriRouteImport
+      parentRoute: typeof ProprietarRoute
+    }
     '/proprietar/calendar': {
       id: '/proprietar/calendar'
       path: '/calendar'
@@ -468,6 +487,7 @@ const ProprietarSaliRouteWithChildren = ProprietarSaliRoute._addFileChildren(
 
 interface ProprietarRouteChildren {
   ProprietarCalendarRoute: typeof ProprietarCalendarRoute
+  ProprietarCereriRoute: typeof ProprietarCereriRoute
   ProprietarContRoute: typeof ProprietarContRoute
   ProprietarDashboardRoute: typeof ProprietarDashboardRoute
   ProprietarSaliRoute: typeof ProprietarSaliRouteWithChildren
@@ -477,6 +497,7 @@ interface ProprietarRouteChildren {
 
 const ProprietarRouteChildren: ProprietarRouteChildren = {
   ProprietarCalendarRoute: ProprietarCalendarRoute,
+  ProprietarCereriRoute: ProprietarCereriRoute,
   ProprietarContRoute: ProprietarContRoute,
   ProprietarDashboardRoute: ProprietarDashboardRoute,
   ProprietarSaliRoute: ProprietarSaliRouteWithChildren,
