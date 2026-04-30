@@ -356,13 +356,18 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
       rules_and_notes: form.rules_and_notes || null,
       is_active: form.is_active,
     };
-    if (isEdit) roomFields.id = roomId;
-
-    const { data: savedRoom, error: roomErr } = await supabase
-      .from("rooms")
-      .upsert(roomFields)
-      .select()
-      .single();
+    const { data: savedRoom, error: roomErr } = isEdit
+      ? await supabase
+          .from("rooms")
+          .update(roomFields)
+          .eq("id", roomId!)
+          .select()
+          .single()
+      : await supabase
+          .from("rooms")
+          .insert(roomFields)
+          .select()
+          .single();
 
     if (roomErr || !savedRoom) {
       console.error(roomErr);
