@@ -690,7 +690,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
                     key={rule._key}
                     className="rounded-lg border p-4 space-y-3 bg-muted/20"
                   >
-                    <div className="grid md:grid-cols-3 gap-3">
+                    <div className="grid md:grid-cols-2 gap-3">
                       <Field label="Tip Tarif">
                         <Input
                           value={rule.label}
