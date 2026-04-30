@@ -713,17 +713,6 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
                           }
                         />
                       </Field>
-                      <Field label="Prioritate">
-                        <Input
-                          type="number"
-                          value={rule.priority}
-                          onChange={(e) =>
-                            updatePricing(rule._key, {
-                              priority: Number(e.target.value),
-                            })
-                          }
-                        />
-                      </Field>
                     </div>
                     <Field label="Zile săptămână">
                       <div className="flex gap-2 flex-wrap">
