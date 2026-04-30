@@ -779,8 +779,15 @@ function RoomCalendarPage() {
                         type="button"
                         key={dateISO}
                         onClick={() => {
-                          setView("week");
-                          setWeekStart(startOfWeek(d));
+                          if (typeof window !== "undefined" && window.innerWidth < 1024) {
+                            const day = new Date(d);
+                            day.setHours(0, 0, 0, 0);
+                            setSelectedDay(day);
+                            setView("day");
+                          } else {
+                            setView("week");
+                            setWeekStart(startOfWeek(d));
+                          }
                         }}
                         className={
                           "min-h-[72px] border-l border-t -ml-px -mt-px text-left p-2 text-xs transition-colors " +
