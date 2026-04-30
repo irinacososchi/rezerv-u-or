@@ -596,13 +596,20 @@ function RoomDetailsPage() {
                       <div className="mt-2 grid grid-cols-2 gap-2">
                         {slots.map((s) => {
                           const selected = selectedHours.includes(s.hour);
+                          const unavailable = s.busy || s.tooSoon;
+                          const title = s.tooSoon
+                            ? "Indisponibil — rezervarea trebuie făcută cu minim 2h înainte"
+                            : s.busy
+                              ? "Interval ocupat"
+                              : undefined;
                           return (
                             <button
                               key={s.hour}
-                              disabled={s.busy}
+                              disabled={unavailable}
                               onClick={() => toggleHour(s.hour)}
+                              title={title}
                               className={`rounded-md border px-2 py-1.5 text-xs font-medium transition ${
-                                s.busy
+                                unavailable
                                   ? "cursor-not-allowed border-border bg-muted text-muted-foreground/60"
                                   : selected
                                     ? "border-primary bg-primary text-primary-foreground"
