@@ -13,10 +13,17 @@ const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
 export type RoomPhoto = {
   id: string;
   storage_url: string;
-  storage_path: string | null;
   is_cover: boolean;
   sort_order: number;
 };
+
+/** Extrage path-ul din bucket dintr-un URL public Supabase Storage. */
+function extractStoragePath(url: string): string | null {
+  const marker = `/storage/v1/object/public/${BUCKET}/`;
+  const idx = url.indexOf(marker);
+  if (idx === -1) return null;
+  return decodeURIComponent(url.slice(idx + marker.length));
+}
 
 type Props = {
   /** Dacă lipsește (sală nouă, încă nesalvată), uploaderul afișează un mesaj. */
