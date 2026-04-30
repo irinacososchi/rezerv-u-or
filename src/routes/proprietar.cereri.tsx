@@ -151,6 +151,7 @@ function ActionButtons({
 }
 
 function CereriPage() {
+  const { q: initialQ } = Route.useSearch();
   const [bookings, setBookings] = useState<BookingFull[]>([]);
   const [loading, setLoading] = useState(true);
   const [, setUserId] = useState("");
@@ -159,7 +160,7 @@ function CereriPage() {
   const [filterRoom, setFilterRoom] = useState("toate");
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(initialQ);
 
   const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
