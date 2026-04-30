@@ -394,9 +394,11 @@ function RoomCalendarPage() {
   }, [monthAnchor]);
 
   const headerLabel =
-    view === "week"
-      ? formatRange(weekStart)
-      : `${MONTH_LABELS[monthAnchor.getMonth()]} ${monthAnchor.getFullYear()}`;
+    view === "day"
+      ? `${DAY_NAMES_RO[getDayOfWeek(selectedDay)]}, ${selectedDay.getDate()} ${MONTH_NAMES_RO[selectedDay.getMonth()]} ${selectedDay.getFullYear()}`
+      : view === "week"
+        ? formatRange(weekStart)
+        : `${MONTH_LABELS[monthAnchor.getMonth()]} ${monthAnchor.getFullYear()}`;
 
   const pickerYears = useMemo(() => {
     const cy = new Date().getFullYear();
