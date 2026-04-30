@@ -138,6 +138,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
   const [pricing, setPricing] = useState<PricingRule[]>([]);
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
   const [checkingSlug, setCheckingSlug] = useState(false);
+  const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([]);
 
   async function checkSlugAvailability(value: string) {
     const v = value.trim();
