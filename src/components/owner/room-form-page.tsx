@@ -636,7 +636,11 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
           </Card>
 
           {/* Section 1.5 — Photos */}
-          <RoomPhotosUploader roomId={roomId} />
+          <RoomPhotosUploader
+            roomId={roomId}
+            pending={pendingPhotos}
+            onPendingChange={setPendingPhotos}
+          />
 
           {/* Section 2 — Amenities */}
           <Card>
