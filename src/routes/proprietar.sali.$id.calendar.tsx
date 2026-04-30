@@ -126,6 +126,22 @@ function parseHM(t: string): number {
   return h + (m || 0) / 60;
 }
 
+function generateWeeklyDates(startDateStr: string, endDateStr: string): string[] {
+  const dates: string[] = [];
+  const end = parseISODate(endDateStr);
+  let current = parseISODate(startDateStr);
+  while (current <= end) {
+    dates.push(formatDateISO(current));
+    current = addDays(current, 7);
+  }
+  return dates;
+}
+
+function formatShortRO(dateISO: string): string {
+  const d = parseISODate(dateISO);
+  return `${d.getDate()} ${MONTH_NAMES_RO[d.getMonth()].slice(0, 3)}`;
+}
+
 function RoomCalendarPage() {
   const { id } = useParams({ from: "/proprietar/sali/$id/calendar" });
   const navigate = useNavigate();
@@ -1202,6 +1218,8 @@ function BlockSlotForm({
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [blockError, setBlockError] = useState<string | null>(null);
+  const [isRecurrent, setIsRecurrent] = useState(false);
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
 
   const startHours = Array.from(
     { length: HOUR_END - HOUR_START },
@@ -1212,31 +1230,67 @@ function BlockSlotForm({
     (_, i) => HOUR_START + 1 + i,
   ).filter((h) => h <= HOUR_END);
 
+  const recurrenceDates =
+    isRecurrent && recurrenceEndDate
+      ? generateWeeklyDates(date, recurrenceEndDate)
+      : [];
+
   async function submit() {
     setBlockError(null);
     if (parseInt(end, 10) <= parseInt(start, 10)) {
       setBlockError("Ora de sfârșit trebuie să fie după ora de început.");
       return;
     }
-    setBusy(true);
-    const { error } = await supabase.rpc("block_slot", {
-      p_room_id: roomId,
-      p_date: date,
-      p_start_time: start,
-      p_end_time: end,
-      p_reason: reason || "Rezervat de proprietar",
-    });
-    setBusy(false);
-    if (error) {
-      console.error("block_slot error:", error);
-      if (error.code === "23P01") {
-        setBlockError("Acest interval se suprapune cu o rezervare existentă.");
-      } else {
-        setBlockError(error.message || "Eroare la blocare.");
-      }
+    if (isRecurrent && !recurrenceEndDate) {
+      setBlockError("Selectează data de sfârșit pentru recurență.");
       return;
     }
-    toast.success("Interval blocat");
+
+    const allDates =
+      isRecurrent && recurrenceEndDate ? generateWeeklyDates(date, recurrenceEndDate) : [date];
+
+    setBusy(true);
+    const skipped: string[] = [];
+    const inserted: string[] = [];
+
+    for (const d of allDates) {
+      const { error } = await supabase.rpc("block_slot", {
+        p_room_id: roomId,
+        p_date: d,
+        p_start_time: start,
+        p_end_time: end,
+        p_reason: reason || "Rezervat de proprietar",
+      });
+      if (error) {
+        if (error.code === "23P01") {
+          skipped.push(formatShortRO(d));
+        } else {
+          console.error("block_slot error:", error);
+          setBusy(false);
+          setBlockError(error.message || "Eroare la blocare.");
+          return;
+        }
+      } else {
+        inserted.push(d);
+      }
+    }
+
+    setBusy(false);
+
+    if (inserted.length === 0) {
+      setBlockError("Toate intervalele sunt deja ocupate.");
+      return;
+    }
+
+    if (skipped.length > 0) {
+      toast.warning(
+        `${inserted.length} blocări create. Sărite (ocupate): ${skipped.join(", ")}`,
+      );
+    } else {
+      toast.success(
+        allDates.length > 1 ? `${inserted.length} intervale blocate` : "Interval blocat",
+      );
+    }
     onChanged();
     onClose();
   }
@@ -1292,6 +1346,36 @@ function BlockSlotForm({
             value={reason}
             onChange={(e) => setReason(e.target.value)}
           />
+        </div>
+        <div className="col-span-2 space-y-2 pt-2 border-t">
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isRecurrent}
+              onChange={(e) => {
+                setIsRecurrent(e.target.checked);
+                setRecurrenceEndDate("");
+              }}
+              className="accent-primary h-4 w-4"
+            />
+            Repetă săptămânal
+          </label>
+          {isRecurrent && (
+            <div className="space-y-1 pl-6">
+              <Label className="text-xs">Până la:</Label>
+              <Input
+                type="date"
+                value={recurrenceEndDate}
+                min={date}
+                onChange={(e) => setRecurrenceEndDate(e.target.value)}
+              />
+              {recurrenceDates.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {recurrenceDates.length} blocări săptămânale
+                </p>
+              )}
+            </div>
+          )}
         </div>
         {blockError && (
           <div className="col-span-2 text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-md px-3 py-2">
@@ -1369,6 +1453,9 @@ function ManualBookingForm({
   onClose: () => void;
   onChanged: () => void;
 }) {
+  const [isRecurrent, setIsRecurrent] = useState(false);
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
+
   const startHours = Array.from(
     { length: HOUR_END - HOUR_START },
     (_, i) => HOUR_START + i,
@@ -1385,6 +1472,9 @@ function ManualBookingForm({
   const pricePerHour = calculatePriceForDate(date, manualStart.slice(0, 2), pricingRules);
   const total = duration * pricePerHour;
 
+  const recurrenceDates =
+    isRecurrent && recurrenceEndDate ? generateWeeklyDates(date, recurrenceEndDate) : [];
+
   async function handleManualBooking() {
     if (!manualName.trim()) {
       setManualError("Completează numele clientului.");
@@ -1398,6 +1488,10 @@ function ManualBookingForm({
       setManualError("Ora de sfârșit trebuie să fie după ora de început.");
       return;
     }
+    if (isRecurrent && !recurrenceEndDate) {
+      setManualError("Selectează data de sfârșit pentru recurență.");
+      return;
+    }
 
     setManualSubmitting(true);
     setManualError(null);
@@ -1405,37 +1499,91 @@ function ManualBookingForm({
     const startTime = `${manualStart}:00`;
     const endTime = `${manualEnd}:00`;
 
-    const { error } = await supabase.from("bookings").insert({
-      room_id: roomId,
-      guest_name: manualName.trim(),
-      guest_email: manualEmail.trim() || `noemail+${Date.now()}@rezervari.intern`,
-      guest_phone: manualPhone.trim(),
-      booking_date: date,
-      start_time: startTime,
-      end_time: endTime,
-      duration_hours: duration,
-      price_per_hour: pricePerHour,
-      subtotal: total,
-      discount_amount: 0,
-      total_amount: total,
-      status: "confirmată",
-      payment_method: "la_sala",
-      payment_status: manualPaymentStatus,
-      renter_notes: manualNote.trim() || null,
-    });
+    const allDates =
+      isRecurrent && recurrenceEndDate ? generateWeeklyDates(date, recurrenceEndDate) : [date];
+
+    // Create recurrence group if recurrent
+    let recurrenceId: string | null = null;
+    if (isRecurrent && allDates.length > 1) {
+      const dayOfWeek = getDayOfWeek(parseISODate(date));
+      const { data: rec, error: recError } = await supabase
+        .from("recurrences")
+        .insert({
+          room_id: roomId,
+          created_by_email: manualEmail.trim() || `noemail+${Date.now()}@rezervari.intern`,
+          frequency: "saptamanal",
+          day_of_week: dayOfWeek,
+          start_time: startTime,
+          end_time: endTime,
+          first_date: allDates[0],
+          last_date: allDates[allDates.length - 1],
+          total_bookings: allDates.length,
+        })
+        .select()
+        .single();
+
+      if (recError) {
+        setManualError("Eroare la crearea grupului de recurență: " + recError.message);
+        setManualSubmitting(false);
+        return;
+      }
+      recurrenceId = (rec as { id: string }).id;
+    }
+
+    const skipped: string[] = [];
+    const inserted: string[] = [];
+
+    for (const [idx, d] of allDates.entries()) {
+      const { error } = await supabase.from("bookings").insert({
+        room_id: roomId,
+        recurrence_id: recurrenceId,
+        recurrence_index: recurrenceId ? idx + 1 : null,
+        guest_name: manualName.trim(),
+        guest_email: manualEmail.trim() || `noemail+${Date.now()}@rezervari.intern`,
+        guest_phone: manualPhone.trim(),
+        booking_date: d,
+        start_time: startTime,
+        end_time: endTime,
+        duration_hours: duration,
+        price_per_hour: pricePerHour,
+        subtotal: total,
+        discount_amount: 0,
+        total_amount: total,
+        status: "confirmată",
+        payment_method: "la_sala",
+        payment_status: manualPaymentStatus,
+        renter_notes: manualNote.trim() || null,
+      });
+
+      if (error) {
+        if (error.code === "23P01") {
+          skipped.push(formatShortRO(d));
+        } else {
+          setManualError("Eroare: " + error.message);
+          setManualSubmitting(false);
+          return;
+        }
+      } else {
+        inserted.push(d);
+      }
+    }
 
     setManualSubmitting(false);
 
-    if (error) {
-      if (error.code === "23P01") {
-        setManualError("Intervalul se suprapune cu o rezervare existentă.");
-      } else {
-        setManualError("Eroare: " + error.message);
-      }
+    if (inserted.length === 0) {
+      setManualError("Toate intervalele selectate sunt deja ocupate.");
       return;
     }
 
-    toast.success("Rezervare adăugată");
+    if (skipped.length > 0) {
+      toast.warning(
+        `${inserted.length} rezervări create. Sărite (ocupate): ${skipped.join(", ")}`,
+      );
+    } else {
+      toast.success(
+        allDates.length > 1 ? `${inserted.length} rezervări adăugate` : "Rezervare adăugată",
+      );
+    }
     onChanged();
     onClose();
   }
@@ -1549,6 +1697,40 @@ function ManualBookingForm({
             onChange={(e) => setManualNote(e.target.value)}
             placeholder="ex: A sunat joi seara"
           />
+        </div>
+
+        <div className="space-y-2 pt-2 border-t">
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isRecurrent}
+              onChange={(e) => {
+                setIsRecurrent(e.target.checked);
+                setRecurrenceEndDate("");
+              }}
+              className="accent-primary h-4 w-4"
+            />
+            Rezervare recurentă săptămânală
+          </label>
+          {isRecurrent && (
+            <div className="space-y-1 pl-6">
+              <Label className="text-xs">Până la:</Label>
+              <Input
+                type="date"
+                value={recurrenceEndDate}
+                min={date}
+                onChange={(e) => setRecurrenceEndDate(e.target.value)}
+              />
+              {recurrenceDates.length > 0 && validRange && (
+                <p className="text-xs text-muted-foreground">
+                  {recurrenceDates.length} rezervări săptămânale · Total:{" "}
+                  <span className="font-semibold text-foreground">
+                    {recurrenceDates.length * total} RON
+                  </span>
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         {manualError && (
