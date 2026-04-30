@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "@tanstack/react-router";
+import { useNavigate, useLocation, Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/external-client";
 import {
   LayoutDashboard,
@@ -109,7 +109,9 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
         >
           {!collapsed && (
             <div className="min-w-0 flex items-center gap-2">
-              <img src={logoUrl} alt="RZRV" className="h-14 w-auto shrink-0" />
+              <Link to="/" className="shrink-0">
+                <img src={logoUrl} alt="RZRV" className="h-14 w-auto shrink-0" />
+              </Link>
               <p className="text-sm text-muted-foreground truncate">{ownerName}</p>
             </div>
           )}
@@ -168,7 +170,9 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
       <div className={`flex-1 ${contentMargin} flex flex-col min-h-screen transition-[margin] duration-200`}>
         {/* Mobile header */}
         <header className="md:hidden flex items-center justify-between px-4 py-3 border-b bg-card sticky top-0 z-10">
-          <img src={logoUrl} alt="RZRV" className="h-14 w-auto" />
+          <Link to="/">
+            <img src={logoUrl} alt="RZRV" className="h-14 w-auto" />
+          </Link>
           <button
             onClick={handleLogout}
             aria-label="Deconectare"
