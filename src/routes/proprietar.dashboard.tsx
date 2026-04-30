@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { OwnerLayout } from "@/components/owner-layout";
 import { supabase } from "@/integrations/supabase/external-client";
 import { Calendar, Clock, TrendingUp, Building2, Check, X } from "lucide-react";
@@ -77,6 +77,7 @@ function totalOf(b: BookingFull) {
 }
 
 function DashboardPage() {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [activeRooms, setActiveRooms] = useState(0);
@@ -280,8 +281,19 @@ function DashboardPage() {
                   </thead>
                   <tbody>
                     {recentList.map((b) => (
-                      <tr key={b.id} className="border-t">
-                        <td className="px-3 py-2 font-mono text-xs">{b.reference ?? "—"}</td>
+                      <tr
+                        key={b.id}
+                        className="border-t cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() =>
+                          navigate({
+                            to: "/proprietar/cereri",
+                            search: { q: b.reference ?? "" },
+                          })
+                        }
+                      >
+                        <td className="px-3 py-2 font-mono text-xs text-primary underline-offset-2 hover:underline">
+                          {b.reference ?? "—"}
+                        </td>
                         <td className="px-3 py-2">{b.room_name}</td>
                         <td className="px-3 py-2">{b.renter_name ?? b.renter_email ?? "—"}</td>
                         <td className="px-3 py-2">{formatDateShort(b.booking_date)}</td>
@@ -298,23 +310,30 @@ function DashboardPage() {
               {/* Mobile cards */}
               <div className="md:hidden space-y-3">
                 {recentList.map((b) => (
-                  <Card key={b.id}>
-                    <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between space-y-0">
-                      <div>
-                        <CardTitle className="text-sm">{b.room_name}</CardTitle>
-                        <p className="text-xs text-muted-foreground mt-1">{b.renter_name ?? b.renter_email ?? "—"}</p>
-                      </div>
-                      <span className="font-mono text-[10px] text-muted-foreground">{b.reference ?? ""}</span>
-                    </CardHeader>
-                    <CardContent className="p-4 pt-2 space-y-2">
-                      <p className="text-sm">{formatDateShort(b.booking_date)} · {formatTimeRange(b.start_time, b.end_time)}</p>
-                      <p className="text-sm font-semibold text-primary">{formatRON(totalOf(b))}</p>
-                      <div className="flex gap-2 flex-wrap">
-                        <StatusBadge status={b.status} />
-                        <PaymentBadge status={b.payment_status} />
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <Link
+                    key={b.id}
+                    to="/proprietar/cereri"
+                    search={{ q: b.reference ?? "" }}
+                    className="block"
+                  >
+                    <Card className="hover:bg-muted/50 transition-colors">
+                      <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between space-y-0">
+                        <div>
+                          <CardTitle className="text-sm">{b.room_name}</CardTitle>
+                          <p className="text-xs text-muted-foreground mt-1">{b.renter_name ?? b.renter_email ?? "—"}</p>
+                        </div>
+                        <span className="font-mono text-[10px] text-primary">{b.reference ?? ""}</span>
+                      </CardHeader>
+                      <CardContent className="p-4 pt-2 space-y-2">
+                        <p className="text-sm">{formatDateShort(b.booking_date)} · {formatTimeRange(b.start_time, b.end_time)}</p>
+                        <p className="text-sm font-semibold text-primary">{formatRON(totalOf(b))}</p>
+                        <div className="flex gap-2 flex-wrap">
+                          <StatusBadge status={b.status} />
+                          <PaymentBadge status={b.payment_status} />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 ))}
               </div>
             </>
