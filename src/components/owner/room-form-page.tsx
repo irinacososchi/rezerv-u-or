@@ -20,7 +20,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Trash2, ArrowLeft, Loader2, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { DAY_NAMES_RO } from "@/lib/date-utils";
-import { RoomPhotosUploader } from "@/components/owner/room-photos-uploader";
+import {
+  RoomPhotosUploader,
+  uploadPendingPhotos,
+  type PendingPhoto,
+} from "@/components/owner/room-photos-uploader";
 
 const DAYS = [1, 2, 3, 4, 5, 6, 7] as const;
 
@@ -134,6 +138,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
   const [pricing, setPricing] = useState<PricingRule[]>([]);
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
   const [checkingSlug, setCheckingSlug] = useState(false);
+  const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([]);
 
   async function checkSlugAvailability(value: string) {
     const v = value.trim();
@@ -320,6 +325,15 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
       toast.error("URL-ul ales este deja folosit. Te rugăm să alegi altul.");
       return;
     }
+    const validPricing = pricing.filter(
+      (r) => r.is_active && Number(r.price_per_hour) > 0 && r.days_of_week.length > 0,
+    );
+    if (validPricing.length === 0) {
+      toast.error(
+        "Adaugă cel puțin un tarif activ, cu preț mai mare ca 0 și cel puțin o zi selectată.",
+      );
+      return;
+    }
 
     setSaving(true);
     const {
@@ -410,6 +424,17 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
         .from("pricing_rules")
         .insert(pricingRows);
       if (priceErr) console.error(priceErr);
+    }
+
+
+    // Upload pending photos (only relevant when creating a new room)
+    if (!isEdit && pendingPhotos.length > 0) {
+      const ok = await uploadPendingPhotos(savedId, user.id, pendingPhotos);
+      if (!ok) {
+        toast.warning("Sala a fost creată, dar unele poze nu s-au încărcat.");
+      }
+      pendingPhotos.forEach((p) => URL.revokeObjectURL(p.previewUrl));
+      setPendingPhotos([]);
     }
 
     setSaving(false);
@@ -611,7 +636,11 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
           </Card>
 
           {/* Section 1.5 — Photos */}
-          <RoomPhotosUploader roomId={roomId} />
+          <RoomPhotosUploader
+            roomId={roomId}
+            pending={pendingPhotos}
+            onPendingChange={setPendingPhotos}
+          />
 
           {/* Section 2 — Amenities */}
           <Card>
