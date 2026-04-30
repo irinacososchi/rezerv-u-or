@@ -399,8 +399,10 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
       room_id: savedId,
       day_of_week: s.day_of_week,
       is_available: s.is_available,
-      open_time: s.is_available ? `${s.open_time}:00` : "00:00:00",
-      close_time: s.is_available ? `${s.close_time}:00` : "00:00:00",
+      // Always persist the user's chosen times so reopening the form preserves them
+      // even when a day is marked as unavailable.
+      open_time: `${s.open_time}:00`,
+      close_time: `${s.close_time}:00`,
     }));
     const { error: schedErr } = await supabase
       .from("weekly_schedule")
