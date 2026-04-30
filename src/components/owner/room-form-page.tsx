@@ -365,7 +365,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
         days_of_week: r.days_of_week,
         start_time: r.has_time_window && r.start_time ? `${r.start_time}:00` : null,
         end_time: r.has_time_window && r.end_time ? `${r.end_time}:00` : null,
-        priority: Number(r.priority) || 0,
+        priority: Math.round(Number(r.price_per_hour) || 0),
         is_active: r.is_active,
       }));
       const { error: priceErr } = await supabase
