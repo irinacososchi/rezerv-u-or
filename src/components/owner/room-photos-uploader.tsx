@@ -73,7 +73,7 @@ export function RoomPhotosUploader({ roomId }: Props) {
     setLoading(true);
     const { data, error } = await supabase
       .from("room_photos")
-      .select("id, storage_url, storage_path, is_cover, sort_order")
+      .select("id, storage_url, is_cover, sort_order")
       .eq("room_id", roomId)
       .order("sort_order", { ascending: true });
     setLoading(false);
