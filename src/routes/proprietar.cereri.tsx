@@ -106,6 +106,23 @@ function ActionButtons({
         >
           Anulează
         </button>
+      {(booking.status === "anulată" || booking.status === "refuzată" || booking.status === "expirată") && (
+        <>
+          <button
+            onClick={() => onAction(booking.id, "confirma")}
+            disabled={loading}
+            className="rounded-md bg-emerald-50 border border-emerald-200 px-2 py-1 text-xs text-emerald-700 hover:bg-emerald-100 transition disabled:opacity-50"
+          >
+            Reactivează ca confirmată
+          </button>
+          <button
+            onClick={() => onAction(booking.id, "in_asteptare")}
+            disabled={loading}
+            className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-800 hover:bg-amber-100 transition disabled:opacity-50"
+          >
+            Pune în așteptare
+          </button>
+        </>
       )}
       {booking.payment_status === "neplatit" && booking.status === "confirmată" && (
         <button
