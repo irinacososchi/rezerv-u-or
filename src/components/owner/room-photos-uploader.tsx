@@ -149,7 +149,6 @@ export function RoomPhotosUploader({ roomId }: Props) {
         const { error: insErr } = await supabase.from("room_photos").insert({
           room_id: roomId,
           storage_url: pub.publicUrl,
-          storage_path: path,
           is_cover: isCover,
           sort_order: nextSort,
         });
