@@ -131,6 +131,28 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
   const [slugTouched, setSlugTouched] = useState(isEdit);
   const [schedule, setSchedule] = useState<ScheduleRow[]>(defaultSchedule());
   const [pricing, setPricing] = useState<PricingRule[]>([]);
+  const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
+  const [checkingSlug, setCheckingSlug] = useState(false);
+
+  async function checkSlugAvailability(value: string) {
+    const v = value.trim();
+    if (!v || v.length < 3) {
+      setSlugAvailable(null);
+      return;
+    }
+    setCheckingSlug(true);
+    const { data } = await supabase
+      .from("rooms")
+      .select("id")
+      .eq("slug", v)
+      .maybeSingle();
+    setCheckingSlug(false);
+    if (data && data.id !== roomId) {
+      setSlugAvailable(false);
+    } else {
+      setSlugAvailable(true);
+    }
+  }
 
   useEffect(() => {
     if (!isEdit) return;
