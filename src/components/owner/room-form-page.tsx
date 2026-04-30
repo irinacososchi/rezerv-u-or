@@ -311,8 +311,12 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
       toast.error("Adresa și orașul sunt obligatorii.");
       return;
     }
-    if (!form.slug.trim()) {
-      toast.error("Slug-ul este obligatoriu.");
+    if (!form.slug.trim() || form.slug.trim().length < 3) {
+      toast.error("URL-ul trebuie să aibă minim 3 caractere.");
+      return;
+    }
+    if (slugAvailable === false) {
+      toast.error("URL-ul ales este deja folosit. Te rugăm să alegi altul.");
       return;
     }
 
