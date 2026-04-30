@@ -106,6 +106,7 @@ function ActionButtons({
         >
           Anulează
         </button>
+      )}
       {(booking.status === "anulată" || booking.status === "refuzată" || booking.status === "expirată") && (
         <>
           <button
