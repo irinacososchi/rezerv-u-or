@@ -281,8 +281,19 @@ function DashboardPage() {
                   </thead>
                   <tbody>
                     {recentList.map((b) => (
-                      <tr key={b.id} className="border-t">
-                        <td className="px-3 py-2 font-mono text-xs">{b.reference ?? "—"}</td>
+                      <tr
+                        key={b.id}
+                        className="border-t cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() =>
+                          navigate({
+                            to: "/proprietar/cereri",
+                            search: { q: b.reference ?? "" },
+                          })
+                        }
+                      >
+                        <td className="px-3 py-2 font-mono text-xs text-primary underline-offset-2 hover:underline">
+                          {b.reference ?? "—"}
+                        </td>
                         <td className="px-3 py-2">{b.room_name}</td>
                         <td className="px-3 py-2">{b.renter_name ?? b.renter_email ?? "—"}</td>
                         <td className="px-3 py-2">{formatDateShort(b.booking_date)}</td>
