@@ -165,8 +165,9 @@ function CheckoutPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   // ---------- Validation of incoming params ----------
+  // total poate fi 0 dacă sala nu are pricing rules configurate încă
   const paramsValid = !!(
-    search.date && search.start && search.end && search.duration > 0 && search.total > 0
+    search.date && search.start && search.end && search.duration > 0
   );
 
   // ---------- Fetch room + pricing ----------
