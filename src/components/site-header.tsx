@@ -1,8 +1,8 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { Disc3 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/external-client";
+import logoUrl from "@/assets/rzrv-logo.png";
 
 export function SiteHeader() {
   const { user, loading } = useAuth();
@@ -17,10 +17,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/70">
       <div className="container mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2 font-semibold">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <Disc3 className="h-5 w-5" />
-          </span>
-          <span className="text-lg tracking-tight">Rezervări Săli</span>
+          <img src={logoUrl} alt="RZRV" className="h-9 w-auto" />
         </Link>
 
         <nav className="flex items-center gap-2 sm:gap-3">
