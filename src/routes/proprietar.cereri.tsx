@@ -236,6 +236,9 @@ function CereriPage() {
       case "anuleaza":
         updates.status = "anulată";
         break;
+      case "in_asteptare":
+        updates.status = "în așteptare";
+        break;
       case "platit":
         updates.payment_status = "platit";
         break;
