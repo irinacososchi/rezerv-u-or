@@ -161,9 +161,28 @@ function RoomCalendarPage() {
 
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<"week" | "month">("week");
+  const [view, setView] = useState<"day" | "week" | "month">(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 1024) return "day";
+    return "week";
+  });
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date()));
   const [monthAnchor, setMonthAnchor] = useState<Date>(() => startOfMonth(new Date()));
+  const [selectedDay, setSelectedDay] = useState<Date>(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
+
+  // Auto-switch from week to day on small screens
+  useEffect(() => {
+    function handleResize() {
+      if (window.innerWidth < 1024 && view === "week") {
+        setView("day");
+      }
+    }
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [view]);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [pricingRules, setPricingRules] = useState<PricingRule[]>([]);
   const [selected, setSelected] = useState<
