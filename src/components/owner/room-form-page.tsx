@@ -365,7 +365,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
       has_air_conditioning: form.has_air_conditioning,
       extra_equipment: form.extra_equipment || null,
       booking_type: form.booking_type,
-      advance_booking_days: Number(form.advance_booking_days) || 30,
+      advance_booking_days: Math.max(0, Number(form.advance_booking_days) || 0),
       min_booking_hours: Number(form.min_booking_hours) || 1,
       cancellation_hours: Number(form.free_cancellation_hours) || 24,
       rules_and_notes: form.rules_and_notes || null,
