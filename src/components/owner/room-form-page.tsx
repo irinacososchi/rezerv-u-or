@@ -267,7 +267,13 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
   function handleNameChange(value: string) {
     update("name", value);
     if (!slugTouched) {
-      setForm((f) => ({ ...f, name: value, slug: slugify(value) }));
+      const generated = slugify(value);
+      setForm((f) => ({ ...f, name: value, slug: generated }));
+      if (generated.length >= 3) {
+        void checkSlugAvailability(generated);
+      } else {
+        setSlugAvailable(null);
+      }
     }
   }
 
