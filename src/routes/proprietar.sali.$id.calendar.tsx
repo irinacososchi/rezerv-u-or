@@ -161,9 +161,28 @@ function RoomCalendarPage() {
 
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<"week" | "month">("week");
+  const [view, setView] = useState<"day" | "week" | "month">(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 1024) return "day";
+    return "week";
+  });
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date()));
   const [monthAnchor, setMonthAnchor] = useState<Date>(() => startOfMonth(new Date()));
+  const [selectedDay, setSelectedDay] = useState<Date>(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
+
+  // Auto-switch from week to day on small screens
+  useEffect(() => {
+    function handleResize() {
+      if (window.innerWidth < 1024 && view === "week") {
+        setView("day");
+      }
+    }
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [view]);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [pricingRules, setPricingRules] = useState<PricingRule[]>([]);
   const [selected, setSelected] = useState<
@@ -233,7 +252,10 @@ function RoomCalendarPage() {
   const loadEntries = useCallback(async () => {
     let startISO: string;
     let endISO: string;
-    if (view === "week") {
+    if (view === "day") {
+      startISO = formatDateISO(selectedDay);
+      endISO = startISO;
+    } else if (view === "week") {
       startISO = formatDateISO(weekStart);
       endISO = formatDateISO(addDays(weekStart, 6));
     } else {
@@ -253,7 +275,7 @@ function RoomCalendarPage() {
       return;
     }
     setEntries((data ?? []) as Entry[]);
-  }, [id, view, weekStart, monthAnchor]);
+  }, [id, view, weekStart, monthAnchor, selectedDay]);
 
   useEffect(() => {
     let cancelled = false;
@@ -372,9 +394,11 @@ function RoomCalendarPage() {
   }, [monthAnchor]);
 
   const headerLabel =
-    view === "week"
-      ? formatRange(weekStart)
-      : `${MONTH_LABELS[monthAnchor.getMonth()]} ${monthAnchor.getFullYear()}`;
+    view === "day"
+      ? `${DAY_NAMES_RO[getDayOfWeek(selectedDay)]}, ${selectedDay.getDate()} ${MONTH_NAMES_RO[selectedDay.getMonth()]} ${selectedDay.getFullYear()}`
+      : view === "week"
+        ? formatRange(weekStart)
+        : `${MONTH_LABELS[monthAnchor.getMonth()]} ${monthAnchor.getFullYear()}`;
 
   const pickerYears = useMemo(() => {
     const cy = new Date().getFullYear();
@@ -409,7 +433,7 @@ function RoomCalendarPage() {
                   )}
                 </button>
                 <p className="text-sm text-muted-foreground">
-                  Calendar {view === "week" ? "săptămânal" : "lunar"}
+                  Calendar {view === "day" ? "zilnic" : view === "week" ? "săptămânal" : "lunar"}
                 </p>
 
                 {dropdownOpen && allRooms.length > 1 && (
@@ -441,7 +465,8 @@ function RoomCalendarPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    if (view === "week") setWeekStart((w) => addDays(w, -7));
+                    if (view === "day") setSelectedDay((d) => addDays(d, -1));
+                    else if (view === "week") setWeekStart((w) => addDays(w, -7));
                     else
                       setMonthAnchor(
                         (m) => new Date(m.getFullYear(), m.getMonth() - 1, 1),
@@ -449,7 +474,9 @@ function RoomCalendarPage() {
                   }}
                 >
                   <ChevronLeft className="h-4 w-4 mr-1" />
-                  {view === "week" ? "Săptămâna trecută" : "Luna trecută"}
+                  <span className="hidden sm:inline">
+                    {view === "day" ? "Ziua trecută" : view === "week" ? "Săptămâna trecută" : "Luna trecută"}
+                  </span>
                 </Button>
 
                 <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
@@ -518,14 +545,17 @@ function RoomCalendarPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    if (view === "week") setWeekStart((w) => addDays(w, 7));
+                    if (view === "day") setSelectedDay((d) => addDays(d, 1));
+                    else if (view === "week") setWeekStart((w) => addDays(w, 7));
                     else
                       setMonthAnchor(
                         (m) => new Date(m.getFullYear(), m.getMonth() + 1, 1),
                       );
                   }}
                 >
-                  {view === "week" ? "Săptămâna viitoare" : "Luna viitoare"}
+                  <span className="hidden sm:inline">
+                    {view === "day" ? "Ziua viitoare" : view === "week" ? "Săptămâna viitoare" : "Luna viitoare"}
+                  </span>
                   <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
                 <Button
@@ -533,6 +563,8 @@ function RoomCalendarPage() {
                   size="sm"
                   onClick={() => {
                     const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    setSelectedDay(today);
                     setWeekStart(startOfWeek(today));
                     setMonthAnchor(startOfMonth(today));
                   }}
@@ -542,7 +574,8 @@ function RoomCalendarPage() {
               </div>
             </div>
 
-            <div className="inline-flex rounded-md border bg-card p-1 text-sm">
+            {/* Desktop: Săptămână / Lună */}
+            <div className="hidden lg:inline-flex rounded-md border bg-card p-1 text-sm">
               <button
                 className={
                   "px-3 py-1 rounded " +
@@ -567,7 +600,86 @@ function RoomCalendarPage() {
               </button>
             </div>
 
-            {view === "week" ? (
+            {/* Mobile: Zi / Săptămână / Lună */}
+            <div className="inline-flex lg:hidden rounded-md border bg-card p-1 text-sm">
+              {(["day", "week", "month"] as const).map((v) => (
+                <button
+                  key={v}
+                  className={
+                    "px-3 py-1 rounded " +
+                    (view === v
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-muted")
+                  }
+                  onClick={() => setView(v)}
+                >
+                  {v === "day" ? "Zi" : v === "week" ? "Săpt." : "Lună"}
+                </button>
+              ))}
+            </div>
+
+            {view === "day" ? (
+              <div className="border rounded-lg bg-card overflow-hidden">
+                <div className="px-3 py-2 border-b bg-muted/20 text-sm font-medium capitalize">
+                  {DAY_NAMES_RO[getDayOfWeek(selectedDay)]},{" "}
+                  {selectedDay.getDate()} {MONTH_NAMES_RO[selectedDay.getMonth()]}
+                </div>
+                {Array.from(
+                  { length: HOUR_END - HOUR_START },
+                  (_, i) => HOUR_START + i,
+                ).map((hour) => {
+                  const dateISO = formatDateISO(selectedDay);
+                  const e = cellMap.get(`${dateISO}|${hour}`);
+                  const sh = e ? Math.floor(parseHM(e.start_time)) : null;
+                  const showLabel = e && sh === hour;
+                  return (
+                    <button
+                      type="button"
+                      key={hour}
+                      onClick={() => onCellClick(dateISO, hour)}
+                      className={
+                        "flex w-full border-b last:border-b-0 min-h-[56px] text-left transition-colors " +
+                        cellClass(e)
+                      }
+                    >
+                      <div className="w-16 shrink-0 flex items-start justify-end pr-3 pt-2 text-xs text-muted-foreground border-r bg-muted/10">
+                        {hourLabel(hour)}
+                      </div>
+                      <div className="flex-1 px-3 py-2 text-sm">
+                        {showLabel && (
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <div className="font-medium truncate flex items-center gap-1">
+                                <span className="truncate">
+                                  {e!.entry_type === "blocat"
+                                    ? (e!.reason ?? "Blocat")
+                                    : (e!.renter_name ?? e!.reference ?? "Rezervare")}
+                                </span>
+                                {e!.recurrence_id && (
+                                  <span className="text-[10px]" title="Rezervare recurentă">↻</span>
+                                )}
+                              </div>
+                              <div className="text-xs text-muted-foreground mt-0.5">
+                                {e!.start_time?.slice(0, 5)}–{e!.end_time?.slice(0, 5)}
+                                {e!.entry_type !== "blocat" &&
+                                  e!.total_amount != null &&
+                                  e!.total_amount > 0 &&
+                                  ` · ${e!.total_amount} RON`}
+                              </div>
+                            </div>
+                            {e!.entry_type !== "blocat" && e!.status && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-full border shrink-0">
+                                {e!.status}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : view === "week" ? (
               <div className="border rounded-lg bg-card overflow-x-auto">
                 <div className="min-w-[760px]">
                   <div
@@ -667,8 +779,15 @@ function RoomCalendarPage() {
                         type="button"
                         key={dateISO}
                         onClick={() => {
-                          setView("week");
-                          setWeekStart(startOfWeek(d));
+                          if (typeof window !== "undefined" && window.innerWidth < 1024) {
+                            const day = new Date(d);
+                            day.setHours(0, 0, 0, 0);
+                            setSelectedDay(day);
+                            setView("day");
+                          } else {
+                            setView("week");
+                            setWeekStart(startOfWeek(d));
+                          }
                         }}
                         className={
                           "min-h-[72px] border-l border-t -ml-px -mt-px text-left p-2 text-xs transition-colors " +
