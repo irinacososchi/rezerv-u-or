@@ -77,6 +77,7 @@ function totalOf(b: BookingFull) {
 }
 
 function DashboardPage() {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [activeRooms, setActiveRooms] = useState(0);
