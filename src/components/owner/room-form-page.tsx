@@ -91,7 +91,7 @@ const EMPTY_FORM: FormState = {
   has_air_conditioning: false,
   extra_equipment: "",
   booking_type: "instant",
-  advance_booking_days: "30",
+  advance_booking_days: "0",
   min_booking_hours: "1",
   free_cancellation_hours: "24",
   rules_and_notes: "",
