@@ -426,6 +426,17 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
       if (priceErr) console.error(priceErr);
     }
 
+
+    // Upload pending photos (only relevant when creating a new room)
+    if (!isEdit && pendingPhotos.length > 0) {
+      const ok = await uploadPendingPhotos(savedId, user.id, pendingPhotos);
+      if (!ok) {
+        toast.warning("Sala a fost creată, dar unele poze nu s-au încărcat.");
+      }
+      pendingPhotos.forEach((p) => URL.revokeObjectURL(p.previewUrl));
+      setPendingPhotos([]);
+    }
+
     setSaving(false);
     toast.success(isEdit ? "Sala a fost actualizată." : "Sala a fost creată.");
     navigate({ to: "/proprietar/sali" });
