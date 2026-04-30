@@ -52,6 +52,7 @@ type Room = {
   has_air_conditioning: boolean | null;
   rules_and_notes: string | null;
   currency: string | null;
+  advance_booking_days: number | null;
   cover_url?: string | null;
 };
 
