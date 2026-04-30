@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Trash2, ArrowLeft } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, Loader2, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { DAY_NAMES_RO } from "@/lib/date-utils";
 
