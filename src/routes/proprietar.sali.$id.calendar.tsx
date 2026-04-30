@@ -1772,6 +1772,25 @@ function ManualBookingForm({
             {manualError}
           </div>
         )}
+        {(() => {
+          const allDates =
+            isRecurrent && recurrenceEndDate
+              ? generateWeeklyDates(date, recurrenceEndDate)
+              : [date];
+          const past = pastDates(allDates, manualStart);
+          if (past.length === 0) return null;
+          const list = past.slice(0, 5).map(formatShortRO).join(", ");
+          const more = past.length > 5 ? ` și încă ${past.length - 5}` : "";
+          return (
+            <div className="text-sm text-amber-900 dark:text-amber-200 bg-amber-100/70 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 rounded-md px-3 py-2">
+              <strong>Atenție:</strong>{" "}
+              {past.length === 1
+                ? "rezervarea este în trecut"
+                : `${past.length} apariții sunt în trecut`}{" "}
+              ({list}{more}).
+            </div>
+          );
+        })()}
       </div>
 
       <DialogFooter className="gap-2">
