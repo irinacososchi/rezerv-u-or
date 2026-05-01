@@ -121,7 +121,7 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
           {!collapsed && (
             <div className="min-w-0 flex items-center gap-2">
               <Link to="/" className="shrink-0">
-                <img src={logoUrl} alt="RZRV" className="h-14 w-auto shrink-0" />
+                <img src={logoUrl} alt="RZRV" className="h-12 w-auto object-contain shrink-0" />
               </Link>
               <p className="text-sm text-muted-foreground truncate">{ownerName}</p>
             </div>
@@ -182,7 +182,7 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
         {/* Mobile header */}
         <header className="md:hidden flex items-center justify-between px-4 py-3 border-b bg-card sticky top-0 z-10">
           <Link to="/">
-            <img src={logoUrl} alt="RZRV" className="h-14 w-auto" />
+            <img src={logoUrl} alt="RZRV" className="h-12 w-auto object-contain shrink-0" />
           </Link>
           <button
             onClick={handleLogout}
