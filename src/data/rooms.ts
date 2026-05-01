@@ -48,7 +48,6 @@ export async function fetchRooms(limit = 6): Promise<Room[]> {
     .select(
       `id, name, slug, city, neighbourhood, has_mirrors, has_sound_system, has_ballet_barre, is_active, room_photos(storage_url, is_cover, sort_order), pricing_rules(price_per_hour, is_active)`,
     )
-    .eq("is_active", true)
     .limit(limit);
 
   if (error) {
@@ -57,6 +56,8 @@ export async function fetchRooms(limit = 6): Promise<Room[]> {
   }
 
   const rows = (data ?? []) as RoomRow[];
+  // Active rooms first, then inactive
+  rows.sort((a, b) => Number(b.is_active ?? false) - Number(a.is_active ?? false));
   return rows.map((row, idx) => {
     const { min, max } = priceRange(row);
     return {
@@ -71,6 +72,7 @@ export async function fetchRooms(limit = 6): Promise<Room[]> {
       hasMirrors: !!row.has_mirrors,
       hasSound: !!row.has_sound_system,
       hasBarre: !!row.has_ballet_barre,
+      isActive: !!row.is_active,
     };
   });
 }
