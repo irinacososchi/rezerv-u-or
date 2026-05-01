@@ -42,13 +42,23 @@ function priceRange(row: RoomRow): { min: number; max: number } {
   return { min: Math.min(...prices), max: Math.max(...prices) };
 }
 
-export async function fetchRooms(limit = 6): Promise<Room[]> {
-  const { data, error } = await supabase
+export async function fetchRooms(
+  limit = 6,
+  options: { activeOnly?: boolean } = {},
+): Promise<Room[]> {
+  const { activeOnly = true } = options;
+  let query = supabase
     .from("rooms")
     .select(
       `id, name, slug, city, neighbourhood, has_mirrors, has_sound_system, has_ballet_barre, is_active, room_photos(storage_url, is_cover, sort_order), pricing_rules(price_per_hour, is_active)`,
     )
     .limit(limit);
+
+  if (activeOnly) {
+    query = query.eq("is_active", true);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("fetchRooms error:", error.message);
