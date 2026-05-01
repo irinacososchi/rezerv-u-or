@@ -748,8 +748,9 @@ function RoomDetailsPage() {
                 <Button
                   className="mt-5 w-full cursor-pointer"
                   size="lg"
-                  disabled={!summary || !summary.contiguous}
+                  disabled={!summary || !summary.contiguous || !room.is_active}
                   onClick={() => {
+                    if (!room?.is_active) return;
                     if (!summary || !summary.contiguous || !selectedDate || !room) return;
                     const recurrentActive = isRecurrent && recurrenceDates.length > 0;
                     navigate({
@@ -768,7 +769,7 @@ function RoomDetailsPage() {
                     });
                   }}
                 >
-                  Rezervă acum
+                  {room.is_active ? "Rezervă acum" : "Rezervările sunt indisponibile"}
                 </Button>
 
                 <p className="mt-3 text-center text-xs text-muted-foreground">
