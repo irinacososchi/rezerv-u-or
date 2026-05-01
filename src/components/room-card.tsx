@@ -14,6 +14,7 @@ export interface Room {
   hasMirrors: boolean;
   hasSound: boolean;
   hasBarre: boolean;
+  isActive: boolean;
 }
 
 export function RoomCard({ room }: { room: Room }) {
