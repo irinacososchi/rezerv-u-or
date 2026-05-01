@@ -53,6 +53,7 @@ type Room = {
   rules_and_notes: string | null;
   currency: string | null;
   advance_booking_days: number | null;
+  is_active: boolean | null;
   cover_url?: string | null;
 };
 
