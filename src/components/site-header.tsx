@@ -62,8 +62,12 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/70">
       <div className="container mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-        <Link to="/" className="flex items-center gap-2 font-semibold">
-          <img src={logoUrl} alt="RZRV" className="h-28 w-auto" />
+        <Link to="/" className="flex items-center gap-2 font-semibold shrink-0">
+          <img
+            src={logoUrl}
+            alt="RZRV"
+            className="h-16 sm:h-20 md:h-24 w-auto object-contain shrink-0"
+          />
         </Link>
 
         <nav className="flex items-center gap-2 sm:gap-3">
