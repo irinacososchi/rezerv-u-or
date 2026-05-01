@@ -44,7 +44,9 @@ function SaliPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
 
   useEffect(() => {
-    fetchRooms().then(setRooms).catch((e) => console.error("fetchRooms", e));
+    fetchRooms(100, { activeOnly: false })
+      .then(setRooms)
+      .catch((e) => console.error("fetchRooms", e));
   }, []);
 
   const filtered = useMemo(() => {

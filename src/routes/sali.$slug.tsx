@@ -53,6 +53,7 @@ type Room = {
   rules_and_notes: string | null;
   currency: string | null;
   advance_booking_days: number | null;
+  is_active: boolean | null;
   cover_url?: string | null;
 };
 
@@ -427,6 +428,21 @@ function RoomDetailsPage() {
             <ArrowLeft className="h-4 w-4" /> Înapoi la săli
           </Link>
 
+          {!room.is_active && (
+            <div
+              role="alert"
+              className="mt-4 flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive"
+            >
+              <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0" />
+              <div>
+                <div className="font-semibold">Această sală este momentan inactivă</div>
+                <div className="mt-0.5 text-destructive/90">
+                  Proprietarul a dezactivat temporar rezervările. Poți vedea detaliile, dar nu poți rezerva acum.
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="mt-6 grid gap-8 lg:grid-cols-[3fr_2fr]">
             {/* LEFT */}
             <div>
@@ -732,8 +748,9 @@ function RoomDetailsPage() {
                 <Button
                   className="mt-5 w-full cursor-pointer"
                   size="lg"
-                  disabled={!summary || !summary.contiguous}
+                  disabled={!summary || !summary.contiguous || !room.is_active}
                   onClick={() => {
+                    if (!room?.is_active) return;
                     if (!summary || !summary.contiguous || !selectedDate || !room) return;
                     const recurrentActive = isRecurrent && recurrenceDates.length > 0;
                     navigate({
@@ -752,7 +769,7 @@ function RoomDetailsPage() {
                     });
                   }}
                 >
-                  Rezervă acum
+                  {room.is_active ? "Rezervă acum" : "Rezervările sunt indisponibile"}
                 </Button>
 
                 <p className="mt-3 text-center text-xs text-muted-foreground">
