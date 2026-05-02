@@ -14,22 +14,24 @@ export function SiteHeader() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    async function loadUser() {
-      const {
-        data: { user: u },
-      } = await supabase.auth.getUser();
+    let cancelled = false;
+
+    async function loadProfile(u: any) {
       if (!u) {
-        setUser(null);
-        setProfile(null);
-        setLoading(false);
+        if (!cancelled) {
+          setUser(null);
+          setProfile(null);
+          setLoading(false);
+        }
         return;
       }
-      setUser(u);
+      if (!cancelled) setUser(u);
       const { data: p } = await supabase
         .from("profiles")
         .select("full_name, email, role")
         .eq("id", u.id)
         .single();
+      if (cancelled) return;
       setProfile(
         p
           ? {
@@ -42,11 +44,28 @@ export function SiteHeader() {
       setLoading(false);
     }
 
-    loadUser();
+    // Set up listener FIRST (catches SIGNED_OUT, TOKEN_REFRESHED, INITIAL_SESSION)
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => loadUser());
-    return () => subscription.unsubscribe();
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      loadProfile(session?.user ?? null);
+    });
+
+    // THEN read existing session — getSession never throws on missing/invalid token
+    supabase.auth.getSession().then(({ data }) => {
+      loadProfile(data.session?.user ?? null);
+    }).catch(() => {
+      if (!cancelled) {
+        setUser(null);
+        setProfile(null);
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -154,13 +173,28 @@ export function SiteHeader() {
                   <div className="border-t border-border px-4 py-2">
                     <button
                       onClick={async () => {
-                        await supabase.auth.signOut();
-                        setUser(null);
-                        setProfile(null);
                         setDropdownOpen(false);
+                        try {
+                          await supabase.auth.signOut();
+                        } catch {
+                          // ignore — we'll force-clear below
+                        }
                         if (typeof window !== "undefined") {
-                          window.location.href = "/";
+                          // Purge any orphaned auth tokens from both storages
+                          const purge = (s: Storage) => {
+                            const keys: string[] = [];
+                            for (let i = 0; i < s.length; i++) {
+                              const k = s.key(i);
+                              if (k && (k.startsWith("sb-") || k.includes("supabase.auth"))) keys.push(k);
+                            }
+                            keys.forEach((k) => s.removeItem(k));
+                          };
+                          purge(window.localStorage);
+                          purge(window.sessionStorage);
+                          window.location.replace("/");
                         } else {
+                          setUser(null);
+                          setProfile(null);
                           navigate({ to: "/" });
                         }
                       }}
