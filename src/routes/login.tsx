@@ -6,7 +6,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/external-client";
+import { supabase, setRememberMe } from "@/integrations/supabase/external-client";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -24,6 +24,7 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMeState] = useState(true);
 
   const [showReset, setShowReset] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
@@ -35,6 +36,7 @@ function LoginPage() {
     e.preventDefault();
     setError(null);
     setLoading(true);
+    setRememberMe(rememberMe);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       setLoading(false);
@@ -122,11 +124,17 @@ function LoginPage() {
                     </p>
                   )}
 
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Se conectează..." : "Conectează-te"}
-                  </Button>
+                  <div className="flex items-center justify-between">
+                    <label className="flex cursor-pointer items-center gap-2 select-none">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMeState(e.target.checked)}
+                        className="h-4 w-4 cursor-pointer rounded border-border accent-primary"
+                      />
+                      <span className="text-sm text-muted-foreground">Ține-mă minte</span>
+                    </label>
 
-                  <div className="text-center">
                     <button
                       type="button"
                       onClick={() => setShowReset(true)}
@@ -135,6 +143,10 @@ function LoginPage() {
                       Am uitat parola
                     </button>
                   </div>
+
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? "Se conectează..." : "Conectează-te"}
+                  </Button>
                 </form>
 
                 <p className="mt-6 text-center text-sm text-muted-foreground">
