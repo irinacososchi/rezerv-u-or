@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
@@ -28,12 +29,48 @@ function SignupPage() {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [emailExists, setEmailExists] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
+
+  async function checkEmailExists(value: string) {
+    const trimmed = value.trim().toLowerCase();
+    if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return;
+
+    setCheckingEmail(true);
+    const { data } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("email", trimmed)
+      .maybeSingle();
+    setCheckingEmail(false);
+    setEmailExists(!!data);
+  }
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
     setInfo(null);
+
+    if (emailExists) {
+      setError("Acest email este deja înregistrat. Te rugăm să te autentifici.");
+      return;
+    }
+
     setLoading(true);
+
+    // Final check right before submit (in case onBlur didn't fire)
+    const { data: existing } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("email", email.trim().toLowerCase())
+      .maybeSingle();
+
+    if (existing) {
+      setEmailExists(true);
+      setError("Acest email este deja asociat unui cont.");
+      setLoading(false);
+      return;
+    }
 
     const redirectTo =
       typeof window !== "undefined" ? `${window.location.origin}/` : undefined;
@@ -53,7 +90,6 @@ function SignupPage() {
       return;
     }
 
-    // Try to upsert profile (works if session exists immediately or later via trigger).
     if (data.user) {
       await supabase.from("profiles").upsert(
         {
@@ -126,14 +162,44 @@ function SignupPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="nume@exemplu.ro"
-                />
+                <div className="relative">
+                  <Input
+                    id="email"
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setEmailExists(false);
+                    }}
+                    onBlur={() => checkEmailExists(email)}
+                    placeholder="nume@exemplu.ro"
+                    className={
+                      emailExists
+                        ? "border-destructive pr-10 focus-visible:ring-destructive"
+                        : "pr-10"
+                    }
+                  />
+                  {checkingEmail && (
+                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                  )}
+                </div>
+                {emailExists && (
+                  <div className="flex items-start gap-2 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                    <p>
+                      Acest email este deja asociat unui cont.{" "}
+                      <button
+                        type="button"
+                        onClick={() => navigate({ to: "/login" })}
+                        className="font-medium underline hover:no-underline"
+                      >
+                        Autentifică-te
+                      </button>
+                      .
+                    </p>
+                  </div>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Parolă</Label>
@@ -158,8 +224,19 @@ function SignupPage() {
                 </p>
               )}
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Se creează contul..." : "Creează cont"}
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loading || emailExists || checkingEmail}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Se creează contul...
+                  </>
+                ) : (
+                  "Creează cont"
+                )}
               </Button>
             </form>
 
