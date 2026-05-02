@@ -158,7 +158,11 @@ export function SiteHeader() {
                         setUser(null);
                         setProfile(null);
                         setDropdownOpen(false);
-                        navigate({ to: "/" });
+                        if (typeof window !== "undefined") {
+                          window.location.href = "/";
+                        } else {
+                          navigate({ to: "/" });
+                        }
                       }}
                       className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-destructive hover:bg-destructive/10 transition"
                     >
