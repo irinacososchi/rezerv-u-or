@@ -173,13 +173,28 @@ export function SiteHeader() {
                   <div className="border-t border-border px-4 py-2">
                     <button
                       onClick={async () => {
-                        await supabase.auth.signOut();
-                        setUser(null);
-                        setProfile(null);
                         setDropdownOpen(false);
+                        try {
+                          await supabase.auth.signOut();
+                        } catch {
+                          // ignore — we'll force-clear below
+                        }
                         if (typeof window !== "undefined") {
-                          window.location.href = "/";
+                          // Purge any orphaned auth tokens from both storages
+                          const purge = (s: Storage) => {
+                            const keys: string[] = [];
+                            for (let i = 0; i < s.length; i++) {
+                              const k = s.key(i);
+                              if (k && (k.startsWith("sb-") || k.includes("supabase.auth"))) keys.push(k);
+                            }
+                            keys.forEach((k) => s.removeItem(k));
+                          };
+                          purge(window.localStorage);
+                          purge(window.sessionStorage);
+                          window.location.replace("/");
                         } else {
+                          setUser(null);
+                          setProfile(null);
                           navigate({ to: "/" });
                         }
                       }}
