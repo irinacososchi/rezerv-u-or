@@ -305,6 +305,11 @@ function ConfirmarePage() {
               Înapoi la săli
             </Button>
           </Link>
+          <Link to="/rezervarea-mea" className="flex-1">
+            <Button variant="outline" size="lg" className="w-full">
+              Rezervarea mea
+            </Button>
+          </Link>
           <Button
             size="lg"
             className="flex-1"
