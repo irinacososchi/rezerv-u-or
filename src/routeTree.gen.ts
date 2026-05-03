@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SaliRouteImport } from './routes/sali'
+import { Route as RezervareaMeaRouteImport } from './routes/rezervarea-mea'
 import { Route as ResetParolaRouteImport } from './routes/reset-parola'
 import { Route as ProprietarRouteImport } from './routes/proprietar'
 import { Route as LoginRouteImport } from './routes/login'
@@ -40,6 +41,11 @@ const SignupRoute = SignupRouteImport.update({
 const SaliRoute = SaliRouteImport.update({
   id: '/sali',
   path: '/sali',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RezervareaMeaRoute = RezervareaMeaRouteImport.update({
+  id: '/rezervarea-mea',
+  path: '/rezervarea-mea',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetParolaRoute = ResetParolaRouteImport.update({
@@ -150,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/proprietar': typeof ProprietarRouteWithChildren
   '/reset-parola': typeof ResetParolaRoute
+  '/rezervarea-mea': typeof RezervareaMeaRoute
   '/sali': typeof SaliRouteWithChildren
   '/signup': typeof SignupRoute
   '/proprietar/calendar': typeof ProprietarCalendarRoute
@@ -173,6 +180,7 @@ export interface FileRoutesByTo {
   '/confirmare': typeof ConfirmareRoute
   '/login': typeof LoginRoute
   '/reset-parola': typeof ResetParolaRoute
+  '/rezervarea-mea': typeof RezervareaMeaRoute
   '/signup': typeof SignupRoute
   '/proprietar/calendar': typeof ProprietarCalendarRoute
   '/proprietar/cereri': typeof ProprietarCereriRoute
@@ -196,6 +204,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/proprietar': typeof ProprietarRouteWithChildren
   '/reset-parola': typeof ResetParolaRoute
+  '/rezervarea-mea': typeof RezervareaMeaRoute
   '/sali': typeof SaliRouteWithChildren
   '/signup': typeof SignupRoute
   '/proprietar/calendar': typeof ProprietarCalendarRoute
@@ -222,6 +231,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/proprietar'
     | '/reset-parola'
+    | '/rezervarea-mea'
     | '/sali'
     | '/signup'
     | '/proprietar/calendar'
@@ -245,6 +255,7 @@ export interface FileRouteTypes {
     | '/confirmare'
     | '/login'
     | '/reset-parola'
+    | '/rezervarea-mea'
     | '/signup'
     | '/proprietar/calendar'
     | '/proprietar/cereri'
@@ -267,6 +278,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/proprietar'
     | '/reset-parola'
+    | '/rezervarea-mea'
     | '/sali'
     | '/signup'
     | '/proprietar/calendar'
@@ -292,6 +304,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ProprietarRoute: typeof ProprietarRouteWithChildren
   ResetParolaRoute: typeof ResetParolaRoute
+  RezervareaMeaRoute: typeof RezervareaMeaRoute
   SaliRoute: typeof SaliRouteWithChildren
   SignupRoute: typeof SignupRoute
   RezervaSlugRoute: typeof RezervaSlugRoute
@@ -311,6 +324,13 @@ declare module '@tanstack/react-router' {
       path: '/sali'
       fullPath: '/sali'
       preLoaderRoute: typeof SaliRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rezervarea-mea': {
+      id: '/rezervarea-mea'
+      path: '/rezervarea-mea'
+      fullPath: '/rezervarea-mea'
+      preLoaderRoute: typeof RezervareaMeaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-parola': {
@@ -527,6 +547,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ProprietarRoute: ProprietarRouteWithChildren,
   ResetParolaRoute: ResetParolaRoute,
+  RezervareaMeaRoute: RezervareaMeaRoute,
   SaliRoute: SaliRouteWithChildren,
   SignupRoute: SignupRoute,
   RezervaSlugRoute: RezervaSlugRoute,
