@@ -96,6 +96,9 @@ export function SiteHeader() {
           <Button variant="ghost" asChild className="text-foreground/80">
             <Link to="/sali">Săli</Link>
           </Button>
+          <Button variant="ghost" asChild className="text-foreground/80 hidden sm:inline-flex">
+            <Link to="/rezervarea-mea">Rezervarea mea</Link>
+          </Button>
 
           {(profile?.role === "owner" || profile?.role === "admin") && (
             <a
