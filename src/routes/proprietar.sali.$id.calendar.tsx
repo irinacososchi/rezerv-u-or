@@ -1297,6 +1297,29 @@ function BlockDetails({
   onChanged: () => void;
 }) {
   const [busy, setBusy] = useState(false);
+  const [reason, setReason] = useState<string | null>(entry.reason ?? null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("bookings")
+        .select("reason, notes, renter_notes")
+        .eq("id", entry.id)
+        .maybeSingle();
+      if (cancelled || !data) return;
+      const val =
+        (data as { reason?: string | null; notes?: string | null; renter_notes?: string | null })
+          .reason ??
+        (data as { notes?: string | null }).notes ??
+        (data as { renter_notes?: string | null }).renter_notes ??
+        null;
+      setReason(val);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [entry.id]);
 
   async function unblock() {
     setBusy(true);
@@ -1317,7 +1340,7 @@ function BlockDetails({
         </DialogDescription>
       </DialogHeader>
       <div className="space-y-2 text-sm">
-        <Row label="Motiv" value={entry.reason ?? "—"} />
+        <Row label="Motiv" value={reason && reason.trim() ? reason : "—"} />
       </div>
       <DialogFooter className="gap-2">
         <Button onClick={unblock} disabled={busy}>
