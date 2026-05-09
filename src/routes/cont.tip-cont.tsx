@@ -48,10 +48,13 @@ function TipContPage() {
       .update({ role: newRole })
       .eq("id", profile.id);
     setLoading(false);
-    if (newRole === "owner") {
+    // Force a full reload so the header re-reads the new role from the DB
+    if (typeof window !== "undefined") {
+      window.location.href = newRole === "owner" ? "/proprietar/dashboard" : "/cont/rezervari";
+    } else if (newRole === "owner") {
       navigate({ to: "/proprietar/dashboard" });
     } else {
-      navigate({ to: "/" });
+      navigate({ to: "/cont/rezervari" });
     }
   }
 
