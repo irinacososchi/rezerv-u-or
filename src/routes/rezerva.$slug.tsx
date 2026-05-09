@@ -285,6 +285,14 @@ function CheckoutPage() {
   // ---------- Submit ----------
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    const { data: { session } } = await supabase.auth.getSession();
+    console.log("=== DEBUG REZERVARE ===");
+    console.log("Session:", session);
+    console.log("User:", session?.user?.email);
+    console.log("Role:", session?.user?.role);
+    console.log("Access token primele 20 chars:", session?.access_token?.slice(0, 20));
+
     setSubmitError(null);
 
     if (!room || !paramsValid || !dateObj) {
