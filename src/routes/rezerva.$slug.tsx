@@ -405,15 +405,16 @@ function CheckoutPage() {
     console.log("Refreshed session:", refreshed?.session?.user?.email);
     console.log("Refresh error:", refreshError);
 
-    // Insert fără .select() — evită verificarea RLS pe SELECT
+    // Insert fără .select() — evită RLS SELECT pe rândurile nou create
     const { error: insertError } = await supabase
       .from("bookings")
       .insert(bookingsToInsert);
 
+    setSubmitting(false);
+
     if (insertError) {
-      setSubmitting(false);
       if (insertError.code === "23P01") {
-        setSubmitError("Una dintre date a fost rezervată între timp.");
+        setSubmitError("Una dintre date a fost rezervată între timp. Te rugăm să alegi alt interval.");
       } else {
         console.error("Booking insert error:", insertError);
         setSubmitError("A apărut o eroare. Te rugăm să încerci din nou.");
@@ -421,10 +422,10 @@ function CheckoutPage() {
       return;
     }
 
-    // Fetch referința după insert — caută după email ȘI data rezervării
+    // Fetch referința separat — query simplu după email + data + ora
     const { data: newBooking } = await supabase
       .from("bookings")
-      .select("reference, booking_date")
+      .select("reference")
       .eq("guest_email", email.trim().toLowerCase())
       .eq("booking_date", allDates[0])
       .eq("start_time", startTime)
@@ -432,16 +433,7 @@ function CheckoutPage() {
       .limit(1)
       .maybeSingle();
 
-    console.log("New booking found:", newBooking);
-
-    setSubmitting(false);
-
     const reference = newBooking?.reference ?? "";
-
-    if (!reference) {
-      navigate({ to: "/cont/rezervari" });
-      return;
-    }
 
     navigate({
       to: "/confirmare",
