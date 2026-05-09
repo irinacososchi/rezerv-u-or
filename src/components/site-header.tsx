@@ -68,6 +68,29 @@ export function SiteHeader() {
     };
   }, []);
 
+  // Realtime: react to role/profile changes for the current user (e.g. switching account type)
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase
+      .channel(`profile-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${user.id}` },
+        (payload) => {
+          const p = payload.new as { full_name?: string; email?: string; role?: string };
+          setProfile({
+            full_name: p.full_name ?? "",
+            email: p.email ?? user.email ?? "",
+            role: p.role ?? "",
+          });
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, user?.email]);
+
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -173,34 +196,32 @@ export function SiteHeader() {
                     </div>
                   )}
 
-                  {profile?.role === "renter" && (
-                    <div className="border-t border-border px-4 py-2">
-                      <Link
-                        to="/cont/rezervari"
-                        onClick={() => setDropdownOpen(false)}
-                        className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted/40 hover:text-primary transition"
-                      >
-                        <Calendar className="h-4 w-4" />
-                        Rezervările mele
-                      </Link>
-                      <Link
-                        to="/cont/favorite"
-                        onClick={() => setDropdownOpen(false)}
-                        className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted/40 hover:text-primary transition"
-                      >
-                        <Heart className="h-4 w-4" />
-                        Săli favorite
-                      </Link>
-                      <Link
-                        to="/cont"
-                        onClick={() => setDropdownOpen(false)}
-                        className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted/40 hover:text-primary transition"
-                      >
-                        <Settings className="h-4 w-4" />
-                        Contul meu
-                      </Link>
-                    </div>
-                  )}
+                  <div className="border-t border-border px-4 py-2">
+                    <Link
+                      to="/cont/rezervari"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted/40 hover:text-primary transition"
+                    >
+                      <Calendar className="h-4 w-4" />
+                      Rezervările mele
+                    </Link>
+                    <Link
+                      to="/cont/favorite"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted/40 hover:text-primary transition"
+                    >
+                      <Heart className="h-4 w-4" />
+                      Săli favorite
+                    </Link>
+                    <Link
+                      to="/cont"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted/40 hover:text-primary transition"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Contul meu
+                    </Link>
+                  </div>
 
                   {profile?.role && profile.role !== "admin" && (
                     <div className="px-4 py-2">
