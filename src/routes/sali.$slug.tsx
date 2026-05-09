@@ -350,6 +350,74 @@ function RoomDetailsPage() {
     setRecurrenceDates([]);
   }, [selectedDate]);
 
+  // Auth + favorite state
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (cancelled) return;
+      if (!user) {
+        setAuthUser(null);
+        setAuthRole(null);
+        return;
+      }
+      setAuthUser({ id: user.id });
+      const { data: p } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      setAuthRole((p as { role?: string } | null)?.role ?? null);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!authUser || authRole !== "renter" || !room) {
+      setIsFavorite(false);
+      setFavoriteId(null);
+      return;
+    }
+    (async () => {
+      const { data } = await supabase
+        .from("favorites")
+        .select("id")
+        .eq("renter_id", authUser.id)
+        .eq("room_id", room.id)
+        .maybeSingle();
+      if (cancelled) return;
+      setIsFavorite(!!data);
+      setFavoriteId((data as { id?: string } | null)?.id ?? null);
+    })();
+    return () => { cancelled = true; };
+  }, [authUser, authRole, room]);
+
+  async function toggleFavorite() {
+    if (!authUser) {
+      navigate({ to: "/login" });
+      return;
+    }
+    if (!room) return;
+    setFavLoading(true);
+    if (isFavorite && favoriteId) {
+      await supabase.from("favorites").delete().eq("id", favoriteId);
+      setIsFavorite(false);
+      setFavoriteId(null);
+    } else {
+      const { data } = await supabase
+        .from("favorites")
+        .insert({ renter_id: authUser.id, room_id: room.id })
+        .select()
+        .single();
+      setIsFavorite(true);
+      setFavoriteId((data as { id?: string } | null)?.id ?? null);
+    }
+    setFavLoading(false);
+  }
+
+
   function toggleHour(h: number) {
     setSelectedHours((prev) => {
       if (prev.includes(h)) {
@@ -492,9 +560,25 @@ function RoomDetailsPage() {
                 </div>
               )}
 
-              <h1 className="mt-6 text-3xl font-bold tracking-tight sm:text-4xl">
-                {room.name}
-              </h1>
+              <div className="mt-6 flex items-start justify-between gap-3">
+                <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                  {room.name}
+                </h1>
+                {authRole === "renter" && (
+                  <button
+                    onClick={toggleFavorite}
+                    disabled={favLoading}
+                    className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm transition disabled:opacity-60 ${
+                      isFavorite
+                        ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+                        : "border-border text-muted-foreground hover:border-primary hover:text-primary"
+                    }`}
+                  >
+                    <Heart className={`h-4 w-4 ${isFavorite ? "fill-red-500 text-red-500" : ""}`} />
+                    {isFavorite ? "Salvat la favorite" : "Salvează la favorite"}
+                  </button>
+                )}
+              </div>
 
               <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
                 <MapPin className="h-4 w-4" />
