@@ -421,18 +421,27 @@ function CheckoutPage() {
       return;
     }
 
-    // Fetch referința separat după insert reușit
+    // Fetch referința după insert — caută după email ȘI data rezervării
     const { data: newBooking } = await supabase
       .from("bookings")
       .select("reference, booking_date")
-      .eq("guest_email", email.trim())
+      .eq("guest_email", email.trim().toLowerCase())
+      .eq("booking_date", allDates[0])
+      .eq("start_time", startTime)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
 
+    console.log("New booking found:", newBooking);
+
     setSubmitting(false);
 
     const reference = newBooking?.reference ?? "";
+
+    if (!reference) {
+      navigate({ to: "/cont/rezervari" });
+      return;
+    }
 
     navigate({
       to: "/confirmare",
