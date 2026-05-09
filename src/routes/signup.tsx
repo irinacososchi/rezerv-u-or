@@ -89,7 +89,26 @@ function SignupPage() {
 
     if (signupError) {
       setLoading(false);
-      setError(signupError.message);
+      const msg = signupError.message.toLowerCase();
+      if (
+        msg.includes("already registered") ||
+        msg.includes("already been registered") ||
+        msg.includes("user already exists")
+      ) {
+        setEmailExists(true);
+        setError("Acest email este deja asociat unui cont. Autentifică-te sau resetează parola.");
+      } else {
+        setError(signupError.message);
+      }
+      return;
+    }
+
+    // Supabase returns a "fake" user with empty identities when the email
+    // already exists but is unconfirmed (security obfuscation). Detect this.
+    if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+      setLoading(false);
+      setEmailExists(true);
+      setError("Acest email este deja înregistrat. Autentifică-te sau resetează parola.");
       return;
     }
 
