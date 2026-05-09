@@ -45,7 +45,8 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    storage: typeof window !== "undefined" ? hybridStorage : undefined,
+    storage: typeof window !== "undefined" ? window.localStorage : undefined,
+    storageKey: "rzrv-auth",
   },
 });
 
