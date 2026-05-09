@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ChevronDown, LayoutDashboard, LogOut, RefreshCw } from "lucide-react";
+import { ChevronDown, LayoutDashboard, LogOut, RefreshCw, Calendar, Heart, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/external-client";
 import logoUrl from "@/assets/rzrv-logo.png";
@@ -170,6 +170,35 @@ export function SiteHeader() {
                         <LayoutDashboard className="h-4 w-4" />
                         Panoul meu
                       </a>
+                    </div>
+                  )}
+
+                  {profile?.role === "renter" && (
+                    <div className="border-t border-border px-4 py-2">
+                      <Link
+                        to="/cont/rezervari"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted/40 hover:text-primary transition"
+                      >
+                        <Calendar className="h-4 w-4" />
+                        Rezervările mele
+                      </Link>
+                      <Link
+                        to="/cont/favorite"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted/40 hover:text-primary transition"
+                      >
+                        <Heart className="h-4 w-4" />
+                        Săli favorite
+                      </Link>
+                      <Link
+                        to="/cont"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted/40 hover:text-primary transition"
+                      >
+                        <Settings className="h-4 w-4" />
+                        Contul meu
+                      </Link>
                     </div>
                   )}
 

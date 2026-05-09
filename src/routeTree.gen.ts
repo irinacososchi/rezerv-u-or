@@ -15,10 +15,12 @@ import { Route as RezervareaMeaRouteImport } from './routes/rezervarea-mea'
 import { Route as ResetParolaRouteImport } from './routes/reset-parola'
 import { Route as ProprietarRouteImport } from './routes/proprietar'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ContRouteImport } from './routes/cont'
 import { Route as ConfirmareRouteImport } from './routes/confirmare'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SaliIndexRouteImport } from './routes/sali.index'
 import { Route as ProprietarIndexRouteImport } from './routes/proprietar.index'
+import { Route as ContIndexRouteImport } from './routes/cont.index'
 import { Route as SaliSlugRouteImport } from './routes/sali.$slug'
 import { Route as RezervaSlugRouteImport } from './routes/rezerva.$slug'
 import { Route as ProprietarVouchereRouteImport } from './routes/proprietar.vouchere'
@@ -28,6 +30,8 @@ import { Route as ProprietarContRouteImport } from './routes/proprietar.cont'
 import { Route as ProprietarCereriRouteImport } from './routes/proprietar.cereri'
 import { Route as ProprietarCalendarRouteImport } from './routes/proprietar.calendar'
 import { Route as ContTipContRouteImport } from './routes/cont.tip-cont'
+import { Route as ContRezervariRouteImport } from './routes/cont.rezervari'
+import { Route as ContFavoriteRouteImport } from './routes/cont.favorite'
 import { Route as ProprietarSaliIndexRouteImport } from './routes/proprietar.sali.index'
 import { Route as ProprietarSaliNouRouteImport } from './routes/proprietar.sali.nou'
 import { Route as ProprietarSaliIdRouteImport } from './routes/proprietar.sali.$id'
@@ -64,6 +68,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContRoute = ContRouteImport.update({
+  id: '/cont',
+  path: '/cont',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConfirmareRoute = ConfirmareRouteImport.update({
   id: '/confirmare',
   path: '/confirmare',
@@ -83,6 +92,11 @@ const ProprietarIndexRoute = ProprietarIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => ProprietarRoute,
+} as any)
+const ContIndexRoute = ContIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ContRoute,
 } as any)
 const SaliSlugRoute = SaliSlugRouteImport.update({
   id: '/$slug',
@@ -125,9 +139,19 @@ const ProprietarCalendarRoute = ProprietarCalendarRouteImport.update({
   getParentRoute: () => ProprietarRoute,
 } as any)
 const ContTipContRoute = ContTipContRouteImport.update({
-  id: '/cont/tip-cont',
-  path: '/cont/tip-cont',
-  getParentRoute: () => rootRouteImport,
+  id: '/tip-cont',
+  path: '/tip-cont',
+  getParentRoute: () => ContRoute,
+} as any)
+const ContRezervariRoute = ContRezervariRouteImport.update({
+  id: '/rezervari',
+  path: '/rezervari',
+  getParentRoute: () => ContRoute,
+} as any)
+const ContFavoriteRoute = ContFavoriteRouteImport.update({
+  id: '/favorite',
+  path: '/favorite',
+  getParentRoute: () => ContRoute,
 } as any)
 const ProprietarSaliIndexRoute = ProprietarSaliIndexRouteImport.update({
   id: '/',
@@ -159,12 +183,15 @@ const ProprietarSaliIdCalendarRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/confirmare': typeof ConfirmareRoute
+  '/cont': typeof ContRouteWithChildren
   '/login': typeof LoginRoute
   '/proprietar': typeof ProprietarRouteWithChildren
   '/reset-parola': typeof ResetParolaRoute
   '/rezervarea-mea': typeof RezervareaMeaRoute
   '/sali': typeof SaliRouteWithChildren
   '/signup': typeof SignupRoute
+  '/cont/favorite': typeof ContFavoriteRoute
+  '/cont/rezervari': typeof ContRezervariRoute
   '/cont/tip-cont': typeof ContTipContRoute
   '/proprietar/calendar': typeof ProprietarCalendarRoute
   '/proprietar/cereri': typeof ProprietarCereriRoute
@@ -174,6 +201,7 @@ export interface FileRoutesByFullPath {
   '/proprietar/vouchere': typeof ProprietarVouchereRoute
   '/rezerva/$slug': typeof RezervaSlugRoute
   '/sali/$slug': typeof SaliSlugRoute
+  '/cont/': typeof ContIndexRoute
   '/proprietar/': typeof ProprietarIndexRoute
   '/sali/': typeof SaliIndexRoute
   '/proprietar/sali/$id': typeof ProprietarSaliIdRouteWithChildren
@@ -189,6 +217,8 @@ export interface FileRoutesByTo {
   '/reset-parola': typeof ResetParolaRoute
   '/rezervarea-mea': typeof RezervareaMeaRoute
   '/signup': typeof SignupRoute
+  '/cont/favorite': typeof ContFavoriteRoute
+  '/cont/rezervari': typeof ContRezervariRoute
   '/cont/tip-cont': typeof ContTipContRoute
   '/proprietar/calendar': typeof ProprietarCalendarRoute
   '/proprietar/cereri': typeof ProprietarCereriRoute
@@ -197,6 +227,7 @@ export interface FileRoutesByTo {
   '/proprietar/vouchere': typeof ProprietarVouchereRoute
   '/rezerva/$slug': typeof RezervaSlugRoute
   '/sali/$slug': typeof SaliSlugRoute
+  '/cont': typeof ContIndexRoute
   '/proprietar': typeof ProprietarIndexRoute
   '/sali': typeof SaliIndexRoute
   '/proprietar/sali/$id': typeof ProprietarSaliIdRouteWithChildren
@@ -209,12 +240,15 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/confirmare': typeof ConfirmareRoute
+  '/cont': typeof ContRouteWithChildren
   '/login': typeof LoginRoute
   '/proprietar': typeof ProprietarRouteWithChildren
   '/reset-parola': typeof ResetParolaRoute
   '/rezervarea-mea': typeof RezervareaMeaRoute
   '/sali': typeof SaliRouteWithChildren
   '/signup': typeof SignupRoute
+  '/cont/favorite': typeof ContFavoriteRoute
+  '/cont/rezervari': typeof ContRezervariRoute
   '/cont/tip-cont': typeof ContTipContRoute
   '/proprietar/calendar': typeof ProprietarCalendarRoute
   '/proprietar/cereri': typeof ProprietarCereriRoute
@@ -224,6 +258,7 @@ export interface FileRoutesById {
   '/proprietar/vouchere': typeof ProprietarVouchereRoute
   '/rezerva/$slug': typeof RezervaSlugRoute
   '/sali/$slug': typeof SaliSlugRoute
+  '/cont/': typeof ContIndexRoute
   '/proprietar/': typeof ProprietarIndexRoute
   '/sali/': typeof SaliIndexRoute
   '/proprietar/sali/$id': typeof ProprietarSaliIdRouteWithChildren
@@ -237,12 +272,15 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/confirmare'
+    | '/cont'
     | '/login'
     | '/proprietar'
     | '/reset-parola'
     | '/rezervarea-mea'
     | '/sali'
     | '/signup'
+    | '/cont/favorite'
+    | '/cont/rezervari'
     | '/cont/tip-cont'
     | '/proprietar/calendar'
     | '/proprietar/cereri'
@@ -252,6 +290,7 @@ export interface FileRouteTypes {
     | '/proprietar/vouchere'
     | '/rezerva/$slug'
     | '/sali/$slug'
+    | '/cont/'
     | '/proprietar/'
     | '/sali/'
     | '/proprietar/sali/$id'
@@ -267,6 +306,8 @@ export interface FileRouteTypes {
     | '/reset-parola'
     | '/rezervarea-mea'
     | '/signup'
+    | '/cont/favorite'
+    | '/cont/rezervari'
     | '/cont/tip-cont'
     | '/proprietar/calendar'
     | '/proprietar/cereri'
@@ -275,6 +316,7 @@ export interface FileRouteTypes {
     | '/proprietar/vouchere'
     | '/rezerva/$slug'
     | '/sali/$slug'
+    | '/cont'
     | '/proprietar'
     | '/sali'
     | '/proprietar/sali/$id'
@@ -286,12 +328,15 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/confirmare'
+    | '/cont'
     | '/login'
     | '/proprietar'
     | '/reset-parola'
     | '/rezervarea-mea'
     | '/sali'
     | '/signup'
+    | '/cont/favorite'
+    | '/cont/rezervari'
     | '/cont/tip-cont'
     | '/proprietar/calendar'
     | '/proprietar/cereri'
@@ -301,6 +346,7 @@ export interface FileRouteTypes {
     | '/proprietar/vouchere'
     | '/rezerva/$slug'
     | '/sali/$slug'
+    | '/cont/'
     | '/proprietar/'
     | '/sali/'
     | '/proprietar/sali/$id'
@@ -313,13 +359,13 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConfirmareRoute: typeof ConfirmareRoute
+  ContRoute: typeof ContRouteWithChildren
   LoginRoute: typeof LoginRoute
   ProprietarRoute: typeof ProprietarRouteWithChildren
   ResetParolaRoute: typeof ResetParolaRoute
   RezervareaMeaRoute: typeof RezervareaMeaRoute
   SaliRoute: typeof SaliRouteWithChildren
   SignupRoute: typeof SignupRoute
-  ContTipContRoute: typeof ContTipContRoute
   RezervaSlugRoute: typeof RezervaSlugRoute
 }
 
@@ -367,6 +413,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/cont': {
+      id: '/cont'
+      path: '/cont'
+      fullPath: '/cont'
+      preLoaderRoute: typeof ContRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/confirmare': {
       id: '/confirmare'
       path: '/confirmare'
@@ -394,6 +447,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/proprietar/'
       preLoaderRoute: typeof ProprietarIndexRouteImport
       parentRoute: typeof ProprietarRoute
+    }
+    '/cont/': {
+      id: '/cont/'
+      path: '/'
+      fullPath: '/cont/'
+      preLoaderRoute: typeof ContIndexRouteImport
+      parentRoute: typeof ContRoute
     }
     '/sali/$slug': {
       id: '/sali/$slug'
@@ -453,10 +513,24 @@ declare module '@tanstack/react-router' {
     }
     '/cont/tip-cont': {
       id: '/cont/tip-cont'
-      path: '/cont/tip-cont'
+      path: '/tip-cont'
       fullPath: '/cont/tip-cont'
       preLoaderRoute: typeof ContTipContRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ContRoute
+    }
+    '/cont/rezervari': {
+      id: '/cont/rezervari'
+      path: '/rezervari'
+      fullPath: '/cont/rezervari'
+      preLoaderRoute: typeof ContRezervariRouteImport
+      parentRoute: typeof ContRoute
+    }
+    '/cont/favorite': {
+      id: '/cont/favorite'
+      path: '/favorite'
+      fullPath: '/cont/favorite'
+      preLoaderRoute: typeof ContFavoriteRouteImport
+      parentRoute: typeof ContRoute
     }
     '/proprietar/sali/': {
       id: '/proprietar/sali/'
@@ -495,6 +569,22 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface ContRouteChildren {
+  ContFavoriteRoute: typeof ContFavoriteRoute
+  ContRezervariRoute: typeof ContRezervariRoute
+  ContTipContRoute: typeof ContTipContRoute
+  ContIndexRoute: typeof ContIndexRoute
+}
+
+const ContRouteChildren: ContRouteChildren = {
+  ContFavoriteRoute: ContFavoriteRoute,
+  ContRezervariRoute: ContRezervariRoute,
+  ContTipContRoute: ContTipContRoute,
+  ContIndexRoute: ContIndexRoute,
+}
+
+const ContRouteWithChildren = ContRoute._addFileChildren(ContRouteChildren)
 
 interface ProprietarSaliIdRouteChildren {
   ProprietarSaliIdCalendarRoute: typeof ProprietarSaliIdCalendarRoute
@@ -564,13 +654,13 @@ const SaliRouteWithChildren = SaliRoute._addFileChildren(SaliRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConfirmareRoute: ConfirmareRoute,
+  ContRoute: ContRouteWithChildren,
   LoginRoute: LoginRoute,
   ProprietarRoute: ProprietarRouteWithChildren,
   ResetParolaRoute: ResetParolaRoute,
   RezervareaMeaRoute: RezervareaMeaRoute,
   SaliRoute: SaliRouteWithChildren,
   SignupRoute: SignupRoute,
-  ContTipContRoute: ContTipContRoute,
   RezervaSlugRoute: RezervaSlugRoute,
 }
 export const routeTree = rootRouteImport
