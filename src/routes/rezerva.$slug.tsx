@@ -292,6 +292,7 @@ function CheckoutPage() {
     console.log("User:", session?.user?.email);
     console.log("Role:", session?.user?.role);
     console.log("Access token primele 20 chars:", session?.access_token?.slice(0, 20));
+    console.log("Supabase URL folosit:", (supabase as any).supabaseUrl);
 
     setSubmitError(null);
 
