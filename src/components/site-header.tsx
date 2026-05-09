@@ -173,6 +173,21 @@ export function SiteHeader() {
                     </div>
                   )}
 
+                  {profile?.role && profile.role !== "admin" && (
+                    <div className="px-4 py-2">
+                      <Link
+                        to="/cont/tip-cont"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted/40 hover:text-primary transition"
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                        {profile.role === "renter"
+                          ? "Vreau să listez o sală"
+                          : "Treci la cont chiriaș"}
+                      </Link>
+                    </div>
+                  )}
+
                   <div className="border-t border-border px-4 py-2">
                     <button
                       onClick={async () => {
