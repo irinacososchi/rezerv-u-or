@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ArrowLeft,
+  Heart,
 } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -153,6 +154,13 @@ function RoomDetailsPage() {
   const [isRecurrent, setIsRecurrent] = useState(false);
   const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
   const [recurrenceDates, setRecurrenceDates] = useState<Date[]>([]);
+
+  // Favorites
+  const [authUser, setAuthUser] = useState<{ id: string } | null>(null);
+  const [authRole, setAuthRole] = useState<string | null>(null);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteId, setFavoriteId] = useState<string | null>(null);
+  const [favLoading, setFavLoading] = useState(false);
 
   // ---------- Fetch ----------
   useEffect(() => {
