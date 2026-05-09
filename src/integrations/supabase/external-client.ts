@@ -18,6 +18,12 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   },
 });
 
+if (typeof window !== "undefined") {
+  supabase.auth.onAuthStateChange((event, session) => {
+    console.log("Auth state change:", event, session?.user?.email);
+  });
+}
+
 export function setRememberMe(remember: boolean) {
   if (typeof window === "undefined") return;
   if (remember) {
