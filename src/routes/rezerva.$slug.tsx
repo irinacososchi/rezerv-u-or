@@ -400,6 +400,11 @@ function CheckoutPage() {
       invoice_address: needsInvoice ? invoiceAddress.trim() : null,
     }));
 
+    // Refresh explicit al sesiunii înainte de insert
+    const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+    console.log("Refreshed session:", refreshed?.session?.user?.email);
+    console.log("Refresh error:", refreshError);
+
     const { data: inserted, error } = await supabase
       .from("bookings")
       .insert(bookingsToInsert)
