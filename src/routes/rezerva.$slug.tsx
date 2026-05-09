@@ -373,8 +373,13 @@ function CheckoutPage() {
       recurrenceId = (rec as { id: string }).id;
     }
 
+    // Verifică dacă există un utilizator logat
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    const renterId = currentUser?.id ?? null;
+
     const bookingsToInsert = allDates.map((date, idx) => ({
       room_id: room.id,
+      renter_id: renterId,
       recurrence_id: recurrenceId,
       recurrence_index: recurrenceId ? idx + 1 : null,
       guest_name: name.trim(),
