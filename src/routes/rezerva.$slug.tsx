@@ -405,27 +405,34 @@ function CheckoutPage() {
     console.log("Refreshed session:", refreshed?.session?.user?.email);
     console.log("Refresh error:", refreshError);
 
-    const { data: inserted, error } = await supabase
+    // Insert fără .select() — evită verificarea RLS pe SELECT
+    const { error: insertError } = await supabase
       .from("bookings")
-      .insert(bookingsToInsert)
-      .select("reference, booking_date");
+      .insert(bookingsToInsert);
 
-    setSubmitting(false);
-
-    if (error) {
-      if (error.code === "23P01") {
-        setSubmitError("Una dintre date a fost rezervată între timp. Te rugăm să verifici disponibilitatea.");
+    if (insertError) {
+      setSubmitting(false);
+      if (insertError.code === "23P01") {
+        setSubmitError("Una dintre date a fost rezervată între timp.");
       } else {
-        console.error("Booking insert error:", error);
+        console.error("Booking insert error:", insertError);
         setSubmitError("A apărut o eroare. Te rugăm să încerci din nou.");
       }
       return;
     }
 
-    const sorted = [...(inserted ?? [])].sort((a, b) =>
-      a.booking_date.localeCompare(b.booking_date),
-    );
-    const reference = (sorted[0] as { reference?: string } | undefined)?.reference ?? "";
+    // Fetch referința separat după insert reușit
+    const { data: newBooking } = await supabase
+      .from("bookings")
+      .select("reference, booking_date")
+      .eq("guest_email", email.trim())
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    setSubmitting(false);
+
+    const reference = newBooking?.reference ?? "";
 
     navigate({
       to: "/confirmare",
