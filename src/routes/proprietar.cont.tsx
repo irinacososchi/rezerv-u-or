@@ -139,7 +139,7 @@ function AccountPage() {
 
   const initial =
     (fullName || profile?.full_name || user?.email || "?").charAt(0).toUpperCase();
-  const isOwner = profile?.role === "owner" || profile?.role === "admin";
+  const isOwner = true;
 
   return (
     <OwnerLayout>
