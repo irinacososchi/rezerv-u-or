@@ -141,6 +141,27 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
   const [checkingSlug, setCheckingSlug] = useState(false);
   const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([]);
+  const [tourUrlError, setTourUrlError] = useState<string | null>(null);
+
+  function validateTourUrl(url: string): string | null {
+    if (!url || url.trim() === "") return null;
+    const trimmed = url.trim();
+    try {
+      const parsed = new URL(trimmed);
+      if (!parsed.hostname.match(/^(www\.)?google\.[a-z.]+$/)) {
+        return "Linkul trebuie să fie de pe google.com sau google.ro";
+      }
+      if (!parsed.pathname.startsWith("/maps/")) {
+        return "Linkul trebuie să fie din Google Maps";
+      }
+      if (!trimmed.includes("3m")) {
+        return "Linkul nu pare să fie un tur 360°. Asigură-te că ai dat click pe imaginea Street View înainte să copiezi linkul.";
+      }
+      return null;
+    } catch {
+      return "Link invalid";
+    }
+  }
 
   async function checkSlugAvailability(value: string) {
     const v = value.trim();
