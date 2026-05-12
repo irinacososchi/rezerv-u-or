@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDateRO, parseISODate } from "@/lib/date-utils";
+import { BookingTimestamps } from "@/components/booking-timestamps";
 
 export const Route = createFileRoute("/proprietar/dashboard")({
   component: DashboardPage,
@@ -29,6 +30,7 @@ type BookingFull = {
   payment_status: string | null;
   payment_method: string | null;
   created_at: string;
+  updated_at?: string;
 };
 
 type Room = { id: string; name: string; is_active: boolean };
@@ -229,6 +231,7 @@ function DashboardPage() {
                         {b.room_name} · {formatDateRO(parseISODate(b.booking_date))} · {formatTimeRange(b.start_time, b.end_time)}
                       </p>
                       <p className="text-sm font-semibold text-primary">{formatRON(totalOf(b))}</p>
+                      <BookingTimestamps createdAt={b.created_at} updatedAt={b.updated_at} />
                     </div>
                     <div className="flex gap-2">
                       <Button
@@ -331,6 +334,7 @@ function DashboardPage() {
                           <StatusBadge status={b.status} />
                           <PaymentBadge status={b.payment_status} />
                         </div>
+                        <BookingTimestamps createdAt={b.created_at} updatedAt={b.updated_at} />
                       </CardContent>
                     </Card>
                   </Link>
