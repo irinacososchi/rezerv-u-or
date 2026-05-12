@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, AlertCircle, RefreshCw, Trash2, Lock, CheckCircle2 } from "lucide-react";
+import { Loader2, AlertCircle, Trash2, Lock, CheckCircle2 } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
@@ -359,17 +359,6 @@ function ContPage() {
                   </div>
                 )}
               </div>
-
-              {/* Switch to owner */}
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full justify-start"
-                onClick={() => navigate({ to: "/cont/tip-cont" })}
-              >
-                <RefreshCw className="mr-2 h-4 w-4" />
-                {profile.role === "owner" ? "Treci la cont chiriaș" : "Vreau să listez o sală"}
-              </Button>
 
               {/* Delete */}
               <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">

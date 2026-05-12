@@ -29,7 +29,6 @@ import { Route as ProprietarDashboardRouteImport } from './routes/proprietar.das
 import { Route as ProprietarContRouteImport } from './routes/proprietar.cont'
 import { Route as ProprietarCereriRouteImport } from './routes/proprietar.cereri'
 import { Route as ProprietarCalendarRouteImport } from './routes/proprietar.calendar'
-import { Route as ContTipContRouteImport } from './routes/cont.tip-cont'
 import { Route as ContRezervariRouteImport } from './routes/cont.rezervari'
 import { Route as ContFavoriteRouteImport } from './routes/cont.favorite'
 import { Route as ProprietarSaliIndexRouteImport } from './routes/proprietar.sali.index'
@@ -138,11 +137,6 @@ const ProprietarCalendarRoute = ProprietarCalendarRouteImport.update({
   path: '/calendar',
   getParentRoute: () => ProprietarRoute,
 } as any)
-const ContTipContRoute = ContTipContRouteImport.update({
-  id: '/tip-cont',
-  path: '/tip-cont',
-  getParentRoute: () => ContRoute,
-} as any)
 const ContRezervariRoute = ContRezervariRouteImport.update({
   id: '/rezervari',
   path: '/rezervari',
@@ -192,7 +186,6 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/cont/favorite': typeof ContFavoriteRoute
   '/cont/rezervari': typeof ContRezervariRoute
-  '/cont/tip-cont': typeof ContTipContRoute
   '/proprietar/calendar': typeof ProprietarCalendarRoute
   '/proprietar/cereri': typeof ProprietarCereriRoute
   '/proprietar/cont': typeof ProprietarContRoute
@@ -219,7 +212,6 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/cont/favorite': typeof ContFavoriteRoute
   '/cont/rezervari': typeof ContRezervariRoute
-  '/cont/tip-cont': typeof ContTipContRoute
   '/proprietar/calendar': typeof ProprietarCalendarRoute
   '/proprietar/cereri': typeof ProprietarCereriRoute
   '/proprietar/cont': typeof ProprietarContRoute
@@ -249,7 +241,6 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/cont/favorite': typeof ContFavoriteRoute
   '/cont/rezervari': typeof ContRezervariRoute
-  '/cont/tip-cont': typeof ContTipContRoute
   '/proprietar/calendar': typeof ProprietarCalendarRoute
   '/proprietar/cereri': typeof ProprietarCereriRoute
   '/proprietar/cont': typeof ProprietarContRoute
@@ -281,7 +272,6 @@ export interface FileRouteTypes {
     | '/signup'
     | '/cont/favorite'
     | '/cont/rezervari'
-    | '/cont/tip-cont'
     | '/proprietar/calendar'
     | '/proprietar/cereri'
     | '/proprietar/cont'
@@ -308,7 +298,6 @@ export interface FileRouteTypes {
     | '/signup'
     | '/cont/favorite'
     | '/cont/rezervari'
-    | '/cont/tip-cont'
     | '/proprietar/calendar'
     | '/proprietar/cereri'
     | '/proprietar/cont'
@@ -337,7 +326,6 @@ export interface FileRouteTypes {
     | '/signup'
     | '/cont/favorite'
     | '/cont/rezervari'
-    | '/cont/tip-cont'
     | '/proprietar/calendar'
     | '/proprietar/cereri'
     | '/proprietar/cont'
@@ -511,13 +499,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProprietarCalendarRouteImport
       parentRoute: typeof ProprietarRoute
     }
-    '/cont/tip-cont': {
-      id: '/cont/tip-cont'
-      path: '/tip-cont'
-      fullPath: '/cont/tip-cont'
-      preLoaderRoute: typeof ContTipContRouteImport
-      parentRoute: typeof ContRoute
-    }
     '/cont/rezervari': {
       id: '/cont/rezervari'
       path: '/rezervari'
@@ -573,14 +554,12 @@ declare module '@tanstack/react-router' {
 interface ContRouteChildren {
   ContFavoriteRoute: typeof ContFavoriteRoute
   ContRezervariRoute: typeof ContRezervariRoute
-  ContTipContRoute: typeof ContTipContRoute
   ContIndexRoute: typeof ContIndexRoute
 }
 
 const ContRouteChildren: ContRouteChildren = {
   ContFavoriteRoute: ContFavoriteRoute,
   ContRezervariRoute: ContRezervariRoute,
-  ContTipContRoute: ContTipContRoute,
   ContIndexRoute: ContIndexRoute,
 }
 

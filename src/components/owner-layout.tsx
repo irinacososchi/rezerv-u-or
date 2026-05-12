@@ -54,16 +54,12 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
         }
         const { data: profile } = await supabase
           .from("profiles")
-          .select("role, full_name")
+          .select("full_name")
           .eq("id", user.id)
           .single();
 
         if (cancelled) return;
-        if (!profile || !["owner", "admin"].includes(profile.role)) {
-          navigate({ to: "/" });
-          return;
-        }
-        setOwnerName(profile.full_name ?? "Proprietar");
+        setOwnerName(profile?.full_name ?? "Proprietar");
       } catch (err) {
         console.error("Auth check failed:", err);
         if (!cancelled) navigate({ to: "/login" });
