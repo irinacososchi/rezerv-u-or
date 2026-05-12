@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/external-client";
+import { BookingTimestamps } from "@/components/booking-timestamps";
 
 export const Route = createFileRoute("/cont/rezervari")({
   head: () => ({
@@ -28,6 +29,8 @@ type Booking = {
   payment_status: string;
   guest_email: string;
   recurrence_id: string | null;
+  created_at?: string;
+  updated_at?: string;
 };
 
 type Tab = "upcoming" | "past" | "all";
@@ -258,6 +261,12 @@ function RezervariContPage() {
                       <dd className="font-semibold">{b.total_amount} RON</dd>
                     </div>
                   </dl>
+
+                  <BookingTimestamps
+                    createdAt={b.created_at}
+                    updatedAt={b.updated_at}
+                    className="mt-3"
+                  />
 
                   {cancelError?.id === b.id && (
                     <div className="mt-3 rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">
