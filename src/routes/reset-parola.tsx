@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { supabase } from "@/integrations/supabase/external-client";
@@ -26,6 +26,8 @@ function ResetParolaPage() {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [validSession, setValidSession] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     // Verificăm dacă există deja o sesiune (link-ul de email setează automat sesiunea)
@@ -91,26 +93,50 @@ function ResetParolaPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="password">Parolă nouă</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Minim 8 caractere"
-                    required
-                  />
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Minim 8 caractere"
+                      required
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition"
+                      aria-label={showPassword ? "Ascunde parola" : "Arată parola"}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="confirm">Confirmă parola</Label>
-                  <Input
-                    id="confirm"
-                    type="password"
-                    value={confirm}
-                    onChange={(e) => setConfirm(e.target.value)}
-                    placeholder="Repetă parola"
-                    required
-                  />
+                  <div className="relative">
+                    <Input
+                      id="confirm"
+                      type={showConfirm ? "text" : "password"}
+                      value={confirm}
+                      onChange={(e) => setConfirm(e.target.value)}
+                      placeholder="Repetă parola"
+                      required
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirm(!showConfirm)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition"
+                      aria-label={showConfirm ? "Ascunde parola" : "Arată parola"}
+                      tabIndex={-1}
+                    >
+                      {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
 
                 {error && (

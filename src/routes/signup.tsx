@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,8 @@ function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [emailExists, setEmailExists] = useState(false);
   const [checkingEmail, setCheckingEmail] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   async function checkEmailExists(value: string) {
     const trimmed = value.trim().toLowerCase();
@@ -209,27 +211,51 @@ function SignupPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="password">Parolă *</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  minLength={6}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Minim 6 caractere"
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    minLength={6}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Minim 6 caractere"
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition"
+                    aria-label={showPassword ? "Ascunde parola" : "Arată parola"}
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="confirm">Confirmă parola *</Label>
-                <Input
-                  id="confirm"
-                  type="password"
-                  required
-                  value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
-                  placeholder="Repetă parola"
-                />
+                <div className="relative">
+                  <Input
+                    id="confirm"
+                    type={showConfirmPassword ? "text" : "password"}
+                    required
+                    value={confirm}
+                    onChange={(e) => setConfirm(e.target.value)}
+                    placeholder="Repetă parola"
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition"
+                    aria-label={showConfirmPassword ? "Ascunde parola" : "Arată parola"}
+                    tabIndex={-1}
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
 
               {error && (
