@@ -58,6 +58,7 @@ type FormState = {
   city: string;
   neighbourhood: string;
   google_maps_url: string;
+  virtual_tour_url: string;
   currency: string;
   floor_size_sqm: string;
   has_mirrors: boolean;
