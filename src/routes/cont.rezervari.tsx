@@ -262,6 +262,12 @@ function RezervariContPage() {
                     </div>
                   </dl>
 
+                  <BookingTimestamps
+                    createdAt={b.created_at}
+                    updatedAt={b.updated_at}
+                    className="mt-3"
+                  />
+
                   {cancelError?.id === b.id && (
                     <div className="mt-3 rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">
                       {cancelError.msg}
