@@ -1,95 +1,75 @@
 import { useEffect, useRef, useState } from "react";
+import type { User } from "@supabase/supabase-js";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ChevronDown, LayoutDashboard, LogOut, RefreshCw, Calendar, Heart, Settings } from "lucide-react";
+import { ChevronDown, LayoutDashboard, LogOut, Calendar, Heart, Settings, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/external-client";
 import logoUrl from "@/assets/rzrv-logo.png";
 
+type Profile = { full_name: string | null; email: string | null; role: string | null };
+
 export function SiteHeader() {
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<{ full_name: string; email: string; role: string } | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [hasRooms, setHasRooms] = useState(false);
+  const [hasBookings, setHasBookings] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadProfile(u: any) {
-      if (!u) {
-        if (!cancelled) {
-          setUser(null);
-          setProfile(null);
-          setLoading(false);
-        }
-        return;
-      }
-      if (!cancelled) setUser(u);
-      const { data: p } = await supabase
-        .from("profiles")
-        .select("full_name, email, role")
-        .eq("id", u.id)
-        .single();
-      if (cancelled) return;
-      setProfile(
-        p
-          ? {
-              full_name: p.full_name ?? "",
-              email: p.email ?? u.email ?? "",
-              role: p.role ?? "",
-            }
-          : { full_name: "", email: u.email ?? "", role: "" },
-      );
+  async function loadUserData() {
+    const { data: { user: u } } = await supabase.auth.getUser();
+    if (!u) {
+      setUser(null);
+      setProfile(null);
+      setHasRooms(false);
+      setHasBookings(false);
       setLoading(false);
+      return;
+    }
+    setUser(u);
+
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("full_name, email, role")
+      .eq("id", u.id)
+      .single();
+    setProfile((profileData as Profile) ?? { full_name: null, email: u.email ?? null, role: "user" });
+
+    const { count: roomsCount } = await supabase
+      .from("rooms")
+      .select("id", { count: "exact", head: true })
+      .eq("owner_id", u.id);
+    setHasRooms((roomsCount ?? 0) > 0);
+
+    const { count: bookingsByRenterId } = await supabase
+      .from("bookings")
+      .select("id", { count: "exact", head: true })
+      .eq("renter_id", u.id);
+
+    let totalBookings = bookingsByRenterId ?? 0;
+
+    const email = profileData?.email ?? u.email;
+    if (email) {
+      const { count: bookingsByEmail } = await supabase
+        .from("bookings")
+        .select("id", { count: "exact", head: true })
+        .eq("guest_email", email);
+      totalBookings += bookingsByEmail ?? 0;
     }
 
-    // Set up listener FIRST (catches SIGNED_OUT, TOKEN_REFRESHED, INITIAL_SESSION)
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      loadProfile(session?.user ?? null);
-    });
+    setHasBookings(totalBookings > 0);
+    setLoading(false);
+  }
 
-    // THEN read existing session — getSession never throws on missing/invalid token
-    supabase.auth.getSession().then(({ data }) => {
-      loadProfile(data.session?.user ?? null);
-    }).catch(() => {
-      if (!cancelled) {
-        setUser(null);
-        setProfile(null);
-        setLoading(false);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  // Realtime: react to role/profile changes for the current user (e.g. switching account type)
   useEffect(() => {
-    if (!user?.id) return;
-    const channel = supabase
-      .channel(`profile-${user.id}`)
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${user.id}` },
-        (payload) => {
-          const p = payload.new as { full_name?: string; email?: string; role?: string };
-          setProfile({
-            full_name: p.full_name ?? "",
-            email: p.email ?? user.email ?? "",
-            role: p.role ?? "",
-          });
-        },
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id, user?.email]);
+    loadUserData();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      loadUserData();
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -100,6 +80,8 @@ export function SiteHeader() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const isAdmin = profile?.role === "admin";
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/70">
@@ -123,7 +105,7 @@ export function SiteHeader() {
             <Link to="/rezervarea-mea">Rezervarea mea</Link>
           </Button>
 
-          {(profile?.role === "owner" || profile?.role === "admin") && (
+          {(hasRooms || isAdmin) && (
             <a
               href="/proprietar/dashboard"
               className="inline-flex items-center gap-1.5 rounded-lg border border-primary bg-primary/5 px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/10 transition"
@@ -161,58 +143,14 @@ export function SiteHeader() {
 
               {dropdownOpen && (
                 <div className="absolute right-0 top-full mt-2 w-72 rounded-xl border border-border bg-background shadow-lg z-50">
+                  {/* Header */}
                   <div className="border-b border-border px-4 py-3">
                     <div className="font-medium text-sm">{profile?.full_name || "Fără nume"}</div>
                     <div className="text-xs text-muted-foreground mt-0.5">{user.email}</div>
                   </div>
 
-                  <div className="px-4 py-3 border-b border-border">
-                    <EditNameSection
-                      currentName={profile?.full_name ?? ""}
-                      onSave={async (newName) => {
-                        await supabase
-                          .from("profiles")
-                          .update({ full_name: newName })
-                          .eq("id", user.id);
-                        setProfile((p) => (p ? { ...p, full_name: newName } : p));
-                      }}
-                    />
-                  </div>
-
-                  <div className="px-4 py-3 border-b border-border">
-                    <ChangePasswordSection userId={user.id} />
-                  </div>
-
-                  {(profile?.role === "owner" || profile?.role === "admin") && (
-                    <div className="px-4 py-2">
-                      <a
-                        href="/proprietar/dashboard"
-                        className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted/40 hover:text-primary transition"
-                        onClick={() => setDropdownOpen(false)}
-                      >
-                        <LayoutDashboard className="h-4 w-4" />
-                        Panoul meu
-                      </a>
-                    </div>
-                  )}
-
-                  <div className="border-t border-border px-4 py-2">
-                    <Link
-                      to="/cont/rezervari"
-                      onClick={() => setDropdownOpen(false)}
-                      className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted/40 hover:text-primary transition"
-                    >
-                      <Calendar className="h-4 w-4" />
-                      Rezervările mele
-                    </Link>
-                    <Link
-                      to="/cont/favorite"
-                      onClick={() => setDropdownOpen(false)}
-                      className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted/40 hover:text-primary transition"
-                    >
-                      <Heart className="h-4 w-4" />
-                      Săli favorite
-                    </Link>
+                  {/* Account links */}
+                  <div className="px-2 py-2">
                     <Link
                       to="/cont"
                       onClick={() => setDropdownOpen(false)}
@@ -221,24 +159,50 @@ export function SiteHeader() {
                       <Settings className="h-4 w-4" />
                       Contul meu
                     </Link>
-                  </div>
-
-                  {profile?.role && profile.role !== "admin" && (
-                    <div className="px-4 py-2">
+                    {hasBookings && (
                       <Link
-                        to="/cont/tip-cont"
+                        to="/cont/rezervari"
                         onClick={() => setDropdownOpen(false)}
                         className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted/40 hover:text-primary transition"
                       >
-                        <RefreshCw className="h-4 w-4" />
-                        {profile.role === "renter"
-                          ? "Vreau să listez o sală"
-                          : "Treci la cont chiriaș"}
+                        <Calendar className="h-4 w-4" />
+                        Rezervările mele
                       </Link>
-                    </div>
-                  )}
+                    )}
+                    <Link
+                      to="/cont/favorite"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted/40 hover:text-primary transition"
+                    >
+                      <Heart className="h-4 w-4" />
+                      Săli favorite
+                    </Link>
+                    {(hasRooms || isAdmin) && (
+                      <a
+                        href="/proprietar/dashboard"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted/40 hover:text-primary transition"
+                      >
+                        <LayoutDashboard className="h-4 w-4" />
+                        Panoul meu
+                      </a>
+                    )}
+                  </div>
 
-                  <div className="border-t border-border px-4 py-2">
+                  {/* List a room */}
+                  <div className="border-t border-border px-2 py-2">
+                    <a
+                      href="/proprietar/sali/nou"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted/40 hover:text-primary transition"
+                    >
+                      <Plus className="h-4 w-4" />
+                      {hasRooms ? "Adaugă încă o sală" : "Listează o sală"}
+                    </a>
+                  </div>
+
+                  {/* Logout */}
+                  <div className="border-t border-border px-2 py-2">
                     <button
                       onClick={async () => {
                         setDropdownOpen(false);
@@ -248,7 +212,6 @@ export function SiteHeader() {
                           // ignore — we'll force-clear below
                         }
                         if (typeof window !== "undefined") {
-                          // Purge any orphaned auth tokens from both storages
                           const purge = (s: Storage) => {
                             const keys: string[] = [];
                             for (let i = 0; i < s.length; i++) {
@@ -279,146 +242,5 @@ export function SiteHeader() {
         </nav>
       </div>
     </header>
-  );
-}
-
-function EditNameSection({
-  currentName,
-  onSave,
-}: {
-  currentName: string;
-  onSave: (name: string) => Promise<void>;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [name, setName] = useState(currentName);
-  const [saving, setSaving] = useState(false);
-
-  return (
-    <div>
-      <div className="text-xs font-medium text-muted-foreground mb-2">Numele meu</div>
-      {!editing ? (
-        <div className="flex items-center justify-between">
-          <span className="text-sm">{currentName || "Fără nume"}</span>
-          <button
-            onClick={() => {
-              setName(currentName);
-              setEditing(true);
-            }}
-            className="text-xs text-primary hover:underline"
-          >
-            Modifică
-          </button>
-        </div>
-      ) : (
-        <div className="flex gap-2">
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="flex-1 rounded-md border border-border bg-background px-2 py-1 text-sm"
-            autoFocus
-            maxLength={100}
-          />
-          <button
-            onClick={async () => {
-              if (!name.trim()) return;
-              setSaving(true);
-              await onSave(name.trim());
-              setSaving(false);
-              setEditing(false);
-            }}
-            disabled={saving}
-            className="rounded-md bg-primary px-2 py-1 text-xs text-primary-foreground"
-          >
-            {saving ? "..." : "Salvează"}
-          </button>
-          <button
-            onClick={() => setEditing(false)}
-            className="rounded-md border border-border px-2 py-1 text-xs"
-          >
-            ✕
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ChangePasswordSection({ userId: _userId }: { userId: string }) {
-  const [open, setOpen] = useState(false);
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  const [saving, setSaving] = useState(false);
-
-  async function handleChange() {
-    setError(null);
-    if (password.length < 8) {
-      setError("Minim 8 caractere.");
-      return;
-    }
-    if (password !== confirm) {
-      setError("Parolele nu coincid.");
-      return;
-    }
-    setSaving(true);
-    const { error: err } = await supabase.auth.updateUser({ password });
-    setSaving(false);
-    if (err) {
-      setError(err.message);
-      return;
-    }
-    setSuccess(true);
-    setPassword("");
-    setConfirm("");
-    setTimeout(() => {
-      setSuccess(false);
-      setOpen(false);
-    }, 2000);
-  }
-
-  return (
-    <div>
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-muted-foreground">Parolă</span>
-        <button
-          onClick={() => {
-            setOpen(!open);
-            setError(null);
-          }}
-          className="text-xs text-primary hover:underline"
-        >
-          {open ? "Anulează" : "Schimbă parola"}
-        </button>
-      </div>
-
-      {open && (
-        <div className="mt-2 space-y-2">
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Parolă nouă (minim 8 caractere)"
-            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
-          />
-          <input
-            type="password"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            placeholder="Confirmă parola"
-            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
-          />
-          {error && <p className="text-xs text-destructive">{error}</p>}
-          {success && <p className="text-xs text-primary">Parolă schimbată cu succes!</p>}
-          <button
-            onClick={handleChange}
-            disabled={saving}
-            className="w-full rounded-md bg-primary py-1.5 text-sm text-primary-foreground hover:bg-primary/90 transition"
-          >
-            {saving ? "Se salvează..." : "Salvează parola nouă"}
-          </button>
-        </div>
-      )}
-    </div>
   );
 }
