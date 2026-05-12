@@ -7,13 +7,15 @@ import {
 } from "@/components/ui/tooltip";
 
 interface Props {
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string | null;
+  updatedAt?: string | null;
   className?: string;
 }
 
 export function BookingTimestamps({ createdAt, updatedAt, className }: Props) {
+  if (!createdAt) return null;
   const wasModified =
+    !!updatedAt &&
     new Date(updatedAt).getTime() - new Date(createdAt).getTime() > 1000;
 
   return (
