@@ -47,6 +47,7 @@ type Room = {
   city: string | null;
   neighbourhood: string | null;
   google_maps_url: string | null;
+  virtual_tour_url: string | null;
   floor_size_sqm: number | null;
   has_mirrors: boolean | null;
   has_sound_system: boolean | null;
