@@ -680,6 +680,46 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
             onPendingChange={setPendingPhotos}
           />
 
+          {/* Section 1.6 — Virtual tour 360° */}
+          <div className="rounded-xl border border-border bg-background p-5">
+            <div className="flex items-start gap-3 mb-3">
+              <View className="h-5 w-5 text-primary mt-0.5" />
+              <div className="flex-1">
+                <h3 className="font-semibold">Tur virtual 360° (opțional)</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Adaugă un link Google Maps 360° către sala ta. Chiriașii vor putea vedea
+                  sala înainte să rezerve.
+                </p>
+              </div>
+            </div>
+
+            <Label htmlFor="virtual_tour_url">Link Google Maps</Label>
+            <Input
+              id="virtual_tour_url"
+              type="url"
+              value={form.virtual_tour_url}
+              onChange={(e) => {
+                update("virtual_tour_url", e.target.value);
+                if (tourUrlError) setTourUrlError(null);
+              }}
+              placeholder="https://www.google.com/maps/place/..."
+            />
+            {tourUrlError && (
+              <p className="text-sm text-destructive mt-1">{tourUrlError}</p>
+            )}
+            <details className="mt-3">
+              <summary className="text-sm text-primary cursor-pointer hover:underline">
+                Cum obțin linkul?
+              </summary>
+              <ol className="text-sm text-muted-foreground mt-2 ml-4 list-decimal space-y-1">
+                <li>Deschide Google Maps și caută sala ta</li>
+                <li>Click pe imaginea Street View / Tur interior 360°</li>
+                <li>În tur, click pe meniul ⋮ (3 puncte) → "Partajează sau încorporează imaginea"</li>
+                <li>Copiază linkul și lipește-l aici</li>
+              </ol>
+            </details>
+          </div>
+
           {/* Section 2 — Amenities */}
           <Card>
             <CardHeader>
