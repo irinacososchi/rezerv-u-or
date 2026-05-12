@@ -382,6 +382,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
       city: form.city.trim(),
       neighbourhood: form.neighbourhood || null,
       google_maps_url: form.google_maps_url || null,
+      virtual_tour_url: form.virtual_tour_url.trim() || null,
       currency: form.currency,
       floor_size_sqm: form.floor_size_sqm
         ? Number(form.floor_size_sqm)
