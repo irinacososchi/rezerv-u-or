@@ -146,21 +146,20 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
   function validateTourUrl(url: string): string | null {
     if (!url || url.trim() === "") return null;
     const trimmed = url.trim();
+    let parsed: URL;
     try {
-      const parsed = new URL(trimmed);
-      if (!parsed.hostname.match(/^(www\.)?google\.[a-z.]+$/)) {
-        return "Linkul trebuie să fie de pe google.com sau google.ro";
-      }
-      if (!parsed.pathname.startsWith("/maps/")) {
-        return "Linkul trebuie să fie din Google Maps";
-      }
-      if (!trimmed.includes("3m")) {
-        return "Linkul nu pare să fie un tur 360°. Asigură-te că ai dat click pe imaginea Street View înainte să copiezi linkul.";
-      }
-      return null;
+      parsed = new URL(trimmed);
     } catch {
-      return "Link invalid";
+      return "Link invalid. Verifică că ai copiat tot URL-ul.";
     }
+    const host = parsed.hostname.toLowerCase();
+    if (host === "maps.app.goo.gl" || host === "goo.gl") {
+      return null;
+    }
+    if (host.match(/^(www\.)?google\.[a-z.]+$/) && parsed.pathname.startsWith("/maps/")) {
+      return null;
+    }
+    return "Linkul trebuie să fie din Google Maps. Folosește butonul 'Partajează' din Google Maps și copiază linkul.";
   }
 
   async function checkSlugAvailability(value: string) {
@@ -713,10 +712,13 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
               </summary>
               <ol className="text-sm text-muted-foreground mt-2 ml-4 list-decimal space-y-1">
                 <li>Deschide Google Maps și caută sala ta</li>
-                <li>Click pe imaginea Street View / Tur interior 360°</li>
-                <li>În tur, click pe meniul ⋮ (3 puncte) → "Partajează sau încorporează imaginea"</li>
-                <li>Copiază linkul și lipește-l aici</li>
+                <li>Click pe imaginea Street View / tur interior 360°</li>
+                <li>Apasă butonul <strong>Partajează</strong> (sau ⋮ → "Partajează sau încorporează imaginea")</li>
+                <li>Copiază linkul scurt afișat (începe cu <code>maps.app.goo.gl</code>) și lipește-l aici</li>
               </ol>
+              <p className="text-sm text-muted-foreground mt-2">
+                Acceptăm și linkul lung din bara de adrese a browserului.
+              </p>
             </details>
           </div>
 
