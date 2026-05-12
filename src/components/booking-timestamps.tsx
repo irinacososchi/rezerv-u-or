@@ -29,7 +29,7 @@ export function BookingTimestamps({ createdAt, updatedAt, className }: Props) {
           </TooltipTrigger>
           <TooltipContent>{formatAbsoluteRo(createdAt)}</TooltipContent>
         </Tooltip>
-        {wasModified && (
+        {wasModified && updatedAt && (
           <>
             <span> · </span>
             <Tooltip>
