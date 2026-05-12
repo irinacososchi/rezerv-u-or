@@ -4,6 +4,7 @@ import { CalendarX, Loader2 } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { supabase } from "@/integrations/supabase/external-client";
+import { BookingTimestamps } from "@/components/booking-timestamps";
 
 export const Route = createFileRoute("/rezervarea-mea")({
   head: () => ({
@@ -29,6 +30,8 @@ type Booking = {
   payment_status: string;
   guest_email: string;
   recurrence_id: string | null;
+  created_at?: string;
+  updated_at?: string;
 };
 
 function RezervareaMeaPage() {
@@ -298,6 +301,8 @@ function RezervareaMeaPage() {
                           </div>
                         )}
                       </dl>
+
+                      <BookingTimestamps createdAt={b.created_at} updatedAt={b.updated_at} className="mt-3" />
 
                       {cancelError?.id === b.id && (
                         <div className="mt-4 rounded-md bg-destructive/10 border border-destructive/30 p-3 text-sm text-destructive">
