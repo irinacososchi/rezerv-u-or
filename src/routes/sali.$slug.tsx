@@ -8,6 +8,8 @@ import {
   ChevronRight,
   ArrowLeft,
   Heart,
+  View,
+  ExternalLink,
 } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
