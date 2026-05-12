@@ -83,6 +83,7 @@ const EMPTY_FORM: FormState = {
   city: "",
   neighbourhood: "",
   google_maps_url: "",
+  virtual_tour_url: "",
   currency: "RON",
   floor_size_sqm: "",
   has_mirrors: false,
