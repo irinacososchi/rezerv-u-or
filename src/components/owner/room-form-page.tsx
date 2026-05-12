@@ -353,6 +353,13 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
       toast.error("URL-ul ales este deja folosit. Te rugăm să alegi altul.");
       return;
     }
+    const tourError = validateTourUrl(form.virtual_tour_url);
+    if (tourError) {
+      setTourUrlError(tourError);
+      toast.error(tourError);
+      return;
+    }
+    setTourUrlError(null);
     const validPricing = pricing.filter(
       (r) => r.is_active && Number(r.price_per_hour) > 0 && r.days_of_week.length > 0,
     );
