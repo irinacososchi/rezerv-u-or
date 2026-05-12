@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Trash2, ArrowLeft, Loader2, Check, X } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, Loader2, Check, X, View } from "lucide-react";
 import { toast } from "sonner";
 import { DAY_NAMES_RO } from "@/lib/date-utils";
 import {
@@ -58,6 +58,7 @@ type FormState = {
   city: string;
   neighbourhood: string;
   google_maps_url: string;
+  virtual_tour_url: string;
   currency: string;
   floor_size_sqm: string;
   has_mirrors: boolean;
@@ -82,6 +83,7 @@ const EMPTY_FORM: FormState = {
   city: "",
   neighbourhood: "",
   google_maps_url: "",
+  virtual_tour_url: "",
   currency: "RON",
   floor_size_sqm: "",
   has_mirrors: false,
@@ -139,6 +141,27 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
   const [checkingSlug, setCheckingSlug] = useState(false);
   const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([]);
+  const [tourUrlError, setTourUrlError] = useState<string | null>(null);
+
+  function validateTourUrl(url: string): string | null {
+    if (!url || url.trim() === "") return null;
+    const trimmed = url.trim();
+    try {
+      const parsed = new URL(trimmed);
+      if (!parsed.hostname.match(/^(www\.)?google\.[a-z.]+$/)) {
+        return "Linkul trebuie să fie de pe google.com sau google.ro";
+      }
+      if (!parsed.pathname.startsWith("/maps/")) {
+        return "Linkul trebuie să fie din Google Maps";
+      }
+      if (!trimmed.includes("3m")) {
+        return "Linkul nu pare să fie un tur 360°. Asigură-te că ai dat click pe imaginea Street View înainte să copiezi linkul.";
+      }
+      return null;
+    } catch {
+      return "Link invalid";
+    }
+  }
 
   async function checkSlugAvailability(value: string) {
     const v = value.trim();
@@ -187,6 +210,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
         city: (r.city as string) ?? "",
         neighbourhood: (r.neighbourhood as string) ?? "",
         google_maps_url: (r.google_maps_url as string) ?? "",
+        virtual_tour_url: (r.virtual_tour_url as string) ?? "",
         currency: (r.currency as string) ?? "RON",
         floor_size_sqm:
           r.floor_size_sqm != null ? String(r.floor_size_sqm) : "",
@@ -329,6 +353,13 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
       toast.error("URL-ul ales este deja folosit. Te rugăm să alegi altul.");
       return;
     }
+    const tourError = validateTourUrl(form.virtual_tour_url);
+    if (tourError) {
+      setTourUrlError(tourError);
+      toast.error(tourError);
+      return;
+    }
+    setTourUrlError(null);
     const validPricing = pricing.filter(
       (r) => r.is_active && Number(r.price_per_hour) > 0 && r.days_of_week.length > 0,
     );
@@ -358,6 +389,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
       city: form.city.trim(),
       neighbourhood: form.neighbourhood || null,
       google_maps_url: form.google_maps_url || null,
+      virtual_tour_url: form.virtual_tour_url.trim() || null,
       currency: form.currency,
       floor_size_sqm: form.floor_size_sqm
         ? Number(form.floor_size_sqm)
@@ -647,6 +679,46 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
             pending={pendingPhotos}
             onPendingChange={setPendingPhotos}
           />
+
+          {/* Section 1.6 — Virtual tour 360° */}
+          <div className="rounded-xl border border-border bg-background p-5">
+            <div className="flex items-start gap-3 mb-3">
+              <View className="h-5 w-5 text-primary mt-0.5" />
+              <div className="flex-1">
+                <h3 className="font-semibold">Tur virtual 360° (opțional)</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Adaugă un link Google Maps 360° către sala ta. Chiriașii vor putea vedea
+                  sala înainte să rezerve.
+                </p>
+              </div>
+            </div>
+
+            <Label htmlFor="virtual_tour_url">Link Google Maps</Label>
+            <Input
+              id="virtual_tour_url"
+              type="url"
+              value={form.virtual_tour_url}
+              onChange={(e) => {
+                update("virtual_tour_url", e.target.value);
+                if (tourUrlError) setTourUrlError(null);
+              }}
+              placeholder="https://www.google.com/maps/place/..."
+            />
+            {tourUrlError && (
+              <p className="text-sm text-destructive mt-1">{tourUrlError}</p>
+            )}
+            <details className="mt-3">
+              <summary className="text-sm text-primary cursor-pointer hover:underline">
+                Cum obțin linkul?
+              </summary>
+              <ol className="text-sm text-muted-foreground mt-2 ml-4 list-decimal space-y-1">
+                <li>Deschide Google Maps și caută sala ta</li>
+                <li>Click pe imaginea Street View / Tur interior 360°</li>
+                <li>În tur, click pe meniul ⋮ (3 puncte) → "Partajează sau încorporează imaginea"</li>
+                <li>Copiază linkul și lipește-l aici</li>
+              </ol>
+            </details>
+          </div>
 
           {/* Section 2 — Amenities */}
           <Card>

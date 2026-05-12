@@ -8,6 +8,8 @@ import {
   ChevronRight,
   ArrowLeft,
   Heart,
+  View,
+  ExternalLink,
 } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -45,6 +47,7 @@ type Room = {
   city: string | null;
   neighbourhood: string | null;
   google_maps_url: string | null;
+  virtual_tour_url: string | null;
   floor_size_sqm: number | null;
   has_mirrors: boolean | null;
   has_sound_system: boolean | null;
@@ -584,6 +587,19 @@ function RoomDetailsPage() {
                 <MapPin className="h-4 w-4" />
                 {[room.neighbourhood, room.city].filter(Boolean).join(", ")}
               </p>
+
+              {room.virtual_tour_url && (
+                <a
+                  href={room.virtual_tour_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-flex items-center gap-2 text-primary hover:underline font-medium"
+                >
+                  <View className="h-4 w-4" />
+                  Vezi tur virtual 360°
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+              )}
 
               {amenities.length > 0 && (
                 <div className="mt-4 flex flex-wrap gap-2">
