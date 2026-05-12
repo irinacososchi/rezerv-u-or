@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { OwnerLayout } from "@/components/owner-layout";
 import { supabase } from "@/integrations/supabase/external-client";
+import { BookingTimestamps } from "@/components/booking-timestamps";
 
 export const Route = createFileRoute("/proprietar/cereri")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -33,6 +34,8 @@ type BookingFull = {
   status: string;
   payment_status: string;
   recurrence_id: string | null;
+  created_at?: string;
+  updated_at?: string;
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -406,6 +409,7 @@ function CereriPage() {
                       <td className="px-4 py-3">
                         <span className="font-mono text-xs text-muted-foreground">#{b.reference}</span>
                         {b.recurrence_id && <span className="ml-1 text-xs text-primary">↻</span>}
+                        <BookingTimestamps createdAt={b.created_at} updatedAt={b.updated_at} className="mt-1" />
                       </td>
                       <td className="px-4 py-3">
                         <div className="font-medium">{b.renter_name}</div>
@@ -494,6 +498,7 @@ function CereriPage() {
                       onAction={handleAction}
                     />
                   </div>
+                  <BookingTimestamps createdAt={b.created_at} updatedAt={b.updated_at} className="mt-3" />
                 </div>
               ))
             )}
