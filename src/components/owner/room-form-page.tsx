@@ -189,6 +189,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
         city: (r.city as string) ?? "",
         neighbourhood: (r.neighbourhood as string) ?? "",
         google_maps_url: (r.google_maps_url as string) ?? "",
+        virtual_tour_url: (r.virtual_tour_url as string) ?? "",
         currency: (r.currency as string) ?? "RON",
         floor_size_sqm:
           r.floor_size_sqm != null ? String(r.floor_size_sqm) : "",
