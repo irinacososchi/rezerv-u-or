@@ -345,29 +345,35 @@ function CheckoutPage() {
 
     const isRecurrent = search.recurrent === "true" && search.recurrenceCount > 1;
 
-    // Build (date, interval) cartesian list: recurrence weeks × intervals
-    const dates: string[] = [search.date];
-    if (isRecurrent) {
-      const baseDate = parseISODate(search.date);
-      for (let i = 1; i < search.recurrenceCount; i++) {
-        const next = new Date(baseDate);
-        next.setDate(next.getDate() + i * 7);
-        const y = next.getFullYear();
-        const m = String(next.getMonth() + 1).padStart(2, "0");
-        const d = String(next.getDate()).padStart(2, "0");
-        dates.push(`${y}-${m}-${d}`);
-      }
-    } else if (search.recurrenceEnd) {
-      // Backward compat: if old flow used recurrenceEnd
-      const all = generateWeeklyDates(search.date, search.recurrenceEnd);
-      dates.length = 0;
-      dates.push(...all);
-    }
-
+    // Build slot list. If multi-day, parsedSlots already has dates.
+    // Otherwise (single-day) expand recurrence over the single date.
     const allDateIntervals: { date: string; start: string; end: string }[] = [];
-    for (const d of dates) {
-      for (const iv of parsedIntervals) {
-        allDateIntervals.push({ date: d, start: iv.start, end: iv.end });
+    if (isMultiDay) {
+      // Multi-day already explicit; recurrence is disabled in this case.
+      for (const s of parsedSlots) {
+        allDateIntervals.push({ date: s.date, start: s.start, end: s.end });
+      }
+    } else {
+      const dates: string[] = [firstDate];
+      if (isRecurrent) {
+        const baseDate = parseISODate(firstDate);
+        for (let i = 1; i < search.recurrenceCount; i++) {
+          const next = new Date(baseDate);
+          next.setDate(next.getDate() + i * 7);
+          const y = next.getFullYear();
+          const m = String(next.getMonth() + 1).padStart(2, "0");
+          const d = String(next.getDate()).padStart(2, "0");
+          dates.push(`${y}-${m}-${d}`);
+        }
+      } else if (search.recurrenceEnd) {
+        const all = generateWeeklyDates(firstDate, search.recurrenceEnd);
+        dates.length = 0;
+        dates.push(...all);
+      }
+      for (const d of dates) {
+        for (const s of parsedSlots) {
+          allDateIntervals.push({ date: d, start: s.start, end: s.end });
+        }
       }
     }
 
