@@ -335,8 +335,8 @@ function CheckoutPage() {
 
     setSubmitting(true);
 
-    const startTime = `${search.start}:00`;
-    const endTime = `${search.end}:00`;
+    const startTime = `${effectiveStart}:00`;
+    const endTime = `${effectiveEnd}:00`;
     const pricePerHour = activeRule?.price_per_hour ?? subtotal / Math.max(1, search.duration);
     const pricingLabel = activeRule?.label ?? null;
 
