@@ -168,31 +168,51 @@ function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // ---------- Parse intervals (new format) with fallback to start/end ----------
-  const parsedIntervals = useMemo<{ start: string; end: string }[]>(() => {
-    if (search.intervals) {
+  // ---------- Parse slots (new multi-day format) with fallbacks ----------
+  type ParsedSlot = { date: string; start: string; end: string };
+
+  const parsedSlots: ParsedSlot[] = useMemo(() => {
+    // Format nou (multi-day): "DATE:HH:MM-HH:MM,DATE:HH:MM-HH:MM,..."
+    if (search.slots) {
+      return search.slots
+        .split(",")
+        .filter(Boolean)
+        .map((s) => {
+          // First ":" separates DATE from TIME-RANGE (HH:MM-HH:MM contains ":")
+          const colonIdx = s.indexOf(":");
+          const date = s.slice(0, colonIdx);
+          const timeRange = s.slice(colonIdx + 1);
+          const [start, end] = timeRange.split("-");
+          return { date, start, end };
+        });
+    }
+    // Format vechi (single-day): date + intervals
+    if (search.intervals && search.date) {
       return search.intervals
         .split(",")
         .filter(Boolean)
-        .map((s: string) => {
+        .map((s) => {
           const [start, end] = s.split("-");
-          return { start, end };
+          return { date: search.date, start, end };
         });
     }
-    if (search.start && search.end) {
-      return [{ start: search.start, end: search.end }];
+    // Format mai vechi: date + start + end
+    if (search.date && search.start && search.end) {
+      return [{ date: search.date, start: search.start, end: search.end }];
     }
     return [];
-  }, [search.intervals, search.start, search.end]);
+  }, [search.slots, search.intervals, search.date, search.start, search.end]);
 
-  const isMultiSlot = parsedIntervals.length > 1;
-  const effectiveStart = parsedIntervals[0]?.start ?? "";
-  const effectiveEnd = parsedIntervals[parsedIntervals.length - 1]?.end ?? "";
+  const isMultiSlot = parsedSlots.length > 1;
+  const uniqueDates = Array.from(new Set(parsedSlots.map((s) => s.date)));
+  const isMultiDay = uniqueDates.length > 1;
+  const firstDate = parsedSlots[0]?.date ?? "";
+  const effectiveStart = parsedSlots[0]?.start ?? "";
+  const effectiveEnd = parsedSlots[parsedSlots.length - 1]?.end ?? "";
 
   // ---------- Validation of incoming params ----------
-  // total poate fi 0 dacă sala nu are pricing rules configurate încă
   const paramsValid = !!(
-    search.date && parsedIntervals.length > 0 && search.duration > 0
+    firstDate && parsedSlots.length > 0 && search.duration > 0
   );
 
   // ---------- Fetch room + pricing ----------
