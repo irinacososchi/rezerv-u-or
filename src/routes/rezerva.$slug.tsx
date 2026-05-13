@@ -548,7 +548,22 @@ function CheckoutPage() {
 
               <div className="mt-5 space-y-3 text-sm">
                 <Row label="Data" value={formatDateRO(dateObj)} />
-                <Row label="Interval" value={`${search.start}–${search.end}`} />
+                {isMultiSlot ? (
+                  <div>
+                    <span className="text-sm text-muted-foreground">
+                      Intervale ({parsedIntervals.length})
+                    </span>
+                    <ul className="mt-1 space-y-0.5">
+                      {parsedIntervals.map((iv, i) => (
+                        <li key={i} className="text-sm font-medium">
+                          {iv.start}–{iv.end}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <Row label="Interval" value={`${effectiveStart}–${effectiveEnd}`} />
+                )}
                 <Row
                   label="Durată"
                   value={`${search.duration} ${search.duration === 1 ? "oră" : "ore"}`}
