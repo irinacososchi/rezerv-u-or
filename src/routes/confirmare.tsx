@@ -199,7 +199,18 @@ function ConfirmarePage() {
         <div className="mt-8 rounded-xl border border-border bg-background p-6 shadow-sm">
           <h2 className="text-lg font-semibold">Detalii rezervare</h2>
 
-          {search.recurrenceCount > 1 && (
+          {isGroup && (
+            <div className="rounded-md bg-primary/5 border border-primary/20 p-3 text-sm mt-3">
+              <div className="font-medium text-primary">
+                Grup de rezervări — {bookings.length} intervale
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Vei primi confirmare pe email pentru fiecare interval în parte.
+              </div>
+            </div>
+          )}
+
+          {!isGroup && search.recurrenceCount > 1 && (
             <div className="rounded-md bg-primary/5 border border-primary/20 p-3 text-sm mt-3">
               <div className="font-medium text-primary">
                 Rezervare recurentă — {search.recurrenceCount} apariții
@@ -211,12 +222,6 @@ function ConfirmarePage() {
           )}
 
           <dl className="mt-5 space-y-3 text-sm">
-            <DetailRow
-              label="Referință"
-              value={
-                <span className="font-mono font-bold">#{booking.reference}</span>
-              }
-            />
             <DetailRow label="Sală" value={booking.room_name} />
             {booking.room_address && (
               <DetailRow
@@ -226,38 +231,73 @@ function ConfirmarePage() {
                   .join(", ")}
               />
             )}
-            <DetailRow label="Data" value={formatDateRO(dateObj)} />
-            <DetailRow label="Interval" value={`${startLabel}–${endLabel}`} />
-            <DetailRow
-              label="Durată"
-              value={`${booking.duration_hours} ${
-                booking.duration_hours === 1 ? "oră" : "ore"
-              }`}
-            />
-            <DetailRow
-              label="Preț/oră"
-              value={
-                <>
-                  {booking.price_per_hour} {currency}/oră
-                  {booking.pricing_rule_label && (
-                    <span className="text-muted-foreground">
-                      {" · "}
-                      {booking.pricing_rule_label}
-                    </span>
-                  )}
-                </>
-              }
-            />
+            {isGroup ? (
+              <div className="border-t border-border pt-3">
+                <div className="text-muted-foreground text-sm mb-2">Intervale</div>
+                <ul className="space-y-1">
+                  {bookings.map((b) => (
+                    <li
+                      key={b.id}
+                      className="flex items-baseline justify-between gap-3 text-sm"
+                    >
+                      <span>
+                        <span className="font-mono text-xs text-muted-foreground mr-2">
+                          #{b.reference}
+                        </span>
+                        {formatDateRO(parseISODate(b.booking_date))} ·{" "}
+                        {b.start_time.slice(0, 5)}–{b.end_time.slice(0, 5)}
+                      </span>
+                      <span className="font-medium">
+                        {b.total_amount} {currency}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <>
+                <DetailRow
+                  label="Referință"
+                  value={
+                    <span className="font-mono font-bold">#{booking.reference}</span>
+                  }
+                />
+                <DetailRow label="Data" value={formatDateRO(dateObj)} />
+                <DetailRow label="Interval" value={`${startLabel}–${endLabel}`} />
+                <DetailRow
+                  label="Durată"
+                  value={`${booking.duration_hours} ${
+                    booking.duration_hours === 1 ? "oră" : "ore"
+                  }`}
+                />
+                <DetailRow
+                  label="Preț/oră"
+                  value={
+                    <>
+                      {booking.price_per_hour} {currency}/oră
+                      {booking.pricing_rule_label && (
+                        <span className="text-muted-foreground">
+                          {" · "}
+                          {booking.pricing_rule_label}
+                        </span>
+                      )}
+                    </>
+                  }
+                />
+              </>
+            )}
           </dl>
 
           <div className="mt-5 space-y-2 border-t border-border pt-4 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Subtotal</span>
-              <span>
-                {booking.subtotal} {currency}
-              </span>
-            </div>
-            {booking.discount_amount > 0 && (
+            {!isGroup && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span>
+                  {booking.subtotal} {currency}
+                </span>
+              </div>
+            )}
+            {!isGroup && booking.discount_amount > 0 && (
               <div className="flex justify-between text-primary">
                 <span>
                   Reducere
@@ -271,7 +311,10 @@ function ConfirmarePage() {
             <div className="flex items-baseline justify-between border-t border-border pt-3">
               <span className="text-base font-semibold">Total</span>
               <span className="text-2xl font-bold text-primary">
-                {booking.total_amount} {currency}
+                {isGroup
+                  ? bookings.reduce((s, b) => s + Number(b.total_amount ?? 0), 0)
+                  : booking.total_amount}{" "}
+                {currency}
               </span>
             </div>
           </div>
