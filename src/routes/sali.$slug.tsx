@@ -348,13 +348,14 @@ function RoomDetailsPage() {
     return result;
   }, [activeDay, scheduleByDay, bookings, pricing, minAdvanceDays]);
 
-  // Reset slots when date changes
+  // Reset recurrence if user transitions to multi-day (recurrence ambiguous)
   useEffect(() => {
-    setSelectedHours([]);
-    setIsRecurrent(false);
-    setRecurrenceEndDate("");
-    setRecurrenceDates([]);
-  }, [selectedDate]);
+    if (daySelections.length > 1 && isRecurrent) {
+      setIsRecurrent(false);
+      setRecurrenceEndDate("");
+      setRecurrenceDates([]);
+    }
+  }, [daySelections.length, isRecurrent]);
 
   // Auth + favorite state
   useEffect(() => {
