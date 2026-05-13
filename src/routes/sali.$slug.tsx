@@ -426,60 +426,69 @@ function RoomDetailsPage() {
 
 
   function toggleHour(h: number) {
-    setSelectedHours((prev) => {
-      if (prev.includes(h)) {
-        return prev.filter((x) => x !== h).sort((a, b) => a - b);
-      }
-      return [...prev, h].sort((a, b) => a - b);
-    });
+    if (activeDayIndex === null) return;
+    setDaySelections((prev) =>
+      prev.map((ds, idx) => {
+        if (idx !== activeDayIndex) return ds;
+        const has = ds.hours.includes(h);
+        return {
+          ...ds,
+          hours: has
+            ? ds.hours.filter((x) => x !== h).sort((a, b) => a - b)
+            : [...ds.hours, h].sort((a, b) => a - b),
+        };
+      }),
+    );
   }
 
-  // Booking summary
+  // Booking summary across all selected days
   const summary = useMemo(() => {
-    if (!selectedDate || selectedHours.length === 0) return null;
-    const sorted = [...selectedHours].sort((a, b) => a - b);
+    const allValidDays = daySelections.filter((ds) => ds.hours.length > 0);
+    if (allValidDays.length === 0) return null;
 
-    const intervals: { start: number; end: number; hours: number[] }[] = [];
-    let currentInterval = {
-      start: sorted[0],
-      end: sorted[0] + 1,
-      hours: [sorted[0]],
-    };
-
-    for (let i = 1; i < sorted.length; i++) {
-      if (sorted[i] === sorted[i - 1] + 1) {
-        currentInterval.end = sorted[i] + 1;
-        currentInterval.hours.push(sorted[i]);
-      } else {
-        intervals.push(currentInterval);
-        currentInterval = {
-          start: sorted[i],
-          end: sorted[i] + 1,
-          hours: [sorted[i]],
-        };
+    const daysWithIntervals = allValidDays.map((ds) => {
+      const sorted = [...ds.hours].sort((a, b) => a - b);
+      const intervals: { start: number; end: number; hours: number[] }[] = [];
+      let current = { start: sorted[0], end: sorted[0] + 1, hours: [sorted[0]] };
+      for (let i = 1; i < sorted.length; i++) {
+        if (sorted[i] === sorted[i - 1] + 1) {
+          current.end = sorted[i] + 1;
+          current.hours.push(sorted[i]);
+        } else {
+          intervals.push(current);
+          current = { start: sorted[i], end: sorted[i] + 1, hours: [sorted[i]] };
+        }
       }
-    }
-    intervals.push(currentInterval);
+      intervals.push(current);
 
-    const total = sorted.reduce(
-      (sum, h) => sum + getPriceForSlot(selectedDate, h, pricing),
-      0,
-    );
+      const dayTotal = sorted.reduce(
+        (sum, h) => sum + getPriceForSlot(ds.date, h, pricing),
+        0,
+      );
+
+      return { date: ds.date, intervals, dayTotal, hoursCount: sorted.length };
+    });
+
+    const total = daysWithIntervals.reduce((s, d) => s + d.dayTotal, 0);
+    const totalIntervals = daysWithIntervals.reduce((s, d) => s + d.intervals.length, 0);
+    const totalHours = daysWithIntervals.reduce((s, d) => s + d.hoursCount, 0);
 
     const recurrenceMultiplier =
       isRecurrent && recurrenceDates.length > 0 ? recurrenceDates.length + 1 : 1;
-    const totalSlotsToCreate = sorted.length * recurrenceMultiplier;
+    const totalSlotsToCreate = totalIntervals * recurrenceMultiplier;
     const exceedsLimit = totalSlotsToCreate > 50;
 
     return {
-      intervals,
-      duration: sorted.length,
+      days: daysWithIntervals,
+      totalIntervals,
+      totalHours,
       total,
-      isMultiSlot: intervals.length > 1,
+      isMultiDay: daysWithIntervals.length > 1,
+      isMultiSlot: totalIntervals > 1,
       totalSlotsToCreate,
       exceedsLimit,
     };
-  }, [selectedDate, selectedHours, pricing, isRecurrent, recurrenceDates.length]);
+  }, [daySelections, pricing, isRecurrent, recurrenceDates.length]);
 
   // ---------- Render ----------
   if (loading) {
