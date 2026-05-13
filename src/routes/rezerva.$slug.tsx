@@ -253,7 +253,7 @@ function CheckoutPage() {
 
   // ---------- Derived ----------
   const currency = room?.currency ?? "RON";
-  const dateObj = paramsValid ? parseISODate(search.date) : null;
+  const dateObj = paramsValid ? parseISODate(firstDate) : null;
   const startHour = paramsValid ? parseInt(effectiveStart.slice(0, 2), 10) : 0;
   const activeRule = useMemo(() => {
     if (!dateObj || !pricing.length) return null;
@@ -261,7 +261,7 @@ function CheckoutPage() {
   }, [dateObj, startHour, pricing]);
 
   const isRecurrentSearch = search.recurrent === "true";
-  const voucherDisabled = isMultiSlot || isRecurrentSearch;
+  const voucherDisabled = isMultiSlot || isMultiDay || isRecurrentSearch;
 
   const subtotal = search.total;
   const discountAmount = useMemo(() => {
