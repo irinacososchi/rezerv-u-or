@@ -434,28 +434,48 @@ function RoomDetailsPage() {
   const summary = useMemo(() => {
     if (!selectedDate || selectedHours.length === 0) return null;
     const sorted = [...selectedHours].sort((a, b) => a - b);
-    const start = sorted[0];
-    const end = sorted[sorted.length - 1] + 1;
+
+    const intervals: { start: number; end: number; hours: number[] }[] = [];
+    let currentInterval = {
+      start: sorted[0],
+      end: sorted[0] + 1,
+      hours: [sorted[0]],
+    };
+
+    for (let i = 1; i < sorted.length; i++) {
+      if (sorted[i] === sorted[i - 1] + 1) {
+        currentInterval.end = sorted[i] + 1;
+        currentInterval.hours.push(sorted[i]);
+      } else {
+        intervals.push(currentInterval);
+        currentInterval = {
+          start: sorted[i],
+          end: sorted[i] + 1,
+          hours: [sorted[i]],
+        };
+      }
+    }
+    intervals.push(currentInterval);
+
     const total = sorted.reduce(
       (sum, h) => sum + getPriceForSlot(selectedDate, h, pricing),
       0,
     );
-    // Check contiguity
-    let contiguous = true;
-    for (let i = 1; i < sorted.length; i++) {
-      if (sorted[i] !== sorted[i - 1] + 1) {
-        contiguous = false;
-        break;
-      }
-    }
+
+    const recurrenceMultiplier =
+      isRecurrent && recurrenceDates.length > 0 ? recurrenceDates.length + 1 : 1;
+    const totalSlotsToCreate = sorted.length * recurrenceMultiplier;
+    const exceedsLimit = totalSlotsToCreate > 50;
+
     return {
-      start: `${start.toString().padStart(2, "0")}:00`,
-      end: `${end.toString().padStart(2, "0")}:00`,
+      intervals,
       duration: sorted.length,
       total,
-      contiguous,
+      isMultiSlot: intervals.length > 1,
+      totalSlotsToCreate,
+      exceedsLimit,
     };
-  }, [selectedDate, selectedHours, pricing]);
+  }, [selectedDate, selectedHours, pricing, isRecurrent, recurrenceDates.length]);
 
   // ---------- Render ----------
   if (loading) {
