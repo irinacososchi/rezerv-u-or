@@ -19,6 +19,7 @@ import {
 type CheckoutSearch = {
   date: string;
   intervals: string;
+  slots: string;
   start: string;
   end: string;
   duration: number;
@@ -32,6 +33,7 @@ export const Route = createFileRoute("/rezerva/$slug")({
   validateSearch: (raw: Record<string, unknown>): CheckoutSearch => ({
     date: typeof raw.date === "string" ? raw.date : "",
     intervals: typeof raw.intervals === "string" ? raw.intervals : "",
+    slots: typeof raw.slots === "string" ? raw.slots : "",
     start: typeof raw.start === "string" ? raw.start : "",
     end: typeof raw.end === "string" ? raw.end : "",
     duration: Number(raw.duration) || 0,
@@ -166,31 +168,51 @@ function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // ---------- Parse intervals (new format) with fallback to start/end ----------
-  const parsedIntervals = useMemo<{ start: string; end: string }[]>(() => {
-    if (search.intervals) {
+  // ---------- Parse slots (new multi-day format) with fallbacks ----------
+  type ParsedSlot = { date: string; start: string; end: string };
+
+  const parsedSlots: ParsedSlot[] = useMemo(() => {
+    // Format nou (multi-day): "DATE:HH:MM-HH:MM,DATE:HH:MM-HH:MM,..."
+    if (search.slots) {
+      return search.slots
+        .split(",")
+        .filter(Boolean)
+        .map((s: string) => {
+          // First ":" separates DATE from TIME-RANGE (HH:MM-HH:MM contains ":")
+          const colonIdx = s.indexOf(":");
+          const date = s.slice(0, colonIdx);
+          const timeRange = s.slice(colonIdx + 1);
+          const [start, end] = timeRange.split("-");
+          return { date, start, end };
+        });
+    }
+    // Format vechi (single-day): date + intervals
+    if (search.intervals && search.date) {
       return search.intervals
         .split(",")
         .filter(Boolean)
         .map((s: string) => {
           const [start, end] = s.split("-");
-          return { start, end };
+          return { date: search.date, start, end };
         });
     }
-    if (search.start && search.end) {
-      return [{ start: search.start, end: search.end }];
+    // Format mai vechi: date + start + end
+    if (search.date && search.start && search.end) {
+      return [{ date: search.date, start: search.start, end: search.end }];
     }
     return [];
-  }, [search.intervals, search.start, search.end]);
+  }, [search.slots, search.intervals, search.date, search.start, search.end]);
 
-  const isMultiSlot = parsedIntervals.length > 1;
-  const effectiveStart = parsedIntervals[0]?.start ?? "";
-  const effectiveEnd = parsedIntervals[parsedIntervals.length - 1]?.end ?? "";
+  const isMultiSlot = parsedSlots.length > 1;
+  const uniqueDates = Array.from(new Set(parsedSlots.map((s) => s.date)));
+  const isMultiDay = uniqueDates.length > 1;
+  const firstDate = parsedSlots[0]?.date ?? "";
+  const effectiveStart = parsedSlots[0]?.start ?? "";
+  const effectiveEnd = parsedSlots[parsedSlots.length - 1]?.end ?? "";
 
   // ---------- Validation of incoming params ----------
-  // total poate fi 0 dacă sala nu are pricing rules configurate încă
   const paramsValid = !!(
-    search.date && parsedIntervals.length > 0 && search.duration > 0
+    firstDate && parsedSlots.length > 0 && search.duration > 0
   );
 
   // ---------- Fetch room + pricing ----------
@@ -231,7 +253,7 @@ function CheckoutPage() {
 
   // ---------- Derived ----------
   const currency = room?.currency ?? "RON";
-  const dateObj = paramsValid ? parseISODate(search.date) : null;
+  const dateObj = paramsValid ? parseISODate(firstDate) : null;
   const startHour = paramsValid ? parseInt(effectiveStart.slice(0, 2), 10) : 0;
   const activeRule = useMemo(() => {
     if (!dateObj || !pricing.length) return null;
@@ -239,7 +261,7 @@ function CheckoutPage() {
   }, [dateObj, startHour, pricing]);
 
   const isRecurrentSearch = search.recurrent === "true";
-  const voucherDisabled = isMultiSlot || isRecurrentSearch;
+  const voucherDisabled = isMultiSlot || isMultiDay || isRecurrentSearch;
 
   const subtotal = search.total;
   const discountAmount = useMemo(() => {
@@ -323,29 +345,35 @@ function CheckoutPage() {
 
     const isRecurrent = search.recurrent === "true" && search.recurrenceCount > 1;
 
-    // Build (date, interval) cartesian list: recurrence weeks × intervals
-    const dates: string[] = [search.date];
-    if (isRecurrent) {
-      const baseDate = parseISODate(search.date);
-      for (let i = 1; i < search.recurrenceCount; i++) {
-        const next = new Date(baseDate);
-        next.setDate(next.getDate() + i * 7);
-        const y = next.getFullYear();
-        const m = String(next.getMonth() + 1).padStart(2, "0");
-        const d = String(next.getDate()).padStart(2, "0");
-        dates.push(`${y}-${m}-${d}`);
-      }
-    } else if (search.recurrenceEnd) {
-      // Backward compat: if old flow used recurrenceEnd
-      const all = generateWeeklyDates(search.date, search.recurrenceEnd);
-      dates.length = 0;
-      dates.push(...all);
-    }
-
+    // Build slot list. If multi-day, parsedSlots already has dates.
+    // Otherwise (single-day) expand recurrence over the single date.
     const allDateIntervals: { date: string; start: string; end: string }[] = [];
-    for (const d of dates) {
-      for (const iv of parsedIntervals) {
-        allDateIntervals.push({ date: d, start: iv.start, end: iv.end });
+    if (isMultiDay) {
+      // Multi-day already explicit; recurrence is disabled in this case.
+      for (const s of parsedSlots) {
+        allDateIntervals.push({ date: s.date, start: s.start, end: s.end });
+      }
+    } else {
+      const dates: string[] = [firstDate];
+      if (isRecurrent) {
+        const baseDate = parseISODate(firstDate);
+        for (let i = 1; i < search.recurrenceCount; i++) {
+          const next = new Date(baseDate);
+          next.setDate(next.getDate() + i * 7);
+          const y = next.getFullYear();
+          const m = String(next.getMonth() + 1).padStart(2, "0");
+          const d = String(next.getDate()).padStart(2, "0");
+          dates.push(`${y}-${m}-${d}`);
+        }
+      } else if (search.recurrenceEnd) {
+        const all = generateWeeklyDates(firstDate, search.recurrenceEnd);
+        dates.length = 0;
+        dates.push(...all);
+      }
+      for (const d of dates) {
+        for (const s of parsedSlots) {
+          allDateIntervals.push({ date: d, start: s.start, end: s.end });
+        }
       }
     }
 
@@ -362,9 +390,14 @@ function CheckoutPage() {
 
     setSubmitting(true);
 
-    // Recurrence record (only when more than one date AND single interval per day, kept for compat)
+    // Recurrence record (only when recurrence active, single-day, single interval)
     let recurrenceId: string | null = null;
-    if (isRecurrent && dates.length > 1 && parsedIntervals.length === 1) {
+    const recurrenceDateCount = isMultiDay
+      ? 0
+      : isRecurrent
+        ? search.recurrenceCount
+        : 1;
+    if (isRecurrent && !isMultiDay && parsedSlots.length === 1 && recurrenceDateCount > 1) {
       const dayOfWeek = getDayOfWeek(dateObj);
       const { data: rec, error: recError } = await supabase
         .from("recurrences")
@@ -373,11 +406,11 @@ function CheckoutPage() {
           created_by_email: email.trim(),
           frequency: "saptamanal",
           day_of_week: dayOfWeek,
-          start_time: `${parsedIntervals[0].start}:00`,
-          end_time: `${parsedIntervals[0].end}:00`,
-          first_date: dates[0],
-          last_date: dates[dates.length - 1],
-          total_bookings: dates.length,
+          start_time: `${parsedSlots[0].start}:00`,
+          end_time: `${parsedSlots[0].end}:00`,
+          first_date: allDateIntervals[0].date,
+          last_date: allDateIntervals[allDateIntervals.length - 1].date,
+          total_bookings: recurrenceDateCount,
         })
         .select()
         .single();
@@ -512,7 +545,7 @@ function CheckoutPage() {
         reference: succeeded[0].reference ?? "",
         group: bookingGroupId ?? "",
         recurrent: isRecurrent ? "true" : "false",
-        recurrenceCount: isRecurrent ? dates.length : 0,
+        recurrenceCount: isRecurrent ? recurrenceDateCount : 0,
       } as never,
     });
   }
@@ -588,22 +621,52 @@ function CheckoutPage() {
               )}
 
               <div className="mt-5 space-y-3 text-sm">
-                <Row label="Data" value={formatDateRO(dateObj)} />
-                {isMultiSlot ? (
+                {isMultiDay ? (
                   <div>
                     <span className="text-sm text-muted-foreground">
-                      Intervale ({parsedIntervals.length})
+                      Rezervări ({parsedSlots.length} intervale în {uniqueDates.length} zile)
                     </span>
-                    <ul className="mt-1 space-y-0.5">
-                      {parsedIntervals.map((iv, i) => (
-                        <li key={i} className="text-sm font-medium">
-                          {iv.start}–{iv.end}
-                        </li>
-                      ))}
+                    <ul className="mt-2 space-y-2">
+                      {uniqueDates.map((d) => {
+                        const slotsForDate = parsedSlots.filter((s) => s.date === d);
+                        const dObj = parseISODate(d);
+                        return (
+                          <li key={d} className="border-b border-border pb-2 last:border-0">
+                            <div className="text-sm font-medium">
+                              {formatDateRO(dObj)}
+                            </div>
+                            <ul className="ml-3 mt-1">
+                              {slotsForDate.map((s, i) => (
+                                <li key={i} className="text-sm">
+                                  {s.start}–{s.end}
+                                </li>
+                              ))}
+                            </ul>
+                          </li>
+                        );
+                      })}
                     </ul>
                   </div>
                 ) : (
-                  <Row label="Interval" value={`${effectiveStart}–${effectiveEnd}`} />
+                  <>
+                    <Row label="Data" value={formatDateRO(dateObj)} />
+                    {isMultiSlot ? (
+                      <div>
+                        <span className="text-sm text-muted-foreground">
+                          Intervale ({parsedSlots.length})
+                        </span>
+                        <ul className="mt-1 space-y-0.5">
+                          {parsedSlots.map((iv, i) => (
+                            <li key={i} className="text-sm font-medium">
+                              {iv.start}–{iv.end}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : (
+                      <Row label="Interval" value={`${effectiveStart}–${effectiveEnd}`} />
+                    )}
+                  </>
                 )}
                 <Row
                   label="Durată"
@@ -749,7 +812,7 @@ function CheckoutPage() {
                   )}
                   {voucherDisabled && (
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Voucherele se aplică doar la rezervări cu un singur interval, fără recurență.
+                      Voucherele se aplică doar la rezervări cu un singur interval, fără recurență sau multi-zi.
                     </p>
                   )}
                 </>

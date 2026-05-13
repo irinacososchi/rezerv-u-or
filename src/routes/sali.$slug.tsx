@@ -10,6 +10,8 @@ import {
   Heart,
   View,
   ExternalLink,
+  X,
+  Plus,
 } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -152,8 +154,10 @@ function RoomDetailsPage() {
     const d = new Date();
     return new Date(d.getFullYear(), d.getMonth(), 1);
   });
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedHours, setSelectedHours] = useState<number[]>([]);
+  type DaySelection = { date: Date; hours: number[] };
+  const [daySelections, setDaySelections] = useState<DaySelection[]>([]);
+  const [activeDayIndex, setActiveDayIndex] = useState<number | null>(null);
+  const [isPickingNewDay, setIsPickingNewDay] = useState(true);
   const [isRecurrent, setIsRecurrent] = useState(false);
   const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
   const [recurrenceDates, setRecurrenceDates] = useState<Date[]>([]);
@@ -299,28 +303,27 @@ function RoomDetailsPage() {
     return false;
   }
 
-  // Slots for selected day
+  // Active day (currently being edited)
+  const activeDay =
+    activeDayIndex !== null ? daySelections[activeDayIndex] ?? null : null;
+
+  // Slots for active day
   const slots = useMemo(() => {
-    if (!selectedDate) return [] as { hour: number; busy: boolean; tooSoon: boolean; price: number }[];
-    const dow = getDayOfWeek(selectedDate);
+    if (!activeDay) return [] as { hour: number; busy: boolean; tooSoon: boolean; price: number }[];
+    const dow = getDayOfWeek(activeDay.date);
     const sched = scheduleByDay.get(dow);
     if (!sched) return [];
     const open = hourFromTime(sched.open_time);
     const close = hourFromTime(sched.close_time);
-    const iso = formatDateISO(selectedDate);
+    const iso = formatDateISO(activeDay.date);
     const dayBookings = bookings.filter((b) => b.booking_date === iso);
 
-    // Compute earliest allowed slot start time (in hours, on selectedDate)
-    // Only relevant for same-day bookings (minAdvanceDays === 0 and selectedDate === today)
     const now = new Date();
-    const isToday = isSameDay(selectedDate, now);
+    const isToday = isSameDay(activeDay.date, now);
     let earliestStartHour = -Infinity;
     if (minAdvanceDays === 0 && isToday) {
-      // Slot must start at least SAME_DAY_BUFFER_HOURS after now
       const cutoffMs = now.getTime() + SAME_DAY_BUFFER_HOURS * 60 * 60 * 1000;
       const cutoff = new Date(cutoffMs);
-      // Slot starts at top of hour h on selectedDate; require slotStart >= cutoff
-      // earliest h: ceil((cutoff hours + minutes/60))
       earliestStartHour =
         cutoff.getHours() + (cutoff.getMinutes() > 0 || cutoff.getSeconds() > 0 ? 1 : 0);
     }
@@ -339,19 +342,20 @@ function RoomDetailsPage() {
         hour: h,
         busy,
         tooSoon,
-        price: getPriceForSlot(selectedDate, h, pricing),
+        price: getPriceForSlot(activeDay.date, h, pricing),
       });
     }
     return result;
-  }, [selectedDate, scheduleByDay, bookings, pricing, minAdvanceDays]);
+  }, [activeDay, scheduleByDay, bookings, pricing, minAdvanceDays]);
 
-  // Reset slots when date changes
+  // Reset recurrence if user transitions to multi-day (recurrence ambiguous)
   useEffect(() => {
-    setSelectedHours([]);
-    setIsRecurrent(false);
-    setRecurrenceEndDate("");
-    setRecurrenceDates([]);
-  }, [selectedDate]);
+    if (daySelections.length > 1 && isRecurrent) {
+      setIsRecurrent(false);
+      setRecurrenceEndDate("");
+      setRecurrenceDates([]);
+    }
+  }, [daySelections.length, isRecurrent]);
 
   // Auth + favorite state
   useEffect(() => {
@@ -422,60 +426,69 @@ function RoomDetailsPage() {
 
 
   function toggleHour(h: number) {
-    setSelectedHours((prev) => {
-      if (prev.includes(h)) {
-        return prev.filter((x) => x !== h).sort((a, b) => a - b);
-      }
-      return [...prev, h].sort((a, b) => a - b);
-    });
+    if (activeDayIndex === null) return;
+    setDaySelections((prev) =>
+      prev.map((ds, idx) => {
+        if (idx !== activeDayIndex) return ds;
+        const has = ds.hours.includes(h);
+        return {
+          ...ds,
+          hours: has
+            ? ds.hours.filter((x) => x !== h).sort((a, b) => a - b)
+            : [...ds.hours, h].sort((a, b) => a - b),
+        };
+      }),
+    );
   }
 
-  // Booking summary
+  // Booking summary across all selected days
   const summary = useMemo(() => {
-    if (!selectedDate || selectedHours.length === 0) return null;
-    const sorted = [...selectedHours].sort((a, b) => a - b);
+    const allValidDays = daySelections.filter((ds) => ds.hours.length > 0);
+    if (allValidDays.length === 0) return null;
 
-    const intervals: { start: number; end: number; hours: number[] }[] = [];
-    let currentInterval = {
-      start: sorted[0],
-      end: sorted[0] + 1,
-      hours: [sorted[0]],
-    };
-
-    for (let i = 1; i < sorted.length; i++) {
-      if (sorted[i] === sorted[i - 1] + 1) {
-        currentInterval.end = sorted[i] + 1;
-        currentInterval.hours.push(sorted[i]);
-      } else {
-        intervals.push(currentInterval);
-        currentInterval = {
-          start: sorted[i],
-          end: sorted[i] + 1,
-          hours: [sorted[i]],
-        };
+    const daysWithIntervals = allValidDays.map((ds) => {
+      const sorted = [...ds.hours].sort((a, b) => a - b);
+      const intervals: { start: number; end: number; hours: number[] }[] = [];
+      let current = { start: sorted[0], end: sorted[0] + 1, hours: [sorted[0]] };
+      for (let i = 1; i < sorted.length; i++) {
+        if (sorted[i] === sorted[i - 1] + 1) {
+          current.end = sorted[i] + 1;
+          current.hours.push(sorted[i]);
+        } else {
+          intervals.push(current);
+          current = { start: sorted[i], end: sorted[i] + 1, hours: [sorted[i]] };
+        }
       }
-    }
-    intervals.push(currentInterval);
+      intervals.push(current);
 
-    const total = sorted.reduce(
-      (sum, h) => sum + getPriceForSlot(selectedDate, h, pricing),
-      0,
-    );
+      const dayTotal = sorted.reduce(
+        (sum, h) => sum + getPriceForSlot(ds.date, h, pricing),
+        0,
+      );
+
+      return { date: ds.date, intervals, dayTotal, hoursCount: sorted.length };
+    });
+
+    const total = daysWithIntervals.reduce((s, d) => s + d.dayTotal, 0);
+    const totalIntervals = daysWithIntervals.reduce((s, d) => s + d.intervals.length, 0);
+    const totalHours = daysWithIntervals.reduce((s, d) => s + d.hoursCount, 0);
 
     const recurrenceMultiplier =
       isRecurrent && recurrenceDates.length > 0 ? recurrenceDates.length + 1 : 1;
-    const totalSlotsToCreate = sorted.length * recurrenceMultiplier;
+    const totalSlotsToCreate = totalIntervals * recurrenceMultiplier;
     const exceedsLimit = totalSlotsToCreate > 50;
 
     return {
-      intervals,
-      duration: sorted.length,
+      days: daysWithIntervals,
+      totalIntervals,
+      totalHours,
       total,
-      isMultiSlot: intervals.length > 1,
+      isMultiDay: daysWithIntervals.length > 1,
+      isMultiSlot: totalIntervals > 1,
       totalSlotsToCreate,
       exceedsLimit,
     };
-  }, [selectedDate, selectedHours, pricing, isRecurrent, recurrenceDates.length]);
+  }, [daySelections, pricing, isRecurrent, recurrenceDates.length]);
 
   // ---------- Render ----------
   if (loading) {
@@ -702,34 +715,50 @@ function RoomDetailsPage() {
                   <span className="text-sm font-normal text-muted-foreground">/oră</span>
                 </div>
 
-                {/* Calendar */}
-                <div className="mt-5">
-                  <CalendarMonth
-                    month={currentMonth}
-                    onPrev={() =>
-                      setCurrentMonth(
-                        new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1),
-                      )
-                    }
-                    onNext={() =>
-                      setCurrentMonth(
-                        new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1),
-                      )
-                    }
-                    isDisabled={isDayDisabled}
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                  />
-                </div>
+                {/* Calendar (visible while picking new day or while a day is active) */}
+                {(isPickingNewDay || activeDayIndex !== null) && (
+                  <div className="mt-5">
+                    <CalendarMonth
+                      month={currentMonth}
+                      onPrev={() =>
+                        setCurrentMonth(
+                          new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1),
+                        )
+                      }
+                      onNext={() =>
+                        setCurrentMonth(
+                          new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1),
+                        )
+                      }
+                      isDisabled={isDayDisabled}
+                      selected={activeDay?.date ?? null}
+                      multiSelected={daySelections.map((ds) => ds.date)}
+                      onSelect={(d) => {
+                        const existingIdx = daySelections.findIndex((ds) =>
+                          isSameDay(ds.date, d),
+                        );
+                        if (existingIdx >= 0) {
+                          setActiveDayIndex(existingIdx);
+                          setIsPickingNewDay(false);
+                          return;
+                        }
+                        setDaySelections((prev) => [...prev, { date: d, hours: [] }]);
+                        setActiveDayIndex(daySelections.length);
+                        setIsPickingNewDay(false);
+                      }}
+                    />
+                  </div>
+                )}
 
-                {/* Time slots */}
-                {selectedDate && (
+                {/* Time slots for active day */}
+                {activeDay && (
                   <div className="mt-5">
                     <p className="text-sm font-medium">
                       Ore disponibile —{" "}
                       <span className="text-muted-foreground">
-                        {DAY_NAMES_RO[getDayOfWeek(selectedDate)]},{" "}
-                        {selectedDate.getDate()}.{String(selectedDate.getMonth() + 1).padStart(2, "0")}
+                        {DAY_NAMES_RO[getDayOfWeek(activeDay.date)]},{" "}
+                        {activeDay.date.getDate()}.
+                        {String(activeDay.date.getMonth() + 1).padStart(2, "0")}
                       </span>
                     </p>
                     {slots.length === 0 ? (
@@ -739,7 +768,7 @@ function RoomDetailsPage() {
                     ) : (
                       <div className="mt-2 grid grid-cols-2 gap-2">
                         {slots.map((s) => {
-                          const selected = selectedHours.includes(s.hour);
+                          const selected = activeDay.hours.includes(s.hour);
                           const unavailable = s.busy || s.tooSoon;
                           const title = s.tooSoon
                             ? "Indisponibil — rezervarea trebuie făcută cu minim 2h înainte"
@@ -769,53 +798,149 @@ function RoomDetailsPage() {
                   </div>
                 )}
 
+                {/* List of selected days */}
+                {daySelections.length > 0 && (
+                  <div className="mt-5 space-y-2">
+                    <div className="text-sm font-medium text-muted-foreground">
+                      Zile selectate ({daySelections.length})
+                    </div>
+                    {daySelections.map((ds, idx) => {
+                      const isActive = idx === activeDayIndex;
+                      const hoursCount = ds.hours.length;
+                      return (
+                        <div
+                          key={idx}
+                          className={`flex items-center justify-between rounded-md border p-2 text-sm transition ${
+                            isActive ? "border-primary bg-primary/5" : "border-border bg-background"
+                          }`}
+                        >
+                          <button
+                            onClick={() => {
+                              setActiveDayIndex(idx);
+                              setIsPickingNewDay(false);
+                            }}
+                            className="flex-1 text-left hover:text-primary"
+                          >
+                            <div className="font-medium">
+                              {DAY_NAMES_RO[getDayOfWeek(ds.date)]}, {ds.date.getDate()}.
+                              {String(ds.date.getMonth() + 1).padStart(2, "0")}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {hoursCount === 0
+                                ? "Niciun interval selectat"
+                                : `${hoursCount} ${hoursCount === 1 ? "oră" : "ore"}`}
+                            </div>
+                          </button>
+                          <button
+                            onClick={() => {
+                              setDaySelections((prev) => prev.filter((_, i) => i !== idx));
+                              if (activeDayIndex === idx) {
+                                setActiveDayIndex(null);
+                                setIsPickingNewDay(true);
+                              } else if (activeDayIndex !== null && activeDayIndex > idx) {
+                                setActiveDayIndex(activeDayIndex - 1);
+                              }
+                            }}
+                            className="ml-2 rounded-md p-1 text-destructive hover:bg-destructive/10"
+                            aria-label="Șterge ziua"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      );
+                    })}
+
+                    {!isPickingNewDay && (
+                      <button
+                        onClick={() => {
+                          setIsPickingNewDay(true);
+                          setActiveDayIndex(null);
+                        }}
+                        className="mt-2 inline-flex items-center gap-1.5 text-sm text-primary hover:underline font-medium"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Adaugă altă zi
+                      </button>
+                    )}
+                  </div>
+                )}
+
                 {/* Summary */}
                 {summary && (
                   <div className="mt-5 rounded-lg bg-secondary p-4 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Data</span>
-                      <span className="font-medium">
-                        {selectedDate!.getDate()}.
-                        {String(selectedDate!.getMonth() + 1).padStart(2, "0")}.
-                        {selectedDate!.getFullYear()}
-                      </span>
-                    </div>
-
-                    {summary.isMultiSlot ? (
-                      <div className="mt-2">
-                        <div className="text-muted-foreground mb-1">
-                          Intervale selectate ({summary.intervals.length})
+                    {summary.isMultiDay ? (
+                      <>
+                        <div className="text-muted-foreground mb-2">
+                          {summary.days.length} zile · {summary.totalIntervals} intervale · {summary.totalHours} ore
                         </div>
-                        <ul className="space-y-1">
-                          {summary.intervals.map((iv, i) => (
-                            <li key={i} className="flex justify-between text-sm">
-                              <span className="font-medium">
-                                {iv.start.toString().padStart(2, "0")}:00–{iv.end.toString().padStart(2, "0")}:00
-                              </span>
-                              <span className="text-muted-foreground">
-                                {iv.hours.length} {iv.hours.length === 1 ? "oră" : "ore"}
-                              </span>
+                        <ul className="space-y-2 max-h-60 overflow-y-auto">
+                          {summary.days.map((d, i) => (
+                            <li key={i} className="border-b border-border pb-2 last:border-0">
+                              <div className="font-medium">
+                                {DAY_NAMES_RO[getDayOfWeek(d.date)]}, {d.date.getDate()}.
+                                {String(d.date.getMonth() + 1).padStart(2, "0")}
+                              </div>
+                              <ul className="mt-1 space-y-0.5 ml-2">
+                                {d.intervals.map((iv, j) => (
+                                  <li key={j} className="text-xs flex justify-between">
+                                    <span>
+                                      {iv.start.toString().padStart(2, "0")}:00–{iv.end.toString().padStart(2, "0")}:00
+                                    </span>
+                                    <span className="text-muted-foreground">
+                                      {iv.hours.length} {iv.hours.length === 1 ? "oră" : "ore"}
+                                    </span>
+                                  </li>
+                                ))}
+                              </ul>
                             </li>
                           ))}
                         </ul>
-                        <p className="mt-2 text-xs text-muted-foreground">
-                          Vor fi create {summary.intervals.length} rezervări separate — le poți anula individual.
-                        </p>
-                      </div>
+                      </>
                     ) : (
                       <>
-                        <div className="mt-1 flex justify-between">
-                          <span className="text-muted-foreground">Interval</span>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Data</span>
                           <span className="font-medium">
-                            {summary.intervals[0].start.toString().padStart(2, "0")}:00–{summary.intervals[0].end.toString().padStart(2, "0")}:00
+                            {summary.days[0].date.getDate()}.
+                            {String(summary.days[0].date.getMonth() + 1).padStart(2, "0")}.
+                            {summary.days[0].date.getFullYear()}
                           </span>
                         </div>
-                        <div className="mt-1 flex justify-between">
-                          <span className="text-muted-foreground">Durată</span>
-                          <span className="font-medium">
-                            {summary.duration} {summary.duration === 1 ? "oră" : "ore"}
-                          </span>
-                        </div>
+                        {summary.isMultiSlot ? (
+                          <div className="mt-2">
+                            <div className="text-muted-foreground mb-1">
+                              Intervale ({summary.totalIntervals})
+                            </div>
+                            <ul className="space-y-1">
+                              {summary.days[0].intervals.map((iv, i) => (
+                                <li key={i} className="flex justify-between text-sm">
+                                  <span className="font-medium">
+                                    {iv.start.toString().padStart(2, "0")}:00–{iv.end.toString().padStart(2, "0")}:00
+                                  </span>
+                                  <span className="text-muted-foreground">
+                                    {iv.hours.length} {iv.hours.length === 1 ? "oră" : "ore"}
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="mt-1 flex justify-between">
+                              <span className="text-muted-foreground">Interval</span>
+                              <span className="font-medium">
+                                {summary.days[0].intervals[0].start.toString().padStart(2, "0")}:00–
+                                {summary.days[0].intervals[0].end.toString().padStart(2, "0")}:00
+                              </span>
+                            </div>
+                            <div className="mt-1 flex justify-between">
+                              <span className="text-muted-foreground">Durată</span>
+                              <span className="font-medium">
+                                {summary.totalHours} {summary.totalHours === 1 ? "oră" : "ore"}
+                              </span>
+                            </div>
+                          </>
+                        )}
                       </>
                     )}
 
@@ -842,10 +967,17 @@ function RoomDetailsPage() {
                         </p>
                       </div>
                     )}
+
+                    {(summary.isMultiDay || summary.isMultiSlot) && (
+                      <p className="mt-3 text-xs text-muted-foreground">
+                        Vor fi create {summary.totalIntervals} rezervări separate — le poți anula individual.
+                      </p>
+                    )}
                   </div>
                 )}
 
-                {summary && (
+                {/* Recurrence — only single-day */}
+                {summary && !summary.isMultiDay && (
                   <div className="mt-4 border-t border-border pt-4">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -863,7 +995,7 @@ function RoomDetailsPage() {
                       </span>
                     </label>
 
-                    {isRecurrent && (
+                    {isRecurrent && summary.days[0] && (
                       <div className="mt-3 space-y-3">
                         <div>
                           <label className="text-xs text-muted-foreground">
@@ -872,12 +1004,12 @@ function RoomDetailsPage() {
                           <input
                             type="date"
                             value={recurrenceEndDate}
-                            min={formatDateISO(addDays(selectedDate!, 7))}
+                            min={formatDateISO(addDays(summary.days[0].date, 7))}
                             max={formatDateISO(addDays(new Date(), 365 * 2))}
                             onChange={(e) => {
                               setRecurrenceEndDate(e.target.value);
                               setRecurrenceDates(
-                                generateWeeklyDates(selectedDate!, e.target.value),
+                                generateWeeklyDates(summary.days[0].date, e.target.value),
                               );
                             }}
                             className="mt-1 w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm"
@@ -890,10 +1022,10 @@ function RoomDetailsPage() {
                               {recurrenceDates.length + 1} rezervări săptămânale
                             </div>
                             <div className="mt-1 text-xs text-muted-foreground">
-                              În fiecare {DAY_NAMES_RO[getDayOfWeek(selectedDate!)]}
+                              În fiecare {DAY_NAMES_RO[getDayOfWeek(summary.days[0].date)]}
                             </div>
                             <div className="mt-1 text-xs text-muted-foreground">
-                              Din {selectedDate!.toLocaleDateString("ro-RO")} până în{" "}
+                              Din {summary.days[0].date.toLocaleDateString("ro-RO")} până în{" "}
                               {new Date(recurrenceEndDate).toLocaleDateString("ro-RO")}
                             </div>
                             <div className="mt-2 font-semibold text-primary">
@@ -906,25 +1038,52 @@ function RoomDetailsPage() {
                   </div>
                 )}
 
+                {summary?.isMultiDay && (
+                  <p className="mt-3 text-xs text-muted-foreground italic">
+                    Recurența săptămânală e disponibilă doar pentru rezervări într-o singură zi.
+                  </p>
+                )}
+
                 <Button
                   className="mt-5 w-full cursor-pointer"
                   size="lg"
                   disabled={!summary || !room.is_active || summary.exceedsLimit}
                   onClick={() => {
-                    if (!room?.is_active || !summary || !selectedDate || !room || summary.exceedsLimit) return;
-                    const recurrentActive = isRecurrent && recurrenceDates.length > 0;
+                    if (!room?.is_active || !summary || !room || summary.exceedsLimit) return;
+                    const recurrentActive =
+                      !summary.isMultiDay && isRecurrent && recurrenceDates.length > 0;
 
-                    const intervalsParam = summary.intervals
-                      .map(iv => `${iv.start.toString().padStart(2, "0")}:00-${iv.end.toString().padStart(2, "0")}:00`)
+                    // New format: "DATE:HH:MM-HH:MM,DATE:HH:MM-HH:MM,..."
+                    const slotsParam = summary.days
+                      .flatMap((d) => {
+                        const dateStr = formatDateISO(d.date);
+                        return d.intervals.map(
+                          (iv) =>
+                            `${dateStr}:${iv.start.toString().padStart(2, "0")}:00-${iv.end
+                              .toString()
+                              .padStart(2, "0")}:00`,
+                        );
+                      })
                       .join(",");
 
                     navigate({
                       to: "/rezerva/$slug",
                       params: { slug: room.slug },
                       search: {
-                        date: formatDateISO(selectedDate),
-                        intervals: intervalsParam,
-                        duration: summary.duration,
+                        slots: slotsParam,
+                        // Backward compat for single-day
+                        date: !summary.isMultiDay ? formatDateISO(summary.days[0].date) : "",
+                        intervals: !summary.isMultiDay
+                          ? summary.days[0].intervals
+                              .map(
+                                (iv) =>
+                                  `${iv.start.toString().padStart(2, "0")}:00-${iv.end
+                                    .toString()
+                                    .padStart(2, "0")}:00`,
+                              )
+                              .join(",")
+                          : "",
+                        duration: summary.totalHours,
                         total: summary.total,
                         recurrent: recurrentActive ? "true" : "false",
                         recurrenceEnd: recurrentActive ? recurrenceEndDate : "",
@@ -935,9 +1094,11 @@ function RoomDetailsPage() {
                 >
                   {!room.is_active
                     ? "Rezervările sunt indisponibile"
-                    : summary?.isMultiSlot
-                      ? `Rezervă ${summary.intervals.length} intervale`
-                      : "Rezervă acum"}
+                    : summary?.isMultiDay
+                      ? `Rezervă ${summary.totalIntervals} intervale (${summary.days.length} zile)`
+                      : summary?.isMultiSlot
+                        ? `Rezervă ${summary.totalIntervals} intervale`
+                        : "Rezervă acum"}
                 </Button>
 
                 <p className="mt-3 text-center text-xs text-muted-foreground">
@@ -971,6 +1132,7 @@ function CalendarMonth({
   isDisabled,
   selected,
   onSelect,
+  multiSelected = [],
 }: {
   month: Date;
   onPrev: () => void;
@@ -978,6 +1140,7 @@ function CalendarMonth({
   isDisabled: (d: Date) => boolean;
   selected: Date | null;
   onSelect: (d: Date) => void;
+  multiSelected?: Date[];
 }) {
   const monthName = month.toLocaleDateString("ro-RO", {
     month: "long",
@@ -985,8 +1148,7 @@ function CalendarMonth({
   });
   const start = startOfMonth(month);
   const end = endOfMonth(month);
-  // Grid starting Monday
-  const startDow = getDayOfWeek(start); // 1..7 (Mon..Sun)
+  const startDow = getDayOfWeek(start);
   const leading = startDow - 1;
   const totalDays = end.getDate();
 
@@ -1031,18 +1193,21 @@ function CalendarMonth({
         {cells.map((d, i) => {
           if (!d) return <div key={i} className="aspect-square" />;
           const disabled = isDisabled(d);
-          const isSelected = selected && isSameDay(d, selected);
+          const isActive = selected && isSameDay(d, selected);
+          const isInMultiSelection = multiSelected.some((md) => isSameDay(md, d));
           return (
             <button
               key={i}
               disabled={disabled}
               onClick={() => onSelect(d)}
               className={`aspect-square rounded-md text-sm transition ${
-                isSelected
+                isActive
                   ? "bg-primary text-primary-foreground font-semibold"
-                  : disabled
-                    ? "cursor-not-allowed bg-muted/40 text-muted-foreground/50"
-                    : "bg-background hover:bg-primary/10 hover:text-primary"
+                  : isInMultiSelection
+                    ? "bg-primary/15 text-primary font-medium border border-primary/40"
+                    : disabled
+                      ? "cursor-not-allowed bg-muted/40 text-muted-foreground/50"
+                      : "bg-background hover:bg-primary/10 hover:text-primary"
               }`}
             >
               {d.getDate()}
