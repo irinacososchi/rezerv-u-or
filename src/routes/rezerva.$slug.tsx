@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Tag, Check, Loader2, AlertCircle, ChevronDown, ChevronUp, X } from "lucide-react";
+import { ArrowLeft, Tag, Check, Loader2, AlertCircle, AlertTriangle, ChevronDown, ChevronUp, X } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
@@ -232,12 +232,14 @@ function BookingSlotsPreview({
   allSlots,
   excludedKeys,
   onToggleExclusion,
+  busyKeys,
   pricing,
   currency,
 }: {
   allSlots: ParsedSlot[];
   excludedKeys: Set<string>;
   onToggleExclusion: (s: ParsedSlot) => void;
+  busyKeys: Set<string>;
   pricing: PricingRule[];
   currency: string;
 }) {
@@ -254,8 +256,10 @@ function BookingSlotsPreview({
 
   // Apare preview-ul dacă:
   //  - sunt multiple slot-uri, SAU
-  //  - un singur slot care acoperă mai multe pricing rules
+  //  - un singur slot care acoperă mai multe pricing rules, SAU
+  //  - există slot-uri ocupate (chiar și single)
   const hasMultipleSlots = allSlots.length > 1;
+  const hasBusyAny = allSlots.some((s) => busyKeys.has(slotKey(s)));
   const hasMixedPricing =
     allSlots.length === 1 &&
     (() => {
@@ -270,10 +274,13 @@ function BookingSlotsPreview({
       return labelsSet.size > 1;
     })();
 
-  if (!hasMultipleSlots && !hasMixedPricing) return null;
+  if (!hasMultipleSlots && !hasMixedPricing && !hasBusyAny) return null;
 
   const includedCount = allSlots.filter((s) => !excludedKeys.has(slotKey(s))).length;
   const excludedCount = allSlots.length - includedCount;
+  const busyIncludedCount = allSlots.filter(
+    (s) => busyKeys.has(slotKey(s)) && !excludedKeys.has(slotKey(s)),
+  ).length;
 
   return (
     <div className="mt-4 rounded-xl border border-border bg-secondary/30 overflow-hidden">
@@ -288,11 +295,18 @@ function BookingSlotsPreview({
               ? `Detalii rezervări (${includedCount} ${includedCount === 1 ? "rezervare" : "rezervări"})`
               : "Defalcare tarife"}
           </div>
-          {excludedCount > 0 && (
-            <div className="text-xs text-muted-foreground mt-0.5">
-              {excludedCount} {excludedCount === 1 ? "exclusă" : "excluse"} manual
-            </div>
-          )}
+          <div className="text-xs mt-0.5 space-y-0.5">
+            {excludedCount > 0 && (
+              <div className="text-muted-foreground">
+                {excludedCount} {excludedCount === 1 ? "exclusă" : "excluse"} manual
+              </div>
+            )}
+            {busyIncludedCount > 0 && (
+              <div className="text-destructive font-medium">
+                ⚠ {busyIncludedCount} slot{busyIncludedCount === 1 ? "" : "-uri"} ocupat{busyIncludedCount === 1 ? "" : "e"} — exclude pentru a continua
+              </div>
+            )}
+          </div>
         </div>
         {expanded ? (
           <ChevronUp className="h-4 w-4 text-muted-foreground" />
@@ -322,6 +336,7 @@ function BookingSlotsPreview({
                   <ul className="space-y-1 ml-2">
                     {slots.map((s, i) => {
                       const isExcluded = excludedKeys.has(slotKey(s));
+                      const isBusy = busyKeys.has(slotKey(s));
                       const { totalPrice, labels } = calcSlotPricing(s, pricing);
                       const isReadOnly = allSlots.length === 1;
 
@@ -356,10 +371,24 @@ function BookingSlotsPreview({
                         return (
                           <li
                             key={i}
-                            className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm"
+                            className={`flex items-center justify-between rounded-md border px-3 py-2 text-sm ${
+                              isBusy
+                                ? "border-destructive/40 bg-destructive/5"
+                                : "border-border bg-background"
+                            }`}
                           >
-                            <span className="font-medium">
-                              {s.start}–{s.end}
+                            <span className="flex items-center gap-2">
+                              {isBusy && (
+                                <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
+                              )}
+                              <span className="font-medium">
+                                {s.start}–{s.end}
+                              </span>
+                              {isBusy && (
+                                <span className="ml-1 inline-flex items-center rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-medium text-destructive">
+                                  Ocupat
+                                </span>
+                              )}
                             </span>
                             <div className="flex flex-col items-end">
                               <span className="font-medium">
@@ -383,18 +412,27 @@ function BookingSlotsPreview({
                             className={`w-full flex items-center justify-between rounded-md border px-3 py-2 text-sm transition cursor-pointer ${
                               isExcluded
                                 ? "border-border bg-muted/40 text-muted-foreground line-through"
-                                : "border-border bg-background hover:border-primary"
+                                : isBusy
+                                  ? "border-destructive/40 bg-destructive/5 hover:border-destructive/60"
+                                  : "border-border bg-background hover:border-primary"
                             }`}
                           >
                             <span className="flex items-center gap-2">
                               {isExcluded ? (
                                 <X className="h-3.5 w-3.5 text-destructive" />
+                              ) : isBusy ? (
+                                <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
                               ) : (
                                 <Check className="h-3.5 w-3.5 text-primary" />
                               )}
                               <span className="font-medium">
                                 {s.start}–{s.end}
                               </span>
+                              {isBusy && !isExcluded && (
+                                <span className="ml-1 inline-flex items-center rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-medium text-destructive">
+                                  Ocupat
+                                </span>
+                              )}
                             </span>
                             <div className="flex flex-col items-end">
                               <span className={isExcluded ? "text-muted-foreground/60" : "font-medium"}>
@@ -567,6 +605,11 @@ function CheckoutPage() {
 
   const [excludedSlotKeys, setExcludedSlotKeys] = useState<Set<string>>(new Set());
 
+  // ---------- Availability check (3C.3) ----------
+  const [busySlotKeys, setBusySlotKeys] = useState<Set<string>>(new Set());
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
+  const [availabilityError, setAvailabilityError] = useState<string | null>(null);
+
   const finalSlotsToCreate = useMemo(
     () => allSlotsToCreate.filter((s) => !excludedSlotKeys.has(slotKey(s))),
     [allSlotsToCreate, excludedSlotKeys],
@@ -581,6 +624,78 @@ function CheckoutPage() {
       return next;
     });
   }
+
+  const busyIncludedSlots = useMemo(
+    () => finalSlotsToCreate.filter((s) => busySlotKeys.has(slotKey(s))),
+    [finalSlotsToCreate, busySlotKeys],
+  );
+  const hasBusyConflicts = busyIncludedSlots.length > 0;
+
+  const checkSlotAvailability = async (
+    slotsToCheck: ParsedSlot[],
+  ): Promise<Set<string>> => {
+    if (slotsToCheck.length === 0 || !room) return new Set();
+    const dates = Array.from(new Set(slotsToCheck.map((s) => s.date)));
+    const minDate = dates.reduce((a, b) => (a < b ? a : b));
+    const maxDate = dates.reduce((a, b) => (a > b ? a : b));
+
+    const { data, error } = await supabase
+      .from("bookings")
+      .select("booking_date, start_time, end_time, status")
+      .eq("room_id", room.id)
+      .gte("booking_date", minDate)
+      .lte("booking_date", maxDate)
+      .not("status", "in", '("refuzată","anulată","expirată")');
+
+    if (error) {
+      console.error("availability check error:", error);
+      throw error;
+    }
+
+    const existingBookings = (data ?? []) as {
+      booking_date: string;
+      start_time: string;
+      end_time: string;
+    }[];
+    const busy = new Set<string>();
+
+    for (const slot of slotsToCheck) {
+      const slotStart = parseInt(slot.start.slice(0, 2), 10);
+      const slotEnd = parseInt(slot.end.slice(0, 2), 10);
+      const conflict = existingBookings.some((b) => {
+        if (b.booking_date !== slot.date) return false;
+        const bStart = parseInt(b.start_time.slice(0, 2), 10);
+        const bEnd = parseInt(b.end_time.slice(0, 2), 10);
+        return slotStart < bEnd && slotEnd > bStart;
+      });
+      if (conflict) busy.add(slotKey(slot));
+    }
+    return busy;
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    async function runInitialCheck() {
+      if (allSlotsToCreate.length === 0 || !room) return;
+      setCheckingAvailability(true);
+      setAvailabilityError(null);
+      try {
+        const busy = await checkSlotAvailability(allSlotsToCreate);
+        if (!cancelled) setBusySlotKeys(busy);
+      } catch {
+        if (!cancelled)
+          setAvailabilityError("Nu am putut verifica disponibilitatea. Reîncearcă.");
+      } finally {
+        if (!cancelled) setCheckingAvailability(false);
+      }
+    }
+    runInitialCheck();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allSlotsToCreate.length, room?.id]);
+
 
   const recalculatedTotal = useMemo(() => {
     return finalSlotsToCreate.reduce((sum, s) => sum + calcSlotTotal(s, pricing), 0);
@@ -695,6 +810,30 @@ function CheckoutPage() {
     }
 
     setSubmitting(true);
+
+    // Revalidare disponibilitate înainte de submit (race condition guard)
+    try {
+      const freshBusy = await checkSlotAvailability(finalSlotsToCreate);
+      if (freshBusy.size > 0) {
+        setBusySlotKeys((prev) => {
+          const merged = new Set(prev);
+          freshBusy.forEach((k) => merged.add(k));
+          return merged;
+        });
+        setSubmitting(false);
+        setSubmitError(
+          `Au apărut conflicte de ultim moment — ${freshBusy.size} slot${freshBusy.size === 1 ? "" : "-uri"} ` +
+            `${freshBusy.size === 1 ? "a fost rezervat" : "au fost rezervate"} de altcineva între timp. ` +
+            `Verifică preview-ul și exclude slot-urile marcate ca ocupate.`,
+        );
+        return;
+      }
+    } catch {
+      setSubmitting(false);
+      setSubmitError("Nu am putut verifica disponibilitatea. Reîncearcă peste câteva secunde.");
+      return;
+    }
+
 
     // Recurrence record (only when recurrence active, single-day, single interval)
     let recurrenceId: string | null = null;
@@ -1024,13 +1163,64 @@ function CheckoutPage() {
                 );
               })()}
 
+              {checkingAvailability && (
+                <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  Se verifică disponibilitatea slot-urilor...
+                </div>
+              )}
+
+              {availabilityError && (
+                <div className="mt-3 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                  <p className="font-medium">Eroare la verificare</p>
+                  <p className="mt-1 text-xs">{availabilityError}</p>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setCheckingAvailability(true);
+                      setAvailabilityError(null);
+                      try {
+                        const busy = await checkSlotAvailability(allSlotsToCreate);
+                        setBusySlotKeys(busy);
+                      } catch {
+                        setAvailabilityError("Nu am putut verifica disponibilitatea. Reîncearcă.");
+                      } finally {
+                        setCheckingAvailability(false);
+                      }
+                    }}
+                    className="mt-2 text-xs underline hover:no-underline cursor-pointer"
+                  >
+                    Reîncearcă
+                  </button>
+                </div>
+              )}
+
               <BookingSlotsPreview
                 allSlots={allSlotsToCreate}
                 excludedKeys={excludedSlotKeys}
                 onToggleExclusion={toggleSlotExclusion}
+                busyKeys={busySlotKeys}
                 pricing={pricing}
                 currency={currency}
               />
+
+              {hasBusyConflicts && (
+                <div className="mt-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setExcludedSlotKeys((prev) => {
+                        const next = new Set(prev);
+                        busyIncludedSlots.forEach((s) => next.add(slotKey(s)));
+                        return next;
+                      });
+                    }}
+                    className="text-xs text-primary hover:underline font-medium cursor-pointer"
+                  >
+                    Exclude automat toate slot-urile ocupate ({busyIncludedSlots.length})
+                  </button>
+                </div>
+              )}
 
               {search.recurrent === "true" && search.recurrenceCount > 0 && !isMultiDay && (
                 <div className="mt-3 rounded-md bg-primary/5 border border-primary/20 p-3 text-sm">
@@ -1217,7 +1407,12 @@ function CheckoutPage() {
             <Button
               type="submit"
               size="lg"
-              disabled={submitting || finalSlotsToCreate.length === 0}
+              disabled={
+                submitting ||
+                finalSlotsToCreate.length === 0 ||
+                hasBusyConflicts ||
+                checkingAvailability
+              }
               className="w-full cursor-pointer text-base"
             >
               {submitting ? (
@@ -1225,6 +1420,10 @@ function CheckoutPage() {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Se procesează…
                 </>
+              ) : checkingAvailability ? (
+                "Se verifică disponibilitatea..."
+              ) : hasBusyConflicts ? (
+                `Exclude ${busyIncludedSlots.length} slot${busyIncludedSlots.length === 1 ? "" : "-uri"} ocupat${busyIncludedSlots.length === 1 ? "" : "e"} pentru a continua`
               ) : finalSlotsToCreate.length === 0 ? (
                 "Selectează cel puțin o rezervare"
               ) : finalSlotsToCreate.length === 1 ? (
@@ -1233,6 +1432,12 @@ function CheckoutPage() {
                 `Rezervă ${finalSlotsToCreate.length} intervale · ${finalTotal} ${currency}`
               )}
             </Button>
+
+            {hasBusyConflicts && (
+              <p className="text-center text-xs text-destructive">
+                Ai {busyIncludedSlots.length} slot{busyIncludedSlots.length === 1 ? "" : "-uri"} ocupat{busyIncludedSlots.length === 1 ? "" : "e"}. Te rugăm să le excluzi din preview ca să continui.
+              </p>
+            )}
 
             <p className="text-center text-xs text-muted-foreground">
               Prin confirmarea rezervării accepți termenii și condițiile.
