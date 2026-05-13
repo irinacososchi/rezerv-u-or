@@ -326,6 +326,33 @@ function BookingSlotsPreview({
                       const isReadOnly = allSlots.length === 1;
 
                       if (isReadOnly) {
+                        const subIntervals = splitSlotByPricing(s, pricing);
+                        if (subIntervals.length > 1) {
+                          return (
+                            <li key={i} className="space-y-1">
+                              {subIntervals.map((sub, j) => (
+                                <div
+                                  key={j}
+                                  className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm"
+                                >
+                                  <span className="font-medium">
+                                    {formatHour(sub.startHour)}–{formatHour(sub.endHour)}
+                                  </span>
+                                  <div className="flex flex-col items-end">
+                                    <span className="font-medium">
+                                      {sub.price} {currency}
+                                    </span>
+                                    {sub.label && (
+                                      <span className="text-[10px] text-muted-foreground">
+                                        {sub.label}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </li>
+                          );
+                        }
                         return (
                           <li
                             key={i}
