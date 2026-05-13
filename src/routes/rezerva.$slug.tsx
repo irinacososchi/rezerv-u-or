@@ -1407,7 +1407,12 @@ function CheckoutPage() {
             <Button
               type="submit"
               size="lg"
-              disabled={submitting || finalSlotsToCreate.length === 0}
+              disabled={
+                submitting ||
+                finalSlotsToCreate.length === 0 ||
+                hasBusyConflicts ||
+                checkingAvailability
+              }
               className="w-full cursor-pointer text-base"
             >
               {submitting ? (
@@ -1415,6 +1420,10 @@ function CheckoutPage() {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Se procesează…
                 </>
+              ) : checkingAvailability ? (
+                "Se verifică disponibilitatea..."
+              ) : hasBusyConflicts ? (
+                `Exclude ${busyIncludedSlots.length} slot${busyIncludedSlots.length === 1 ? "" : "-uri"} ocupat${busyIncludedSlots.length === 1 ? "" : "e"} pentru a continua`
               ) : finalSlotsToCreate.length === 0 ? (
                 "Selectează cel puțin o rezervare"
               ) : finalSlotsToCreate.length === 1 ? (
@@ -1423,6 +1432,12 @@ function CheckoutPage() {
                 `Rezervă ${finalSlotsToCreate.length} intervale · ${finalTotal} ${currency}`
               )}
             </Button>
+
+            {hasBusyConflicts && (
+              <p className="text-center text-xs text-destructive">
+                Ai {busyIncludedSlots.length} slot{busyIncludedSlots.length === 1 ? "" : "-uri"} ocupat{busyIncludedSlots.length === 1 ? "" : "e"}. Te rugăm să le excluzi din preview ca să continui.
+              </p>
+            )}
 
             <p className="text-center text-xs text-muted-foreground">
               Prin confirmarea rezervării accepți termenii și condițiile.
