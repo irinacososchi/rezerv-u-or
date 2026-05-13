@@ -154,8 +154,10 @@ function RoomDetailsPage() {
     const d = new Date();
     return new Date(d.getFullYear(), d.getMonth(), 1);
   });
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedHours, setSelectedHours] = useState<number[]>([]);
+  type DaySelection = { date: Date; hours: number[] };
+  const [daySelections, setDaySelections] = useState<DaySelection[]>([]);
+  const [activeDayIndex, setActiveDayIndex] = useState<number | null>(null);
+  const [isPickingNewDay, setIsPickingNewDay] = useState(true);
   const [isRecurrent, setIsRecurrent] = useState(false);
   const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
   const [recurrenceDates, setRecurrenceDates] = useState<Date[]>([]);
