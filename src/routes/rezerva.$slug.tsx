@@ -336,6 +336,7 @@ function BookingSlotsPreview({
                   <ul className="space-y-1 ml-2">
                     {slots.map((s, i) => {
                       const isExcluded = excludedKeys.has(slotKey(s));
+                      const isBusy = busyKeys.has(slotKey(s));
                       const { totalPrice, labels } = calcSlotPricing(s, pricing);
                       const isReadOnly = allSlots.length === 1;
 
@@ -370,10 +371,24 @@ function BookingSlotsPreview({
                         return (
                           <li
                             key={i}
-                            className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm"
+                            className={`flex items-center justify-between rounded-md border px-3 py-2 text-sm ${
+                              isBusy
+                                ? "border-destructive/40 bg-destructive/5"
+                                : "border-border bg-background"
+                            }`}
                           >
-                            <span className="font-medium">
-                              {s.start}–{s.end}
+                            <span className="flex items-center gap-2">
+                              {isBusy && (
+                                <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
+                              )}
+                              <span className="font-medium">
+                                {s.start}–{s.end}
+                              </span>
+                              {isBusy && (
+                                <span className="ml-1 inline-flex items-center rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-medium text-destructive">
+                                  Ocupat
+                                </span>
+                              )}
                             </span>
                             <div className="flex flex-col items-end">
                               <span className="font-medium">
@@ -397,18 +412,27 @@ function BookingSlotsPreview({
                             className={`w-full flex items-center justify-between rounded-md border px-3 py-2 text-sm transition cursor-pointer ${
                               isExcluded
                                 ? "border-border bg-muted/40 text-muted-foreground line-through"
-                                : "border-border bg-background hover:border-primary"
+                                : isBusy
+                                  ? "border-destructive/40 bg-destructive/5 hover:border-destructive/60"
+                                  : "border-border bg-background hover:border-primary"
                             }`}
                           >
                             <span className="flex items-center gap-2">
                               {isExcluded ? (
                                 <X className="h-3.5 w-3.5 text-destructive" />
+                              ) : isBusy ? (
+                                <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
                               ) : (
                                 <Check className="h-3.5 w-3.5 text-primary" />
                               )}
                               <span className="font-medium">
                                 {s.start}–{s.end}
                               </span>
+                              {isBusy && !isExcluded && (
+                                <span className="ml-1 inline-flex items-center rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-medium text-destructive">
+                                  Ocupat
+                                </span>
+                              )}
                             </span>
                             <div className="flex flex-col items-end">
                               <span className={isExcluded ? "text-muted-foreground/60" : "font-medium"}>
