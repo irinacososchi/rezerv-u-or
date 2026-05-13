@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Tag, Check, Loader2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Tag, Check, Loader2, AlertCircle, ChevronDown, ChevronUp, X } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
@@ -11,8 +11,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/external-client";
 import {
   formatDateRO,
+  formatDateISO,
   parseISODate,
   getDayOfWeek,
+  DAY_NAMES_RO,
 } from "@/lib/date-utils";
 
 // ---------- Search params ----------
@@ -89,6 +91,12 @@ type Voucher = {
 };
 
 // ---------- Helpers ----------
+type ParsedSlot = { date: string; start: string; end: string };
+
+function slotKey(s: ParsedSlot): string {
+  return `${s.date}|${s.start}|${s.end}`;
+}
+
 function generateWeeklyDates(startDateStr: string, endDateStr: string): string[] {
   if (!endDateStr) return [startDateStr];
   const dates: string[] = [];
@@ -134,6 +142,134 @@ function pickActivePricing(
   return matching[0] ?? null;
 }
 
+function getPriceForSlot(date: Date, hour: number, rules: PricingRule[]): number {
+  const r = pickActivePricing(date, hour, rules);
+  return r ? Number(r.price_per_hour) : 0;
+}
+
+function calcSlotTotal(s: ParsedSlot, rules: PricingRule[]): number {
+  const startHour = parseInt(s.start.slice(0, 2), 10);
+  const endHour = parseInt(s.end.slice(0, 2), 10);
+  let total = 0;
+  for (let h = startHour; h < endHour; h++) {
+    total += getPriceForSlot(parseISODate(s.date), h, rules);
+  }
+  return total;
+}
+
+// ---------- BookingSlotsPreview ----------
+function BookingSlotsPreview({
+  allSlots,
+  excludedKeys,
+  onToggleExclusion,
+  pricing,
+  currency,
+}: {
+  allSlots: ParsedSlot[];
+  excludedKeys: Set<string>;
+  onToggleExclusion: (s: ParsedSlot) => void;
+  pricing: PricingRule[];
+  currency: string;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  const groupedByDate = useMemo(() => {
+    const map = new Map<string, ParsedSlot[]>();
+    for (const s of allSlots) {
+      if (!map.has(s.date)) map.set(s.date, []);
+      map.get(s.date)!.push(s);
+    }
+    return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
+  }, [allSlots]);
+
+  if (allSlots.length <= 1) return null;
+
+  const includedCount = allSlots.filter((s) => !excludedKeys.has(slotKey(s))).length;
+  const excludedCount = allSlots.length - includedCount;
+
+  return (
+    <div className="mt-4 rounded-xl border border-border bg-secondary/30 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setExpanded(!expanded)}
+        className="flex w-full items-center justify-between p-4 hover:bg-secondary/50 transition cursor-pointer"
+      >
+        <div className="text-left">
+          <div className="font-medium text-sm">
+            Detalii rezervări ({includedCount} {includedCount === 1 ? "rezervare" : "rezervări"})
+          </div>
+          {excludedCount > 0 && (
+            <div className="text-xs text-muted-foreground mt-0.5">
+              {excludedCount} {excludedCount === 1 ? "exclusă" : "excluse"} manual
+            </div>
+          )}
+        </div>
+        {expanded ? (
+          <ChevronUp className="h-4 w-4 text-muted-foreground" />
+        ) : (
+          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+        )}
+      </button>
+
+      {expanded && (
+        <div className="border-t border-border bg-background p-3 max-h-96 overflow-y-auto">
+          <p className="text-xs text-muted-foreground mb-3">
+            Click pe orice rezervare pentru a o exclude din acest checkout. Slot-urile excluse vor fi sărite la submit.
+          </p>
+          <ul className="space-y-3">
+            {groupedByDate.map(([date, slots]) => {
+              const dateObj = parseISODate(date);
+              const dow = getDayOfWeek(dateObj);
+              return (
+                <li key={date}>
+                  <div className="text-sm font-medium mb-1">
+                    {DAY_NAMES_RO[dow]}, {dateObj.getDate()}.
+                    {String(dateObj.getMonth() + 1).padStart(2, "0")}.
+                    {dateObj.getFullYear()}
+                  </div>
+                  <ul className="space-y-1 ml-2">
+                    {slots.map((s, i) => {
+                      const isExcluded = excludedKeys.has(slotKey(s));
+                      const price = calcSlotTotal(s, pricing);
+                      return (
+                        <li key={i}>
+                          <button
+                            type="button"
+                            onClick={() => onToggleExclusion(s)}
+                            className={`w-full flex items-center justify-between rounded-md border px-3 py-2 text-sm transition cursor-pointer ${
+                              isExcluded
+                                ? "border-border bg-muted/40 text-muted-foreground line-through"
+                                : "border-border bg-background hover:border-primary"
+                            }`}
+                          >
+                            <span className="flex items-center gap-2">
+                              {isExcluded ? (
+                                <X className="h-3.5 w-3.5 text-destructive" />
+                              ) : (
+                                <Check className="h-3.5 w-3.5 text-primary" />
+                              )}
+                              <span className="font-medium">
+                                {s.start}–{s.end}
+                              </span>
+                            </span>
+                            <span className={isExcluded ? "text-muted-foreground/60" : "font-medium"}>
+                              {price} {currency}
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ---------- Page ----------
 function CheckoutPage() {
   const { slug } = Route.useParams() as { slug: string };
@@ -169,8 +305,6 @@ function CheckoutPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   // ---------- Parse slots (new multi-day format) with fallbacks ----------
-  type ParsedSlot = { date: string; start: string; end: string };
-
   const parsedSlots: ParsedSlot[] = useMemo(() => {
     // Format nou (multi-day): "DATE:HH:MM-HH:MM,DATE:HH:MM-HH:MM,..."
     if (search.slots) {
@@ -261,16 +395,65 @@ function CheckoutPage() {
   }, [dateObj, startHour, pricing]);
 
   const isRecurrentSearch = search.recurrent === "true";
-  const voucherDisabled = isMultiSlot || isMultiDay || isRecurrentSearch;
 
-  const subtotal = search.total;
+  // ---------- Build full list of slots that WILL be created (incl recurrence) ----------
+  const allSlotsToCreate = useMemo<ParsedSlot[]>(() => {
+    const slots: ParsedSlot[] = [...parsedSlots];
+    const recurrenceCount = search.recurrenceCount ?? 0;
+    if (isRecurrentSearch && recurrenceCount > 1 && !isMultiDay && parsedSlots.length > 0) {
+      const baseDate = parseISODate(parsedSlots[0].date);
+      for (let i = 1; i < recurrenceCount; i++) {
+        const nextDate = new Date(baseDate);
+        nextDate.setDate(nextDate.getDate() + i * 7);
+        const dateStr = formatDateISO(nextDate);
+        for (const slot of parsedSlots) {
+          slots.push({ ...slot, date: dateStr });
+        }
+      }
+    }
+    return slots;
+  }, [parsedSlots, isRecurrentSearch, search.recurrenceCount, isMultiDay]);
+
+  const [excludedSlotKeys, setExcludedSlotKeys] = useState<Set<string>>(new Set());
+
+  const finalSlotsToCreate = useMemo(
+    () => allSlotsToCreate.filter((s) => !excludedSlotKeys.has(slotKey(s))),
+    [allSlotsToCreate, excludedSlotKeys],
+  );
+
+  function toggleSlotExclusion(s: ParsedSlot) {
+    const key = slotKey(s);
+    setExcludedSlotKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  const recalculatedTotal = useMemo(() => {
+    return finalSlotsToCreate.reduce((sum, s) => sum + calcSlotTotal(s, pricing), 0);
+  }, [finalSlotsToCreate, pricing]);
+
+  const recalculatedDuration = useMemo(() => {
+    return finalSlotsToCreate.reduce((sum, s) => {
+      const sh = parseInt(s.start.slice(0, 2), 10);
+      const eh = parseInt(s.end.slice(0, 2), 10);
+      return sum + (eh - sh);
+    }, 0);
+  }, [finalSlotsToCreate]);
+
+  const voucherDisabled =
+    isMultiSlot || isMultiDay || isRecurrentSearch || finalSlotsToCreate.length !== 1;
+
+  const subtotal = recalculatedTotal;
   const discountAmount = useMemo(() => {
-    if (!voucher) return 0;
+    if (!voucher || finalSlotsToCreate.length !== 1) return 0;
     if (voucher.discount_type === "procent") {
       return Math.round((subtotal * voucher.discount_value) / 100);
     }
     return Math.min(subtotal, voucher.discount_value);
-  }, [voucher, subtotal]);
+  }, [voucher, subtotal, finalSlotsToCreate.length]);
   const finalTotal = Math.max(0, subtotal - discountAmount);
 
   // ---------- Voucher apply ----------
@@ -345,37 +528,9 @@ function CheckoutPage() {
 
     const isRecurrent = search.recurrent === "true" && search.recurrenceCount > 1;
 
-    // Build slot list. If multi-day, parsedSlots already has dates.
-    // Otherwise (single-day) expand recurrence over the single date.
-    const allDateIntervals: { date: string; start: string; end: string }[] = [];
-    if (isMultiDay) {
-      // Multi-day already explicit; recurrence is disabled in this case.
-      for (const s of parsedSlots) {
-        allDateIntervals.push({ date: s.date, start: s.start, end: s.end });
-      }
-    } else {
-      const dates: string[] = [firstDate];
-      if (isRecurrent) {
-        const baseDate = parseISODate(firstDate);
-        for (let i = 1; i < search.recurrenceCount; i++) {
-          const next = new Date(baseDate);
-          next.setDate(next.getDate() + i * 7);
-          const y = next.getFullYear();
-          const m = String(next.getMonth() + 1).padStart(2, "0");
-          const d = String(next.getDate()).padStart(2, "0");
-          dates.push(`${y}-${m}-${d}`);
-        }
-      } else if (search.recurrenceEnd) {
-        const all = generateWeeklyDates(firstDate, search.recurrenceEnd);
-        dates.length = 0;
-        dates.push(...all);
-      }
-      for (const d of dates) {
-        for (const s of parsedSlots) {
-          allDateIntervals.push({ date: d, start: s.start, end: s.end });
-        }
-      }
-    }
+    // Use precomputed finalSlotsToCreate (already accounts for recurrence and exclusions)
+    const allDateIntervals: { date: string; start: string; end: string }[] =
+      finalSlotsToCreate.map((s) => ({ date: s.date, start: s.start, end: s.end }));
 
     if (allDateIntervals.length === 0) {
       setSubmitError("Niciun interval selectat.");
@@ -670,7 +825,7 @@ function CheckoutPage() {
                 )}
                 <Row
                   label="Durată"
-                  value={`${search.duration} ${search.duration === 1 ? "oră" : "ore"}`}
+                  value={`${recalculatedDuration} ${recalculatedDuration === 1 ? "oră" : "ore"}`}
                 />
                 <Row label="Subtotal" value={`${subtotal} ${currency}`} />
 
@@ -694,7 +849,21 @@ function CheckoutPage() {
                 </span>
               </div>
 
-              {search.recurrent === "true" && search.recurrenceCount > 0 && (
+              {recalculatedTotal !== (search.total ?? 0) && (
+                <p className="text-xs text-muted-foreground mt-1 text-right">
+                  Total actualizat după excluderea manuală a unor slot-uri.
+                </p>
+              )}
+
+              <BookingSlotsPreview
+                allSlots={allSlotsToCreate}
+                excludedKeys={excludedSlotKeys}
+                onToggleExclusion={toggleSlotExclusion}
+                pricing={pricing}
+                currency={currency}
+              />
+
+              {search.recurrent === "true" && search.recurrenceCount > 0 && !isMultiDay && (
                 <div className="mt-3 rounded-md bg-primary/5 border border-primary/20 p-3 text-sm">
                   <div className="font-medium text-primary">
                     Rezervare recurentă săptămânală
@@ -707,9 +876,6 @@ function CheckoutPage() {
                         {parseISODate(search.recurrenceEnd).toLocaleDateString("ro-RO")}
                       </>
                     )}
-                  </div>
-                  <div className="font-semibold text-primary mt-1">
-                    Total: {search.recurrenceCount * finalTotal} {currency}
                   </div>
                 </div>
               )}
@@ -882,7 +1048,7 @@ function CheckoutPage() {
             <Button
               type="submit"
               size="lg"
-              disabled={submitting}
+              disabled={submitting || finalSlotsToCreate.length === 0}
               className="w-full cursor-pointer text-base"
             >
               {submitting ? (
@@ -890,8 +1056,12 @@ function CheckoutPage() {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Se procesează…
                 </>
-              ) : (
+              ) : finalSlotsToCreate.length === 0 ? (
+                "Selectează cel puțin o rezervare"
+              ) : finalSlotsToCreate.length === 1 ? (
                 `Confirmă rezervarea · ${finalTotal} ${currency}`
+              ) : (
+                `Rezervă ${finalSlotsToCreate.length} intervale · ${finalTotal} ${currency}`
               )}
             </Button>
 
