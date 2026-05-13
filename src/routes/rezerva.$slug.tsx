@@ -185,7 +185,49 @@ function calcSlotPricing(
   return { totalPrice: total, labels: Array.from(labelsSet) };
 }
 
-// ---------- BookingSlotsPreview ----------
+type PricingSubInterval = {
+  startHour: number;
+  endHour: number;
+  price: number;
+  label: string | null;
+};
+
+function splitSlotByPricing(s: ParsedSlot, rules: PricingRule[]): PricingSubInterval[] {
+  const startHour = parseInt(s.start.slice(0, 2), 10);
+  const endHour = parseInt(s.end.slice(0, 2), 10);
+  const date = parseISODate(s.date);
+
+  const subIntervals: PricingSubInterval[] = [];
+  let currentLabel: string | null = null;
+  let currentStart = startHour;
+  let currentSum = 0;
+
+  for (let h = startHour; h < endHour; h++) {
+    const detail = getPriceForSlotDetailed(date, h, rules);
+    if (h === startHour) {
+      currentLabel = detail.label;
+      currentStart = h;
+      currentSum = detail.price;
+    } else if (detail.label !== currentLabel) {
+      subIntervals.push({ startHour: currentStart, endHour: h, price: currentSum, label: currentLabel });
+      currentLabel = detail.label;
+      currentStart = h;
+      currentSum = detail.price;
+    } else {
+      currentSum += detail.price;
+    }
+  }
+
+  if (endHour > startHour) {
+    subIntervals.push({ startHour: currentStart, endHour, price: currentSum, label: currentLabel });
+  }
+  return subIntervals;
+}
+
+function formatHour(h: number): string {
+  return `${h.toString().padStart(2, "0")}:00`;
+}
+
 function BookingSlotsPreview({
   allSlots,
   excludedKeys,
