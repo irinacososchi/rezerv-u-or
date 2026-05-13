@@ -687,16 +687,17 @@ function CheckoutPage() {
                 <>
                   <div className="mt-3 flex gap-2">
                     <Input
-                      placeholder="Cod voucher"
+                      placeholder={voucherDisabled ? "Voucherele nu se aplică aici" : "Cod voucher"}
                       value={voucherInput}
                       onChange={(e) => setVoucherInput(e.target.value.toUpperCase())}
                       maxLength={50}
+                      disabled={voucherDisabled}
                     />
                     <Button
                       type="button"
                       variant="secondary"
                       onClick={applyVoucher}
-                      disabled={voucherLoading}
+                      disabled={voucherLoading || voucherDisabled}
                       className="cursor-pointer"
                     >
                       {voucherLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Aplică"}
