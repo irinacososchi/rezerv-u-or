@@ -1139,13 +1139,64 @@ function CheckoutPage() {
                 );
               })()}
 
+              {checkingAvailability && (
+                <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  Se verifică disponibilitatea slot-urilor...
+                </div>
+              )}
+
+              {availabilityError && (
+                <div className="mt-3 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                  <p className="font-medium">Eroare la verificare</p>
+                  <p className="mt-1 text-xs">{availabilityError}</p>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setCheckingAvailability(true);
+                      setAvailabilityError(null);
+                      try {
+                        const busy = await checkSlotAvailability(allSlotsToCreate);
+                        setBusySlotKeys(busy);
+                      } catch {
+                        setAvailabilityError("Nu am putut verifica disponibilitatea. Reîncearcă.");
+                      } finally {
+                        setCheckingAvailability(false);
+                      }
+                    }}
+                    className="mt-2 text-xs underline hover:no-underline cursor-pointer"
+                  >
+                    Reîncearcă
+                  </button>
+                </div>
+              )}
+
               <BookingSlotsPreview
                 allSlots={allSlotsToCreate}
                 excludedKeys={excludedSlotKeys}
                 onToggleExclusion={toggleSlotExclusion}
+                busyKeys={busySlotKeys}
                 pricing={pricing}
                 currency={currency}
               />
+
+              {hasBusyConflicts && (
+                <div className="mt-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setExcludedSlotKeys((prev) => {
+                        const next = new Set(prev);
+                        busyIncludedSlots.forEach((s) => next.add(slotKey(s)));
+                        return next;
+                      });
+                    }}
+                    className="text-xs text-primary hover:underline font-medium cursor-pointer"
+                  >
+                    Exclude automat toate slot-urile ocupate ({busyIncludedSlots.length})
+                  </button>
+                </div>
+              )}
 
               {search.recurrent === "true" && search.recurrenceCount > 0 && !isMultiDay && (
                 <div className="mt-3 rounded-md bg-primary/5 border border-primary/20 p-3 text-sm">
