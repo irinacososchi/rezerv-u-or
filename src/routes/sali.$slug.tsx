@@ -1132,6 +1132,7 @@ function CalendarMonth({
   isDisabled,
   selected,
   onSelect,
+  multiSelected = [],
 }: {
   month: Date;
   onPrev: () => void;
@@ -1139,6 +1140,7 @@ function CalendarMonth({
   isDisabled: (d: Date) => boolean;
   selected: Date | null;
   onSelect: (d: Date) => void;
+  multiSelected?: Date[];
 }) {
   const monthName = month.toLocaleDateString("ro-RO", {
     month: "long",
@@ -1146,8 +1148,7 @@ function CalendarMonth({
   });
   const start = startOfMonth(month);
   const end = endOfMonth(month);
-  // Grid starting Monday
-  const startDow = getDayOfWeek(start); // 1..7 (Mon..Sun)
+  const startDow = getDayOfWeek(start);
   const leading = startDow - 1;
   const totalDays = end.getDate();
 
@@ -1192,18 +1193,21 @@ function CalendarMonth({
         {cells.map((d, i) => {
           if (!d) return <div key={i} className="aspect-square" />;
           const disabled = isDisabled(d);
-          const isSelected = selected && isSameDay(d, selected);
+          const isActive = selected && isSameDay(d, selected);
+          const isInMultiSelection = multiSelected.some((md) => isSameDay(md, d));
           return (
             <button
               key={i}
               disabled={disabled}
               onClick={() => onSelect(d)}
               className={`aspect-square rounded-md text-sm transition ${
-                isSelected
+                isActive
                   ? "bg-primary text-primary-foreground font-semibold"
-                  : disabled
-                    ? "cursor-not-allowed bg-muted/40 text-muted-foreground/50"
-                    : "bg-background hover:bg-primary/10 hover:text-primary"
+                  : isInMultiSelection
+                    ? "bg-primary/15 text-primary font-medium border border-primary/40"
+                    : disabled
+                      ? "cursor-not-allowed bg-muted/40 text-muted-foreground/50"
+                      : "bg-background hover:bg-primary/10 hover:text-primary"
               }`}
             >
               {d.getDate()}
