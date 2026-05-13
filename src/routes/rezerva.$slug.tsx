@@ -811,6 +811,30 @@ function CheckoutPage() {
 
     setSubmitting(true);
 
+    // Revalidare disponibilitate înainte de submit (race condition guard)
+    try {
+      const freshBusy = await checkSlotAvailability(finalSlotsToCreate);
+      if (freshBusy.size > 0) {
+        setBusySlotKeys((prev) => {
+          const merged = new Set(prev);
+          freshBusy.forEach((k) => merged.add(k));
+          return merged;
+        });
+        setSubmitting(false);
+        setSubmitError(
+          `Au apărut conflicte de ultim moment — ${freshBusy.size} slot${freshBusy.size === 1 ? "" : "-uri"} ` +
+            `${freshBusy.size === 1 ? "a fost rezervat" : "au fost rezervate"} de altcineva între timp. ` +
+            `Verifică preview-ul și exclude slot-urile marcate ca ocupate.`,
+        );
+        return;
+      }
+    } catch {
+      setSubmitting(false);
+      setSubmitError("Nu am putut verifica disponibilitatea. Reîncearcă peste câteva secunde.");
+      return;
+    }
+
+
     // Recurrence record (only when recurrence active, single-day, single interval)
     let recurrenceId: string | null = null;
     const recurrenceDateCount = isMultiDay
