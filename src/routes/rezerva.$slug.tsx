@@ -258,7 +258,7 @@ function BookingSlotsPreview({
                   <ul className="space-y-1 ml-2">
                     {slots.map((s, i) => {
                       const isExcluded = excludedKeys.has(slotKey(s));
-                      const price = calcSlotTotal(s, pricing);
+                      const { totalPrice, labels } = calcSlotPricing(s, pricing);
                       return (
                         <li key={i}>
                           <button
@@ -280,9 +280,16 @@ function BookingSlotsPreview({
                                 {s.start}–{s.end}
                               </span>
                             </span>
-                            <span className={isExcluded ? "text-muted-foreground/60" : "font-medium"}>
-                              {price} {currency}
-                            </span>
+                            <div className="flex flex-col items-end">
+                              <span className={isExcluded ? "text-muted-foreground/60" : "font-medium"}>
+                                {totalPrice} {currency}
+                              </span>
+                              {labels.length > 0 && (
+                                <span className={`text-[10px] ${isExcluded ? "text-muted-foreground/40" : "text-muted-foreground"}`}>
+                                  {labels.join(", ")}
+                                </span>
+                              )}
+                            </div>
                           </button>
                         </li>
                       );
