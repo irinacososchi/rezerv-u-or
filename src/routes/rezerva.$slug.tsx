@@ -706,6 +706,11 @@ function CheckoutPage() {
                   {voucherError && (
                     <p className="mt-2 text-xs text-destructive">{voucherError}</p>
                   )}
+                  {voucherDisabled && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Voucherele se aplică doar la rezervări cu un singur interval, fără recurență.
+                    </p>
+                  )}
                 </>
               )}
             </section>
