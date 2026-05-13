@@ -147,6 +147,18 @@ function getPriceForSlot(date: Date, hour: number, rules: PricingRule[]): number
   return r ? Number(r.price_per_hour) : 0;
 }
 
+function getPriceForSlotDetailed(
+  date: Date,
+  hour: number,
+  rules: PricingRule[],
+): { price: number; label: string | null } {
+  const r = pickActivePricing(date, hour, rules);
+  return {
+    price: r ? Number(r.price_per_hour) : 0,
+    label: r?.label ?? null,
+  };
+}
+
 function calcSlotTotal(s: ParsedSlot, rules: PricingRule[]): number {
   const startHour = parseInt(s.start.slice(0, 2), 10);
   const endHour = parseInt(s.end.slice(0, 2), 10);
@@ -155,6 +167,22 @@ function calcSlotTotal(s: ParsedSlot, rules: PricingRule[]): number {
     total += getPriceForSlot(parseISODate(s.date), h, rules);
   }
   return total;
+}
+
+function calcSlotPricing(
+  s: ParsedSlot,
+  rules: PricingRule[],
+): { totalPrice: number; labels: string[] } {
+  const startHour = parseInt(s.start.slice(0, 2), 10);
+  const endHour = parseInt(s.end.slice(0, 2), 10);
+  const labelsSet = new Set<string>();
+  let total = 0;
+  for (let h = startHour; h < endHour; h++) {
+    const detail = getPriceForSlotDetailed(parseISODate(s.date), h, rules);
+    total += detail.price;
+    if (detail.label) labelsSet.add(detail.label);
+  }
+  return { totalPrice: total, labels: Array.from(labelsSet) };
 }
 
 // ---------- BookingSlotsPreview ----------
