@@ -390,9 +390,14 @@ function CheckoutPage() {
 
     setSubmitting(true);
 
-    // Recurrence record (only when more than one date AND single interval per day, kept for compat)
+    // Recurrence record (only when recurrence active, single-day, single interval)
     let recurrenceId: string | null = null;
-    if (isRecurrent && dates.length > 1 && parsedIntervals.length === 1) {
+    const recurrenceDateCount = isMultiDay
+      ? 0
+      : isRecurrent
+        ? search.recurrenceCount
+        : 1;
+    if (isRecurrent && !isMultiDay && parsedSlots.length === 1 && recurrenceDateCount > 1) {
       const dayOfWeek = getDayOfWeek(dateObj);
       const { data: rec, error: recError } = await supabase
         .from("recurrences")
@@ -401,11 +406,11 @@ function CheckoutPage() {
           created_by_email: email.trim(),
           frequency: "saptamanal",
           day_of_week: dayOfWeek,
-          start_time: `${parsedIntervals[0].start}:00`,
-          end_time: `${parsedIntervals[0].end}:00`,
-          first_date: dates[0],
-          last_date: dates[dates.length - 1],
-          total_bookings: dates.length,
+          start_time: `${parsedSlots[0].start}:00`,
+          end_time: `${parsedSlots[0].end}:00`,
+          first_date: allDateIntervals[0].date,
+          last_date: allDateIntervals[allDateIntervals.length - 1].date,
+          total_bookings: recurrenceDateCount,
         })
         .select()
         .single();
