@@ -185,7 +185,49 @@ function calcSlotPricing(
   return { totalPrice: total, labels: Array.from(labelsSet) };
 }
 
-// ---------- BookingSlotsPreview ----------
+type PricingSubInterval = {
+  startHour: number;
+  endHour: number;
+  price: number;
+  label: string | null;
+};
+
+function splitSlotByPricing(s: ParsedSlot, rules: PricingRule[]): PricingSubInterval[] {
+  const startHour = parseInt(s.start.slice(0, 2), 10);
+  const endHour = parseInt(s.end.slice(0, 2), 10);
+  const date = parseISODate(s.date);
+
+  const subIntervals: PricingSubInterval[] = [];
+  let currentLabel: string | null = null;
+  let currentStart = startHour;
+  let currentSum = 0;
+
+  for (let h = startHour; h < endHour; h++) {
+    const detail = getPriceForSlotDetailed(date, h, rules);
+    if (h === startHour) {
+      currentLabel = detail.label;
+      currentStart = h;
+      currentSum = detail.price;
+    } else if (detail.label !== currentLabel) {
+      subIntervals.push({ startHour: currentStart, endHour: h, price: currentSum, label: currentLabel });
+      currentLabel = detail.label;
+      currentStart = h;
+      currentSum = detail.price;
+    } else {
+      currentSum += detail.price;
+    }
+  }
+
+  if (endHour > startHour) {
+    subIntervals.push({ startHour: currentStart, endHour, price: currentSum, label: currentLabel });
+  }
+  return subIntervals;
+}
+
+function formatHour(h: number): string {
+  return `${h.toString().padStart(2, "0")}:00`;
+}
+
 function BookingSlotsPreview({
   allSlots,
   excludedKeys,
@@ -284,6 +326,33 @@ function BookingSlotsPreview({
                       const isReadOnly = allSlots.length === 1;
 
                       if (isReadOnly) {
+                        const subIntervals = splitSlotByPricing(s, pricing);
+                        if (subIntervals.length > 1) {
+                          return (
+                            <li key={i} className="space-y-1">
+                              {subIntervals.map((sub, j) => (
+                                <div
+                                  key={j}
+                                  className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm"
+                                >
+                                  <span className="font-medium">
+                                    {formatHour(sub.startHour)}–{formatHour(sub.endHour)}
+                                  </span>
+                                  <div className="flex flex-col items-end">
+                                    <span className="font-medium">
+                                      {sub.price} {currency}
+                                    </span>
+                                    {sub.label && (
+                                      <span className="text-[10px] text-muted-foreground">
+                                        {sub.label}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </li>
+                          );
+                        }
                         return (
                           <li
                             key={i}
