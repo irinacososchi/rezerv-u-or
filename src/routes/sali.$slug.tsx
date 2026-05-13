@@ -303,28 +303,27 @@ function RoomDetailsPage() {
     return false;
   }
 
-  // Slots for selected day
+  // Active day (currently being edited)
+  const activeDay =
+    activeDayIndex !== null ? daySelections[activeDayIndex] ?? null : null;
+
+  // Slots for active day
   const slots = useMemo(() => {
-    if (!selectedDate) return [] as { hour: number; busy: boolean; tooSoon: boolean; price: number }[];
-    const dow = getDayOfWeek(selectedDate);
+    if (!activeDay) return [] as { hour: number; busy: boolean; tooSoon: boolean; price: number }[];
+    const dow = getDayOfWeek(activeDay.date);
     const sched = scheduleByDay.get(dow);
     if (!sched) return [];
     const open = hourFromTime(sched.open_time);
     const close = hourFromTime(sched.close_time);
-    const iso = formatDateISO(selectedDate);
+    const iso = formatDateISO(activeDay.date);
     const dayBookings = bookings.filter((b) => b.booking_date === iso);
 
-    // Compute earliest allowed slot start time (in hours, on selectedDate)
-    // Only relevant for same-day bookings (minAdvanceDays === 0 and selectedDate === today)
     const now = new Date();
-    const isToday = isSameDay(selectedDate, now);
+    const isToday = isSameDay(activeDay.date, now);
     let earliestStartHour = -Infinity;
     if (minAdvanceDays === 0 && isToday) {
-      // Slot must start at least SAME_DAY_BUFFER_HOURS after now
       const cutoffMs = now.getTime() + SAME_DAY_BUFFER_HOURS * 60 * 60 * 1000;
       const cutoff = new Date(cutoffMs);
-      // Slot starts at top of hour h on selectedDate; require slotStart >= cutoff
-      // earliest h: ceil((cutoff hours + minutes/60))
       earliestStartHour =
         cutoff.getHours() + (cutoff.getMinutes() > 0 || cutoff.getSeconds() > 0 ? 1 : 0);
     }
@@ -343,11 +342,11 @@ function RoomDetailsPage() {
         hour: h,
         busy,
         tooSoon,
-        price: getPriceForSlot(selectedDate, h, pricing),
+        price: getPriceForSlot(activeDay.date, h, pricing),
       });
     }
     return result;
-  }, [selectedDate, scheduleByDay, bookings, pricing, minAdvanceDays]);
+  }, [activeDay, scheduleByDay, bookings, pricing, minAdvanceDays]);
 
   // Reset slots when date changes
   useEffect(() => {
