@@ -825,7 +825,7 @@ function CheckoutPage() {
                 )}
                 <Row
                   label="Durată"
-                  value={`${search.duration} ${search.duration === 1 ? "oră" : "ore"}`}
+                  value={`${recalculatedDuration} ${recalculatedDuration === 1 ? "oră" : "ore"}`}
                 />
                 <Row label="Subtotal" value={`${subtotal} ${currency}`} />
 
@@ -849,7 +849,21 @@ function CheckoutPage() {
                 </span>
               </div>
 
-              {search.recurrent === "true" && search.recurrenceCount > 0 && (
+              {recalculatedTotal !== (search.total ?? 0) && (
+                <p className="text-xs text-muted-foreground mt-1 text-right">
+                  Total actualizat după excluderea manuală a unor slot-uri.
+                </p>
+              )}
+
+              <BookingSlotsPreview
+                allSlots={allSlotsToCreate}
+                excludedKeys={excludedSlotKeys}
+                onToggleExclusion={toggleSlotExclusion}
+                pricing={pricing}
+                currency={currency}
+              />
+
+              {search.recurrent === "true" && search.recurrenceCount > 0 && !isMultiDay && (
                 <div className="mt-3 rounded-md bg-primary/5 border border-primary/20 p-3 text-sm">
                   <div className="font-medium text-primary">
                     Rezervare recurentă săptămânală
@@ -862,9 +876,6 @@ function CheckoutPage() {
                         {parseISODate(search.recurrenceEnd).toLocaleDateString("ro-RO")}
                       </>
                     )}
-                  </div>
-                  <div className="font-semibold text-primary mt-1">
-                    Total: {search.recurrenceCount * finalTotal} {currency}
                   </div>
                 </div>
               )}
