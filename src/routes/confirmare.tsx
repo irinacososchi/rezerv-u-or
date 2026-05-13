@@ -99,35 +99,41 @@ function downloadICS(b: BookingFull) {
 function ConfirmarePage() {
   const search = Route.useSearch();
   const reference = search.reference;
-  const [booking, setBooking] = useState<BookingFull | null>(null);
+  const group = search.group;
+  const [bookings, setBookings] = useState<BookingFull[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    if (!reference) {
+    if (!reference && !group) {
       setNotFound(true);
       setLoading(false);
       return;
     }
     let cancelled = false;
     (async () => {
-      const { data, error } = await supabase
-        .from("bookings_full")
-        .select("*")
-        .eq("reference", reference)
-        .maybeSingle();
+      let query = supabase.from("bookings_full").select("*");
+      if (group) {
+        query = query.eq("booking_group_id", group).order("booking_date").order("start_time");
+      } else {
+        query = query.eq("reference", reference);
+      }
+      const { data, error } = await query;
       if (cancelled) return;
-      if (error || !data) {
+      if (error || !data || data.length === 0) {
         setNotFound(true);
       } else {
-        setBooking(data as BookingFull);
+        setBookings(data as BookingFull[]);
       }
       setLoading(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, [reference]);
+  }, [reference, group]);
+
+  const booking = bookings[0] ?? null;
+  const isGroup = bookings.length > 1;
 
   if (loading) {
     return (
