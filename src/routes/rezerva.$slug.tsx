@@ -261,9 +261,11 @@ function BookingSlotsPreview({
 
       {expanded && (
         <div className="border-t border-border bg-background p-3 max-h-96 overflow-y-auto">
-          <p className="text-xs text-muted-foreground mb-3">
-            Click pe orice rezervare pentru a o exclude din acest checkout. Slot-urile excluse vor fi sărite la submit.
-          </p>
+          {allSlots.length > 1 && (
+            <p className="text-xs text-muted-foreground mb-3">
+              Click pe orice rezervare pentru a o exclude din acest checkout. Slot-urile excluse vor fi sărite la submit.
+            </p>
+          )}
           <ul className="space-y-3">
             {groupedByDate.map(([date, slots]) => {
               const dateObj = parseISODate(date);
