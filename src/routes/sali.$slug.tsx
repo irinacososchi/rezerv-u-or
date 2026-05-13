@@ -85,7 +85,40 @@ type PricingRule = {
   end_time: string | null;
   priority: number;
   is_active: boolean;
+  label: string | null;
 };
+
+type SlotPricing = {
+  price: number;
+  label: string | null;
+};
+
+function getPriceForSlotDetailed(
+  date: Date,
+  hour: number,
+  pricingRules: PricingRule[],
+): SlotPricing {
+  const dayOfWeek = getDayOfWeek(date);
+  const slotTime = `${hour.toString().padStart(2, "0")}:00:00`;
+
+  const matching = pricingRules
+    .filter((rule) => {
+      if (!rule.is_active) return false;
+      const dayMatch = (rule.days_of_week ?? []).includes(dayOfWeek);
+      const timeMatch =
+        !rule.start_time ||
+        !rule.end_time ||
+        (slotTime >= rule.start_time && slotTime < rule.end_time);
+      return dayMatch && timeMatch;
+    })
+    .sort((a, b) => b.priority - a.priority);
+
+  const winner = matching[0];
+  return {
+    price: Number(winner?.price_per_hour ?? 0),
+    label: winner?.label ?? null,
+  };
+}
 
 type Booking = {
   booking_date: string; // YYYY-MM-DD
