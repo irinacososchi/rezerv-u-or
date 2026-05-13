@@ -85,7 +85,40 @@ type PricingRule = {
   end_time: string | null;
   priority: number;
   is_active: boolean;
+  label: string | null;
 };
+
+type SlotPricing = {
+  price: number;
+  label: string | null;
+};
+
+function getPriceForSlotDetailed(
+  date: Date,
+  hour: number,
+  pricingRules: PricingRule[],
+): SlotPricing {
+  const dayOfWeek = getDayOfWeek(date);
+  const slotTime = `${hour.toString().padStart(2, "0")}:00:00`;
+
+  const matching = pricingRules
+    .filter((rule) => {
+      if (!rule.is_active) return false;
+      const dayMatch = (rule.days_of_week ?? []).includes(dayOfWeek);
+      const timeMatch =
+        !rule.start_time ||
+        !rule.end_time ||
+        (slotTime >= rule.start_time && slotTime < rule.end_time);
+      return dayMatch && timeMatch;
+    })
+    .sort((a, b) => b.priority - a.priority);
+
+  const winner = matching[0];
+  return {
+    price: Number(winner?.price_per_hour ?? 0),
+    label: winner?.label ?? null,
+  };
+}
 
 type Booking = {
   booking_date: string; // YYYY-MM-DD
@@ -770,18 +803,21 @@ function RoomDetailsPage() {
                         {slots.map((s) => {
                           const selected = activeDay.hours.includes(s.hour);
                           const unavailable = s.busy || s.tooSoon;
+                          const slotPricing = getPriceForSlotDetailed(activeDay.date, s.hour, pricing);
                           const title = s.tooSoon
                             ? "Indisponibil — rezervarea trebuie făcută cu minim 2h înainte"
                             : s.busy
                               ? "Interval ocupat"
-                              : undefined;
+                              : slotPricing.label
+                                ? `${slotPricing.price} ${currency} · ${slotPricing.label}`
+                                : undefined;
                           return (
                             <button
                               key={s.hour}
                               disabled={unavailable}
                               onClick={() => toggleHour(s.hour)}
                               title={title}
-                              className={`rounded-md border px-2 py-1.5 text-xs font-medium transition ${
+                              className={`flex flex-col items-center justify-center rounded-md border px-2 py-1.5 text-xs font-medium transition ${
                                 unavailable
                                   ? "cursor-not-allowed border-border bg-muted text-muted-foreground/60"
                                   : selected
@@ -789,7 +825,14 @@ function RoomDetailsPage() {
                                     : "border-border bg-background hover:border-primary hover:text-primary"
                               }`}
                             >
-                              {`${s.hour.toString().padStart(2, "0")}:00–${(s.hour + 1).toString().padStart(2, "0")}:00`}
+                              <span>
+                                {`${s.hour.toString().padStart(2, "0")}:00–${(s.hour + 1).toString().padStart(2, "0")}:00`}
+                              </span>
+                              {slotPricing.label && (
+                                <span className={`text-[10px] mt-0.5 ${selected ? "opacity-90" : "opacity-70"}`}>
+                                  {slotPricing.label}
+                                </span>
+                              )}
                             </button>
                           );
                         })}

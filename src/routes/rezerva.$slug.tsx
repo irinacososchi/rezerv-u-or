@@ -147,6 +147,18 @@ function getPriceForSlot(date: Date, hour: number, rules: PricingRule[]): number
   return r ? Number(r.price_per_hour) : 0;
 }
 
+function getPriceForSlotDetailed(
+  date: Date,
+  hour: number,
+  rules: PricingRule[],
+): { price: number; label: string | null } {
+  const r = pickActivePricing(date, hour, rules);
+  return {
+    price: r ? Number(r.price_per_hour) : 0,
+    label: r?.label ?? null,
+  };
+}
+
 function calcSlotTotal(s: ParsedSlot, rules: PricingRule[]): number {
   const startHour = parseInt(s.start.slice(0, 2), 10);
   const endHour = parseInt(s.end.slice(0, 2), 10);
@@ -155,6 +167,22 @@ function calcSlotTotal(s: ParsedSlot, rules: PricingRule[]): number {
     total += getPriceForSlot(parseISODate(s.date), h, rules);
   }
   return total;
+}
+
+function calcSlotPricing(
+  s: ParsedSlot,
+  rules: PricingRule[],
+): { totalPrice: number; labels: string[] } {
+  const startHour = parseInt(s.start.slice(0, 2), 10);
+  const endHour = parseInt(s.end.slice(0, 2), 10);
+  const labelsSet = new Set<string>();
+  let total = 0;
+  for (let h = startHour; h < endHour; h++) {
+    const detail = getPriceForSlotDetailed(parseISODate(s.date), h, rules);
+    total += detail.price;
+    if (detail.label) labelsSet.add(detail.label);
+  }
+  return { totalPrice: total, labels: Array.from(labelsSet) };
 }
 
 // ---------- BookingSlotsPreview ----------
@@ -230,7 +258,7 @@ function BookingSlotsPreview({
                   <ul className="space-y-1 ml-2">
                     {slots.map((s, i) => {
                       const isExcluded = excludedKeys.has(slotKey(s));
-                      const price = calcSlotTotal(s, pricing);
+                      const { totalPrice, labels } = calcSlotPricing(s, pricing);
                       return (
                         <li key={i}>
                           <button
@@ -252,9 +280,16 @@ function BookingSlotsPreview({
                                 {s.start}–{s.end}
                               </span>
                             </span>
-                            <span className={isExcluded ? "text-muted-foreground/60" : "font-medium"}>
-                              {price} {currency}
-                            </span>
+                            <div className="flex flex-col items-end">
+                              <span className={isExcluded ? "text-muted-foreground/60" : "font-medium"}>
+                                {totalPrice} {currency}
+                              </span>
+                              {labels.length > 0 && (
+                                <span className={`text-[10px] ${isExcluded ? "text-muted-foreground/40" : "text-muted-foreground"}`}>
+                                  {labels.join(", ")}
+                                </span>
+                              )}
+                            </div>
                           </button>
                         </li>
                       );
@@ -854,6 +889,24 @@ function CheckoutPage() {
                   Total actualizat după excluderea manuală a unor slot-uri.
                 </p>
               )}
+
+              {(() => {
+                const allLabels = new Set<string>();
+                for (const s of finalSlotsToCreate) {
+                  const startHour = parseInt(s.start.slice(0, 2), 10);
+                  const endHour = parseInt(s.end.slice(0, 2), 10);
+                  for (let h = startHour; h < endHour; h++) {
+                    const detail = getPriceForSlotDetailed(parseISODate(s.date), h, pricing);
+                    if (detail.label) allLabels.add(detail.label);
+                  }
+                }
+                if (allLabels.size === 0) return null;
+                return (
+                  <p className="text-xs text-muted-foreground mt-1 text-right">
+                    Tarife aplicate: {Array.from(allLabels).join(", ")}
+                  </p>
+                );
+              })()}
 
               <BookingSlotsPreview
                 allSlots={allSlotsToCreate}
