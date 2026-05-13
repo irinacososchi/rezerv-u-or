@@ -19,6 +19,7 @@ import {
 type CheckoutSearch = {
   date: string;
   intervals: string;
+  slots: string;
   start: string;
   end: string;
   duration: number;
@@ -32,6 +33,7 @@ export const Route = createFileRoute("/rezerva/$slug")({
   validateSearch: (raw: Record<string, unknown>): CheckoutSearch => ({
     date: typeof raw.date === "string" ? raw.date : "",
     intervals: typeof raw.intervals === "string" ? raw.intervals : "",
+    slots: typeof raw.slots === "string" ? raw.slots : "",
     start: typeof raw.start === "string" ? raw.start : "",
     end: typeof raw.end === "string" ? raw.end : "",
     duration: Number(raw.duration) || 0,
