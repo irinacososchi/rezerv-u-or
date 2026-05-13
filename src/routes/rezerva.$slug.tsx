@@ -232,12 +232,14 @@ function BookingSlotsPreview({
   allSlots,
   excludedKeys,
   onToggleExclusion,
+  busyKeys,
   pricing,
   currency,
 }: {
   allSlots: ParsedSlot[];
   excludedKeys: Set<string>;
   onToggleExclusion: (s: ParsedSlot) => void;
+  busyKeys: Set<string>;
   pricing: PricingRule[];
   currency: string;
 }) {
@@ -254,8 +256,10 @@ function BookingSlotsPreview({
 
   // Apare preview-ul dacă:
   //  - sunt multiple slot-uri, SAU
-  //  - un singur slot care acoperă mai multe pricing rules
+  //  - un singur slot care acoperă mai multe pricing rules, SAU
+  //  - există slot-uri ocupate (chiar și single)
   const hasMultipleSlots = allSlots.length > 1;
+  const hasBusyAny = allSlots.some((s) => busyKeys.has(slotKey(s)));
   const hasMixedPricing =
     allSlots.length === 1 &&
     (() => {
@@ -270,10 +274,13 @@ function BookingSlotsPreview({
       return labelsSet.size > 1;
     })();
 
-  if (!hasMultipleSlots && !hasMixedPricing) return null;
+  if (!hasMultipleSlots && !hasMixedPricing && !hasBusyAny) return null;
 
   const includedCount = allSlots.filter((s) => !excludedKeys.has(slotKey(s))).length;
   const excludedCount = allSlots.length - includedCount;
+  const busyIncludedCount = allSlots.filter(
+    (s) => busyKeys.has(slotKey(s)) && !excludedKeys.has(slotKey(s)),
+  ).length;
 
   return (
     <div className="mt-4 rounded-xl border border-border bg-secondary/30 overflow-hidden">
@@ -288,11 +295,18 @@ function BookingSlotsPreview({
               ? `Detalii rezervări (${includedCount} ${includedCount === 1 ? "rezervare" : "rezervări"})`
               : "Defalcare tarife"}
           </div>
-          {excludedCount > 0 && (
-            <div className="text-xs text-muted-foreground mt-0.5">
-              {excludedCount} {excludedCount === 1 ? "exclusă" : "excluse"} manual
-            </div>
-          )}
+          <div className="text-xs mt-0.5 space-y-0.5">
+            {excludedCount > 0 && (
+              <div className="text-muted-foreground">
+                {excludedCount} {excludedCount === 1 ? "exclusă" : "excluse"} manual
+              </div>
+            )}
+            {busyIncludedCount > 0 && (
+              <div className="text-destructive font-medium">
+                ⚠ {busyIncludedCount} slot{busyIncludedCount === 1 ? "" : "-uri"} ocupat{busyIncludedCount === 1 ? "" : "e"} — exclude pentru a continua
+              </div>
+            )}
+          </div>
         </div>
         {expanded ? (
           <ChevronUp className="h-4 w-4 text-muted-foreground" />
