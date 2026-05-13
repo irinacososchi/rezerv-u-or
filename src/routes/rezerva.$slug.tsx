@@ -177,7 +177,7 @@ function CheckoutPage() {
       return search.slots
         .split(",")
         .filter(Boolean)
-        .map((s) => {
+        .map((s: string) => {
           // First ":" separates DATE from TIME-RANGE (HH:MM-HH:MM contains ":")
           const colonIdx = s.indexOf(":");
           const date = s.slice(0, colonIdx);
@@ -191,7 +191,7 @@ function CheckoutPage() {
       return search.intervals
         .split(",")
         .filter(Boolean)
-        .map((s) => {
+        .map((s: string) => {
           const [start, end] = s.split("-");
           return { date: search.date, start, end };
         });
