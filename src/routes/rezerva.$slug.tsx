@@ -311,15 +311,6 @@ function CheckoutPage() {
   // ---------- Submit ----------
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-
-    const { data: { session } } = await supabase.auth.getSession();
-    console.log("=== DEBUG REZERVARE ===");
-    console.log("Session:", session);
-    console.log("User:", session?.user?.email);
-    console.log("Role:", session?.user?.role);
-    console.log("Access token primele 20 chars:", session?.access_token?.slice(0, 20));
-    console.log("Supabase URL folosit:", (supabase as any).supabaseUrl);
-
     setSubmitError(null);
 
     if (!room || !paramsValid || !dateObj) {
@@ -329,51 +320,51 @@ function CheckoutPage() {
     if (!name.trim()) return setSubmitError("Completează numele complet.");
     if (!isValidEmail(email)) return setSubmitError("Email invalid.");
     if (!isValidPhone(phone)) return setSubmitError("Telefon invalid (minim 10 cifre).");
-    if (needsInvoice) {
-      // Facturarea va fi disponibilă în viitor — validare dezactivată momentan.
+
+    const isRecurrent = search.recurrent === "true" && search.recurrenceCount > 1;
+
+    // Build (date, interval) cartesian list: recurrence weeks × intervals
+    const dates: string[] = [search.date];
+    if (isRecurrent) {
+      const baseDate = parseISODate(search.date);
+      for (let i = 1; i < search.recurrenceCount; i++) {
+        const next = new Date(baseDate);
+        next.setDate(next.getDate() + i * 7);
+        const y = next.getFullYear();
+        const m = String(next.getMonth() + 1).padStart(2, "0");
+        const d = String(next.getDate()).padStart(2, "0");
+        dates.push(`${y}-${m}-${d}`);
+      }
+    } else if (search.recurrenceEnd) {
+      // Backward compat: if old flow used recurrenceEnd
+      const all = generateWeeklyDates(search.date, search.recurrenceEnd);
+      dates.length = 0;
+      dates.push(...all);
     }
 
-    setSubmitting(true);
+    const allDateIntervals: { date: string; start: string; end: string }[] = [];
+    for (const d of dates) {
+      for (const iv of parsedIntervals) {
+        allDateIntervals.push({ date: d, start: iv.start, end: iv.end });
+      }
+    }
 
-    const startTime = `${effectiveStart}:00`;
-    const endTime = `${effectiveEnd}:00`;
-    const pricePerHour = activeRule?.price_per_hour ?? subtotal / Math.max(1, search.duration);
-    const pricingLabel = activeRule?.label ?? null;
-
-    const isRecurrent = search.recurrent === "true" && !!search.recurrenceEnd;
-    const allDates = isRecurrent
-      ? generateWeeklyDates(search.date, search.recurrenceEnd)
-      : [search.date];
-
-    // Re-check availability for ALL dates
-    const { data: overlap } = await supabase
-      .from("bookings")
-      .select("booking_date, start_time, end_time")
-      .eq("room_id", room.id)
-      .in("booking_date", allDates)
-      .not("status", "in", '("refuzată","anulată","expirată","blocată")');
-
-    const conflictDates = (overlap ?? [])
-      .filter((b: { start_time: string; end_time: string }) =>
-        b.start_time < endTime && b.end_time > startTime,
-      )
-      .map((b: { booking_date: string }) => b.booking_date);
-
-    if (conflictDates.length > 0) {
-      setSubmitting(false);
-      const list = conflictDates
-        .map((d) => parseISODate(d).toLocaleDateString("ro-RO"))
-        .join(", ");
+    if (allDateIntervals.length === 0) {
+      setSubmitError("Niciun interval selectat.");
+      return;
+    }
+    if (allDateIntervals.length > 50) {
       setSubmitError(
-        allDates.length === 1
-          ? "Acest interval a fost rezervat între timp. Te rugăm să alegi alt interval."
-          : `Următoarele date sunt deja ocupate: ${list}. Te rugăm să alegi alt interval.`,
+        `Prea multe rezervări (${allDateIntervals.length}). Limita e 50. Reduce numărul de intervale sau perioada de recurență.`,
       );
       return;
     }
 
+    setSubmitting(true);
+
+    // Recurrence record (only when more than one date AND single interval per day, kept for compat)
     let recurrenceId: string | null = null;
-    if (isRecurrent && allDates.length > 1) {
+    if (isRecurrent && dates.length > 1 && parsedIntervals.length === 1) {
       const dayOfWeek = getDayOfWeek(dateObj);
       const { data: rec, error: recError } = await supabase
         .from("recurrences")
@@ -382,15 +373,14 @@ function CheckoutPage() {
           created_by_email: email.trim(),
           frequency: "saptamanal",
           day_of_week: dayOfWeek,
-          start_time: startTime,
-          end_time: endTime,
-          first_date: allDates[0],
-          last_date: allDates[allDates.length - 1],
-          total_bookings: allDates.length,
+          start_time: `${parsedIntervals[0].start}:00`,
+          end_time: `${parsedIntervals[0].end}:00`,
+          first_date: dates[0],
+          last_date: dates[dates.length - 1],
+          total_bookings: dates.length,
         })
         .select()
         .single();
-
       if (recError || !rec) {
         setSubmitting(false);
         setSubmitError("Eroare la crearea rezervării recurente.");
@@ -399,79 +389,130 @@ function CheckoutPage() {
       recurrenceId = (rec as { id: string }).id;
     }
 
-    // Verifică dacă există un utilizator logat
+    const bookingGroupId =
+      allDateIntervals.length > 1 ? crypto.randomUUID() : null;
+
     const { data: { user: currentUser } } = await supabase.auth.getUser();
     const renterId = currentUser?.id ?? null;
 
-    const bookingsToInsert = allDates.map((date, idx) => ({
-      room_id: room.id,
-      renter_id: renterId,
-      recurrence_id: recurrenceId,
-      recurrence_index: recurrenceId ? idx + 1 : null,
-      guest_name: name.trim(),
-      guest_email: email.trim(),
-      guest_phone: phone.trim(),
-      booking_date: date,
-      start_time: startTime,
-      end_time: endTime,
-      duration_hours: search.duration,
-      price_per_hour: pricePerHour,
-      pricing_rule_label: pricingLabel,
-      subtotal,
-      discount_amount: discountAmount,
-      voucher_code_id: voucher?.id ?? null,
-      voucher_code_used: voucher?.code ?? null,
-      total_amount: finalTotal,
-      status: room.booking_type === "instant" ? "confirmată" : "în așteptare",
-      payment_method: paymentMethod,
-      payment_status: "neplatit",
-      needs_invoice: needsInvoice,
-      invoice_name: needsInvoice ? invoiceName.trim() : null,
-      invoice_vat: needsInvoice ? invoiceVat.trim() || null : null,
-      invoice_address: needsInvoice ? invoiceAddress.trim() : null,
-    }));
+    // Voucher applies only for single booking (1 interval, no recurrence)
+    const applyVoucher =
+      allDateIntervals.length === 1 && !!voucher && discountAmount > 0;
 
-    // Refresh explicit al sesiunii înainte de insert
-    const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
-    console.log("Refreshed session:", refreshed?.session?.user?.email);
-    console.log("Refresh error:", refreshError);
+    const results: {
+      slot: { date: string; start: string; end: string };
+      success: boolean;
+      reference?: string;
+      error?: string;
+    }[] = [];
 
-    // Insert fără .select() — evită RLS SELECT pe rândurile nou create
-    const { error: insertError } = await supabase
-      .from("bookings")
-      .insert(bookingsToInsert);
+    for (let idx = 0; idx < allDateIntervals.length; idx++) {
+      const slot = allDateIntervals[idx];
+      const slotDateObj = parseISODate(slot.date);
+      const startHourN = parseInt(slot.start.slice(0, 2), 10);
+      const endHourN = parseInt(slot.end.slice(0, 2), 10);
+      const intervalHours = endHourN - startHourN;
+
+      // Compute subtotal for this interval by summing per-hour prices
+      let intervalSubtotal = 0;
+      let firstRule = null as PricingRule | null;
+      for (let h = startHourN; h < endHourN; h++) {
+        const r = pickActivePricing(slotDateObj, h, pricing);
+        if (!firstRule) firstRule = r;
+        intervalSubtotal += r ? Number(r.price_per_hour) : 0;
+      }
+      const intervalDiscount = applyVoucher ? discountAmount : 0;
+      const intervalTotal = Math.max(0, intervalSubtotal - intervalDiscount);
+      const intervalPricePerHour =
+        intervalHours > 0 ? intervalSubtotal / intervalHours : 0;
+
+      const payload = {
+        room_id: room.id,
+        renter_id: renterId,
+        recurrence_id: recurrenceId,
+        recurrence_index: recurrenceId ? idx + 1 : null,
+        booking_group_id: bookingGroupId,
+        guest_name: name.trim(),
+        guest_email: email.trim(),
+        guest_phone: phone.trim(),
+        booking_date: slot.date,
+        start_time: `${slot.start}:00`,
+        end_time: `${slot.end}:00`,
+        duration_hours: intervalHours,
+        price_per_hour: intervalPricePerHour,
+        pricing_rule_label: firstRule?.label ?? null,
+        subtotal: intervalSubtotal,
+        discount_amount: intervalDiscount,
+        voucher_code_id: applyVoucher ? voucher?.id ?? null : null,
+        voucher_code_used: applyVoucher ? voucher?.code ?? null : null,
+        total_amount: intervalTotal,
+        status: room.booking_type === "instant" ? "confirmată" : "în așteptare",
+        payment_method: paymentMethod,
+        payment_status: "neplatit",
+        needs_invoice: needsInvoice,
+        invoice_name: needsInvoice ? invoiceName.trim() : null,
+        invoice_vat: needsInvoice ? invoiceVat.trim() || null : null,
+        invoice_address: needsInvoice ? invoiceAddress.trim() : null,
+      };
+
+      const { error: insErr } = await supabase
+        .from("bookings")
+        .insert(payload);
+
+      if (insErr) {
+        results.push({ slot, success: false, error: insErr.message });
+        continue;
+      }
+
+      // Fetch reference best-effort
+      const { data: refRow } = await supabase
+        .from("bookings")
+        .select("reference")
+        .eq("guest_email", email.trim().toLowerCase())
+        .eq("booking_date", slot.date)
+        .eq("start_time", `${slot.start}:00`)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      results.push({
+        slot,
+        success: true,
+        reference: refRow?.reference ?? undefined,
+      });
+    }
 
     setSubmitting(false);
 
-    if (insertError) {
-      if (insertError.code === "23P01") {
-        setSubmitError("Una dintre date a fost rezervată între timp. Te rugăm să alegi alt interval.");
-      } else {
-        console.error("Booking insert error:", insertError);
-        setSubmitError("A apărut o eroare. Te rugăm să încerci din nou.");
-      }
+    const succeeded = results.filter((r) => r.success);
+    const failed = results.filter((r) => !r.success);
+
+    if (succeeded.length === 0) {
+      setSubmitError(
+        "Niciuna dintre rezervări nu s-a putut crea. " +
+          "Posibil ca intervalele să fie ocupate între timp. " +
+          (failed[0]?.error ? `Detalii: ${failed[0].error}` : ""),
+      );
       return;
     }
 
-    // Fetch referința separat — query simplu după email + data + ora
-    const { data: newBooking } = await supabase
-      .from("bookings")
-      .select("reference")
-      .eq("guest_email", email.trim().toLowerCase())
-      .eq("booking_date", allDates[0])
-      .eq("start_time", startTime)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    const reference = newBooking?.reference ?? "";
+    if (failed.length > 0) {
+      const list = failed
+        .map((f) => `• ${f.slot.date} ${f.slot.start}–${f.slot.end}`)
+        .join("\n");
+      alert(
+        `Am creat ${succeeded.length} din ${allDateIntervals.length} rezervări.\n\n` +
+          `Următoarele intervale nu s-au putut crea (probabil ocupate între timp):\n${list}`,
+      );
+    }
 
     navigate({
       to: "/confirmare",
       search: {
-        reference,
+        reference: succeeded[0].reference ?? "",
+        group: bookingGroupId ?? "",
         recurrent: isRecurrent ? "true" : "false",
-        recurrenceCount: isRecurrent ? allDates.length : 0,
+        recurrenceCount: isRecurrent ? dates.length : 0,
       } as never,
     });
   }
