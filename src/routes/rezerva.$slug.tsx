@@ -605,6 +605,11 @@ function CheckoutPage() {
 
   const [excludedSlotKeys, setExcludedSlotKeys] = useState<Set<string>>(new Set());
 
+  // ---------- Availability check (3C.3) ----------
+  const [busySlotKeys, setBusySlotKeys] = useState<Set<string>>(new Set());
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
+  const [availabilityError, setAvailabilityError] = useState<string | null>(null);
+
   const finalSlotsToCreate = useMemo(
     () => allSlotsToCreate.filter((s) => !excludedSlotKeys.has(slotKey(s))),
     [allSlotsToCreate, excludedSlotKeys],
@@ -619,6 +624,78 @@ function CheckoutPage() {
       return next;
     });
   }
+
+  const busyIncludedSlots = useMemo(
+    () => finalSlotsToCreate.filter((s) => busySlotKeys.has(slotKey(s))),
+    [finalSlotsToCreate, busySlotKeys],
+  );
+  const hasBusyConflicts = busyIncludedSlots.length > 0;
+
+  const checkSlotAvailability = async (
+    slotsToCheck: ParsedSlot[],
+  ): Promise<Set<string>> => {
+    if (slotsToCheck.length === 0 || !room) return new Set();
+    const dates = Array.from(new Set(slotsToCheck.map((s) => s.date)));
+    const minDate = dates.reduce((a, b) => (a < b ? a : b));
+    const maxDate = dates.reduce((a, b) => (a > b ? a : b));
+
+    const { data, error } = await supabase
+      .from("bookings")
+      .select("booking_date, start_time, end_time, status")
+      .eq("room_id", room.id)
+      .gte("booking_date", minDate)
+      .lte("booking_date", maxDate)
+      .not("status", "in", '("refuzată","anulată","expirată")');
+
+    if (error) {
+      console.error("availability check error:", error);
+      throw error;
+    }
+
+    const existingBookings = (data ?? []) as {
+      booking_date: string;
+      start_time: string;
+      end_time: string;
+    }[];
+    const busy = new Set<string>();
+
+    for (const slot of slotsToCheck) {
+      const slotStart = parseInt(slot.start.slice(0, 2), 10);
+      const slotEnd = parseInt(slot.end.slice(0, 2), 10);
+      const conflict = existingBookings.some((b) => {
+        if (b.booking_date !== slot.date) return false;
+        const bStart = parseInt(b.start_time.slice(0, 2), 10);
+        const bEnd = parseInt(b.end_time.slice(0, 2), 10);
+        return slotStart < bEnd && slotEnd > bStart;
+      });
+      if (conflict) busy.add(slotKey(slot));
+    }
+    return busy;
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    async function runInitialCheck() {
+      if (allSlotsToCreate.length === 0 || !room) return;
+      setCheckingAvailability(true);
+      setAvailabilityError(null);
+      try {
+        const busy = await checkSlotAvailability(allSlotsToCreate);
+        if (!cancelled) setBusySlotKeys(busy);
+      } catch {
+        if (!cancelled)
+          setAvailabilityError("Nu am putut verifica disponibilitatea. Reîncearcă.");
+      } finally {
+        if (!cancelled) setCheckingAvailability(false);
+      }
+    }
+    runInitialCheck();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allSlotsToCreate.length, room?.id]);
+
 
   const recalculatedTotal = useMemo(() => {
     return finalSlotsToCreate.reduce((sum, s) => sum + calcSlotTotal(s, pricing), 0);
