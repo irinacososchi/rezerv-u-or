@@ -1048,7 +1048,7 @@ function CheckoutPage() {
             <Button
               type="submit"
               size="lg"
-              disabled={submitting}
+              disabled={submitting || finalSlotsToCreate.length === 0}
               className="w-full cursor-pointer text-base"
             >
               {submitting ? (
@@ -1056,8 +1056,12 @@ function CheckoutPage() {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Se procesează…
                 </>
-              ) : (
+              ) : finalSlotsToCreate.length === 0 ? (
+                "Selectează cel puțin o rezervare"
+              ) : finalSlotsToCreate.length === 1 ? (
                 `Confirmă rezervarea · ${finalTotal} ${currency}`
+              ) : (
+                `Rezervă ${finalSlotsToCreate.length} intervale · ${finalTotal} ${currency}`
               )}
             </Button>
 
