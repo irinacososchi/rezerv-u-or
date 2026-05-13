@@ -166,10 +166,31 @@ function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  // ---------- Parse intervals (new format) with fallback to start/end ----------
+  const parsedIntervals = useMemo<{ start: string; end: string }[]>(() => {
+    if (search.intervals) {
+      return search.intervals
+        .split(",")
+        .filter(Boolean)
+        .map((s) => {
+          const [start, end] = s.split("-");
+          return { start, end };
+        });
+    }
+    if (search.start && search.end) {
+      return [{ start: search.start, end: search.end }];
+    }
+    return [];
+  }, [search.intervals, search.start, search.end]);
+
+  const isMultiSlot = parsedIntervals.length > 1;
+  const effectiveStart = parsedIntervals[0]?.start ?? "";
+  const effectiveEnd = parsedIntervals[parsedIntervals.length - 1]?.end ?? "";
+
   // ---------- Validation of incoming params ----------
   // total poate fi 0 dacă sala nu are pricing rules configurate încă
   const paramsValid = !!(
-    search.date && search.start && search.end && search.duration > 0
+    search.date && parsedIntervals.length > 0 && search.duration > 0
   );
 
   // ---------- Fetch room + pricing ----------
@@ -211,11 +232,14 @@ function CheckoutPage() {
   // ---------- Derived ----------
   const currency = room?.currency ?? "RON";
   const dateObj = paramsValid ? parseISODate(search.date) : null;
-  const startHour = paramsValid ? parseInt(search.start.slice(0, 2), 10) : 0;
+  const startHour = paramsValid ? parseInt(effectiveStart.slice(0, 2), 10) : 0;
   const activeRule = useMemo(() => {
     if (!dateObj || !pricing.length) return null;
     return pickActivePricing(dateObj, startHour, pricing);
   }, [dateObj, startHour, pricing]);
+
+  const isRecurrentSearch = search.recurrent === "true";
+  const voucherDisabled = isMultiSlot || isRecurrentSearch;
 
   const subtotal = search.total;
   const discountAmount = useMemo(() => {
