@@ -210,7 +210,25 @@ function BookingSlotsPreview({
     return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
   }, [allSlots]);
 
-  if (allSlots.length <= 1) return null;
+  // Apare preview-ul dacă:
+  //  - sunt multiple slot-uri, SAU
+  //  - un singur slot care acoperă mai multe pricing rules
+  const hasMultipleSlots = allSlots.length > 1;
+  const hasMixedPricing =
+    allSlots.length === 1 &&
+    (() => {
+      const s = allSlots[0];
+      const labelsSet = new Set<string | null>();
+      const startHour = parseInt(s.start.slice(0, 2), 10);
+      const endHour = parseInt(s.end.slice(0, 2), 10);
+      for (let h = startHour; h < endHour; h++) {
+        const detail = getPriceForSlotDetailed(parseISODate(s.date), h, pricing);
+        labelsSet.add(detail.label);
+      }
+      return labelsSet.size > 1;
+    })();
+
+  if (!hasMultipleSlots && !hasMixedPricing) return null;
 
   const includedCount = allSlots.filter((s) => !excludedKeys.has(slotKey(s))).length;
   const excludedCount = allSlots.length - includedCount;
