@@ -621,22 +621,52 @@ function CheckoutPage() {
               )}
 
               <div className="mt-5 space-y-3 text-sm">
-                <Row label="Data" value={formatDateRO(dateObj)} />
-                {isMultiSlot ? (
+                {isMultiDay ? (
                   <div>
                     <span className="text-sm text-muted-foreground">
-                      Intervale ({parsedIntervals.length})
+                      Rezervări ({parsedSlots.length} intervale în {uniqueDates.length} zile)
                     </span>
-                    <ul className="mt-1 space-y-0.5">
-                      {parsedIntervals.map((iv, i) => (
-                        <li key={i} className="text-sm font-medium">
-                          {iv.start}–{iv.end}
-                        </li>
-                      ))}
+                    <ul className="mt-2 space-y-2">
+                      {uniqueDates.map((d) => {
+                        const slotsForDate = parsedSlots.filter((s) => s.date === d);
+                        const dObj = parseISODate(d);
+                        return (
+                          <li key={d} className="border-b border-border pb-2 last:border-0">
+                            <div className="text-sm font-medium">
+                              {formatDateRO(dObj)}
+                            </div>
+                            <ul className="ml-3 mt-1">
+                              {slotsForDate.map((s, i) => (
+                                <li key={i} className="text-sm">
+                                  {s.start}–{s.end}
+                                </li>
+                              ))}
+                            </ul>
+                          </li>
+                        );
+                      })}
                     </ul>
                   </div>
                 ) : (
-                  <Row label="Interval" value={`${effectiveStart}–${effectiveEnd}`} />
+                  <>
+                    <Row label="Data" value={formatDateRO(dateObj)} />
+                    {isMultiSlot ? (
+                      <div>
+                        <span className="text-sm text-muted-foreground">
+                          Intervale ({parsedSlots.length})
+                        </span>
+                        <ul className="mt-1 space-y-0.5">
+                          {parsedSlots.map((iv, i) => (
+                            <li key={i} className="text-sm font-medium">
+                              {iv.start}–{iv.end}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : (
+                      <Row label="Interval" value={`${effectiveStart}–${effectiveEnd}`} />
+                    )}
+                  </>
                 )}
                 <Row
                   label="Durată"
