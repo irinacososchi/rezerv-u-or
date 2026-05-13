@@ -172,7 +172,7 @@ function CheckoutPage() {
       return search.intervals
         .split(",")
         .filter(Boolean)
-        .map((s) => {
+        .map((s: string) => {
           const [start, end] = s.split("-");
           return { start, end };
         });
