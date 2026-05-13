@@ -395,16 +395,65 @@ function CheckoutPage() {
   }, [dateObj, startHour, pricing]);
 
   const isRecurrentSearch = search.recurrent === "true";
-  const voucherDisabled = isMultiSlot || isMultiDay || isRecurrentSearch;
 
-  const subtotal = search.total;
+  // ---------- Build full list of slots that WILL be created (incl recurrence) ----------
+  const allSlotsToCreate = useMemo<ParsedSlot[]>(() => {
+    const slots: ParsedSlot[] = [...parsedSlots];
+    const recurrenceCount = search.recurrenceCount ?? 0;
+    if (isRecurrentSearch && recurrenceCount > 1 && !isMultiDay && parsedSlots.length > 0) {
+      const baseDate = parseISODate(parsedSlots[0].date);
+      for (let i = 1; i < recurrenceCount; i++) {
+        const nextDate = new Date(baseDate);
+        nextDate.setDate(nextDate.getDate() + i * 7);
+        const dateStr = formatDateISO(nextDate);
+        for (const slot of parsedSlots) {
+          slots.push({ ...slot, date: dateStr });
+        }
+      }
+    }
+    return slots;
+  }, [parsedSlots, isRecurrentSearch, search.recurrenceCount, isMultiDay]);
+
+  const [excludedSlotKeys, setExcludedSlotKeys] = useState<Set<string>>(new Set());
+
+  const finalSlotsToCreate = useMemo(
+    () => allSlotsToCreate.filter((s) => !excludedSlotKeys.has(slotKey(s))),
+    [allSlotsToCreate, excludedSlotKeys],
+  );
+
+  function toggleSlotExclusion(s: ParsedSlot) {
+    const key = slotKey(s);
+    setExcludedSlotKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  const recalculatedTotal = useMemo(() => {
+    return finalSlotsToCreate.reduce((sum, s) => sum + calcSlotTotal(s, pricing), 0);
+  }, [finalSlotsToCreate, pricing]);
+
+  const recalculatedDuration = useMemo(() => {
+    return finalSlotsToCreate.reduce((sum, s) => {
+      const sh = parseInt(s.start.slice(0, 2), 10);
+      const eh = parseInt(s.end.slice(0, 2), 10);
+      return sum + (eh - sh);
+    }, 0);
+  }, [finalSlotsToCreate]);
+
+  const voucherDisabled =
+    isMultiSlot || isMultiDay || isRecurrentSearch || finalSlotsToCreate.length !== 1;
+
+  const subtotal = recalculatedTotal;
   const discountAmount = useMemo(() => {
-    if (!voucher) return 0;
+    if (!voucher || finalSlotsToCreate.length !== 1) return 0;
     if (voucher.discount_type === "procent") {
       return Math.round((subtotal * voucher.discount_value) / 100);
     }
     return Math.min(subtotal, voucher.discount_value);
-  }, [voucher, subtotal]);
+  }, [voucher, subtotal, finalSlotsToCreate.length]);
   const finalTotal = Math.max(0, subtotal - discountAmount);
 
   // ---------- Voucher apply ----------
