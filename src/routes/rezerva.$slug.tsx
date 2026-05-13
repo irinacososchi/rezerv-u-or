@@ -18,6 +18,7 @@ import {
 // ---------- Search params ----------
 type CheckoutSearch = {
   date: string;
+  intervals: string;
   start: string;
   end: string;
   duration: number;
@@ -30,6 +31,7 @@ type CheckoutSearch = {
 export const Route = createFileRoute("/rezerva/$slug")({
   validateSearch: (raw: Record<string, unknown>): CheckoutSearch => ({
     date: typeof raw.date === "string" ? raw.date : "",
+    intervals: typeof raw.intervals === "string" ? raw.intervals : "",
     start: typeof raw.start === "string" ? raw.start : "",
     end: typeof raw.end === "string" ? raw.end : "",
     duration: Number(raw.duration) || 0,
@@ -164,10 +166,31 @@ function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  // ---------- Parse intervals (new format) with fallback to start/end ----------
+  const parsedIntervals = useMemo<{ start: string; end: string }[]>(() => {
+    if (search.intervals) {
+      return search.intervals
+        .split(",")
+        .filter(Boolean)
+        .map((s: string) => {
+          const [start, end] = s.split("-");
+          return { start, end };
+        });
+    }
+    if (search.start && search.end) {
+      return [{ start: search.start, end: search.end }];
+    }
+    return [];
+  }, [search.intervals, search.start, search.end]);
+
+  const isMultiSlot = parsedIntervals.length > 1;
+  const effectiveStart = parsedIntervals[0]?.start ?? "";
+  const effectiveEnd = parsedIntervals[parsedIntervals.length - 1]?.end ?? "";
+
   // ---------- Validation of incoming params ----------
   // total poate fi 0 dacă sala nu are pricing rules configurate încă
   const paramsValid = !!(
-    search.date && search.start && search.end && search.duration > 0
+    search.date && parsedIntervals.length > 0 && search.duration > 0
   );
 
   // ---------- Fetch room + pricing ----------
@@ -209,11 +232,14 @@ function CheckoutPage() {
   // ---------- Derived ----------
   const currency = room?.currency ?? "RON";
   const dateObj = paramsValid ? parseISODate(search.date) : null;
-  const startHour = paramsValid ? parseInt(search.start.slice(0, 2), 10) : 0;
+  const startHour = paramsValid ? parseInt(effectiveStart.slice(0, 2), 10) : 0;
   const activeRule = useMemo(() => {
     if (!dateObj || !pricing.length) return null;
     return pickActivePricing(dateObj, startHour, pricing);
   }, [dateObj, startHour, pricing]);
+
+  const isRecurrentSearch = search.recurrent === "true";
+  const voucherDisabled = isMultiSlot || isRecurrentSearch;
 
   const subtotal = search.total;
   const discountAmount = useMemo(() => {
@@ -309,8 +335,8 @@ function CheckoutPage() {
 
     setSubmitting(true);
 
-    const startTime = `${search.start}:00`;
-    const endTime = `${search.end}:00`;
+    const startTime = `${effectiveStart}:00`;
+    const endTime = `${effectiveEnd}:00`;
     const pricePerHour = activeRule?.price_per_hour ?? subtotal / Math.max(1, search.duration);
     const pricingLabel = activeRule?.label ?? null;
 
@@ -522,7 +548,22 @@ function CheckoutPage() {
 
               <div className="mt-5 space-y-3 text-sm">
                 <Row label="Data" value={formatDateRO(dateObj)} />
-                <Row label="Interval" value={`${search.start}–${search.end}`} />
+                {isMultiSlot ? (
+                  <div>
+                    <span className="text-sm text-muted-foreground">
+                      Intervale ({parsedIntervals.length})
+                    </span>
+                    <ul className="mt-1 space-y-0.5">
+                      {parsedIntervals.map((iv, i) => (
+                        <li key={i} className="text-sm font-medium">
+                          {iv.start}–{iv.end}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <Row label="Interval" value={`${effectiveStart}–${effectiveEnd}`} />
+                )}
                 <Row
                   label="Durată"
                   value={`${search.duration} ${search.duration === 1 ? "oră" : "ore"}`}
@@ -646,16 +687,17 @@ function CheckoutPage() {
                 <>
                   <div className="mt-3 flex gap-2">
                     <Input
-                      placeholder="Cod voucher"
+                      placeholder={voucherDisabled ? "Voucherele nu se aplică aici" : "Cod voucher"}
                       value={voucherInput}
                       onChange={(e) => setVoucherInput(e.target.value.toUpperCase())}
                       maxLength={50}
+                      disabled={voucherDisabled}
                     />
                     <Button
                       type="button"
                       variant="secondary"
                       onClick={applyVoucher}
-                      disabled={voucherLoading}
+                      disabled={voucherLoading || voucherDisabled}
                       className="cursor-pointer"
                     >
                       {voucherLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Aplică"}
@@ -663,6 +705,11 @@ function CheckoutPage() {
                   </div>
                   {voucherError && (
                     <p className="mt-2 text-xs text-destructive">{voucherError}</p>
+                  )}
+                  {voucherDisabled && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Voucherele se aplică doar la rezervări cu un singur interval, fără recurență.
+                    </p>
                   )}
                 </>
               )}

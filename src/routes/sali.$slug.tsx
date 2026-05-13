@@ -434,28 +434,48 @@ function RoomDetailsPage() {
   const summary = useMemo(() => {
     if (!selectedDate || selectedHours.length === 0) return null;
     const sorted = [...selectedHours].sort((a, b) => a - b);
-    const start = sorted[0];
-    const end = sorted[sorted.length - 1] + 1;
+
+    const intervals: { start: number; end: number; hours: number[] }[] = [];
+    let currentInterval = {
+      start: sorted[0],
+      end: sorted[0] + 1,
+      hours: [sorted[0]],
+    };
+
+    for (let i = 1; i < sorted.length; i++) {
+      if (sorted[i] === sorted[i - 1] + 1) {
+        currentInterval.end = sorted[i] + 1;
+        currentInterval.hours.push(sorted[i]);
+      } else {
+        intervals.push(currentInterval);
+        currentInterval = {
+          start: sorted[i],
+          end: sorted[i] + 1,
+          hours: [sorted[i]],
+        };
+      }
+    }
+    intervals.push(currentInterval);
+
     const total = sorted.reduce(
       (sum, h) => sum + getPriceForSlot(selectedDate, h, pricing),
       0,
     );
-    // Check contiguity
-    let contiguous = true;
-    for (let i = 1; i < sorted.length; i++) {
-      if (sorted[i] !== sorted[i - 1] + 1) {
-        contiguous = false;
-        break;
-      }
-    }
+
+    const recurrenceMultiplier =
+      isRecurrent && recurrenceDates.length > 0 ? recurrenceDates.length + 1 : 1;
+    const totalSlotsToCreate = sorted.length * recurrenceMultiplier;
+    const exceedsLimit = totalSlotsToCreate > 50;
+
     return {
-      start: `${start.toString().padStart(2, "0")}:00`,
-      end: `${end.toString().padStart(2, "0")}:00`,
+      intervals,
       duration: sorted.length,
       total,
-      contiguous,
+      isMultiSlot: intervals.length > 1,
+      totalSlotsToCreate,
+      exceedsLimit,
     };
-  }, [selectedDate, selectedHours, pricing]);
+  }, [selectedDate, selectedHours, pricing, isRecurrent, recurrenceDates.length]);
 
   // ---------- Render ----------
   if (loading) {
@@ -760,33 +780,67 @@ function RoomDetailsPage() {
                         {selectedDate!.getFullYear()}
                       </span>
                     </div>
-                    <div className="mt-1 flex justify-between">
-                      <span className="text-muted-foreground">Interval</span>
-                      <span className="font-medium">
-                        {summary.start}–{summary.end}
-                      </span>
-                    </div>
-                    <div className="mt-1 flex justify-between">
-                      <span className="text-muted-foreground">Durată</span>
-                      <span className="font-medium">
-                        {summary.duration} {summary.duration === 1 ? "oră" : "ore"}
-                      </span>
-                    </div>
+
+                    {summary.isMultiSlot ? (
+                      <div className="mt-2">
+                        <div className="text-muted-foreground mb-1">
+                          Intervale selectate ({summary.intervals.length})
+                        </div>
+                        <ul className="space-y-1">
+                          {summary.intervals.map((iv, i) => (
+                            <li key={i} className="flex justify-between text-sm">
+                              <span className="font-medium">
+                                {iv.start.toString().padStart(2, "0")}:00–{iv.end.toString().padStart(2, "0")}:00
+                              </span>
+                              <span className="text-muted-foreground">
+                                {iv.hours.length} {iv.hours.length === 1 ? "oră" : "ore"}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          Vor fi create {summary.intervals.length} rezervări separate — le poți anula individual.
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="mt-1 flex justify-between">
+                          <span className="text-muted-foreground">Interval</span>
+                          <span className="font-medium">
+                            {summary.intervals[0].start.toString().padStart(2, "0")}:00–{summary.intervals[0].end.toString().padStart(2, "0")}:00
+                          </span>
+                        </div>
+                        <div className="mt-1 flex justify-between">
+                          <span className="text-muted-foreground">Durată</span>
+                          <span className="font-medium">
+                            {summary.duration} {summary.duration === 1 ? "oră" : "ore"}
+                          </span>
+                        </div>
+                      </>
+                    )}
+
                     <div className="mt-2 flex justify-between border-t border-border pt-2 text-base">
                       <span className="font-semibold">Total</span>
                       <span className="font-bold text-primary">
                         {summary.total} {currency}
                       </span>
                     </div>
-                    {!summary.contiguous && (
-                      <p className="mt-2 text-xs text-destructive">
-                        Selectează ore consecutive pentru un interval continuu.
-                      </p>
-                    )}
-                    {summary.contiguous && summary.total === 0 && pricing.length === 0 && (
+
+                    {summary.total === 0 && pricing.length === 0 && (
                       <p className="mt-2 text-xs text-amber-600">
                         Sala nu are tarife configurate. Proprietarul trebuie să adauge reguli de preț.
                       </p>
+                    )}
+
+                    {summary.exceedsLimit && (
+                      <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3">
+                        <p className="text-sm font-medium text-destructive">
+                          Prea multe rezervări într-un singur checkout
+                        </p>
+                        <p className="text-xs text-destructive/90 mt-1">
+                          Ai selectat {summary.totalSlotsToCreate} rezervări (limita e 50). Redu numărul de intervale sau perioada de recurență.
+                        </p>
+                      </div>
                     )}
                   </div>
                 )}
@@ -836,8 +890,7 @@ function RoomDetailsPage() {
                               {recurrenceDates.length + 1} rezervări săptămânale
                             </div>
                             <div className="mt-1 text-xs text-muted-foreground">
-                              {summary.start}–{summary.end} în fiecare{" "}
-                              {DAY_NAMES_RO[getDayOfWeek(selectedDate!)]}
+                              În fiecare {DAY_NAMES_RO[getDayOfWeek(selectedDate!)]}
                             </div>
                             <div className="mt-1 text-xs text-muted-foreground">
                               Din {selectedDate!.toLocaleDateString("ro-RO")} până în{" "}
@@ -856,18 +909,21 @@ function RoomDetailsPage() {
                 <Button
                   className="mt-5 w-full cursor-pointer"
                   size="lg"
-                  disabled={!summary || !summary.contiguous || !room.is_active}
+                  disabled={!summary || !room.is_active || summary.exceedsLimit}
                   onClick={() => {
-                    if (!room?.is_active) return;
-                    if (!summary || !summary.contiguous || !selectedDate || !room) return;
+                    if (!room?.is_active || !summary || !selectedDate || !room || summary.exceedsLimit) return;
                     const recurrentActive = isRecurrent && recurrenceDates.length > 0;
+
+                    const intervalsParam = summary.intervals
+                      .map(iv => `${iv.start.toString().padStart(2, "0")}:00-${iv.end.toString().padStart(2, "0")}:00`)
+                      .join(",");
+
                     navigate({
                       to: "/rezerva/$slug",
                       params: { slug: room.slug },
                       search: {
                         date: formatDateISO(selectedDate),
-                        start: summary.start,
-                        end: summary.end,
+                        intervals: intervalsParam,
                         duration: summary.duration,
                         total: summary.total,
                         recurrent: recurrentActive ? "true" : "false",
@@ -877,7 +933,11 @@ function RoomDetailsPage() {
                     });
                   }}
                 >
-                  {room.is_active ? "Rezervă acum" : "Rezervările sunt indisponibile"}
+                  {!room.is_active
+                    ? "Rezervările sunt indisponibile"
+                    : summary?.isMultiSlot
+                      ? `Rezervă ${summary.intervals.length} intervale`
+                      : "Rezervă acum"}
                 </Button>
 
                 <p className="mt-3 text-center text-xs text-muted-foreground">
