@@ -890,6 +890,24 @@ function CheckoutPage() {
                 </p>
               )}
 
+              {(() => {
+                const allLabels = new Set<string>();
+                for (const s of finalSlotsToCreate) {
+                  const startHour = parseInt(s.start.slice(0, 2), 10);
+                  const endHour = parseInt(s.end.slice(0, 2), 10);
+                  for (let h = startHour; h < endHour; h++) {
+                    const detail = getPriceForSlotDetailed(parseISODate(s.date), h, pricing);
+                    if (detail.label) allLabels.add(detail.label);
+                  }
+                }
+                if (allLabels.size === 0) return null;
+                return (
+                  <p className="text-xs text-muted-foreground mt-1 text-right">
+                    Tarife aplicate: {Array.from(allLabels).join(", ")}
+                  </p>
+                );
+              })()}
+
               <BookingSlotsPreview
                 allSlots={allSlotsToCreate}
                 excludedKeys={excludedSlotKeys}
