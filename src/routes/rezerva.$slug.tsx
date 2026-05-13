@@ -91,6 +91,12 @@ type Voucher = {
 };
 
 // ---------- Helpers ----------
+type ParsedSlot = { date: string; start: string; end: string };
+
+function slotKey(s: ParsedSlot): string {
+  return `${s.date}|${s.start}|${s.end}`;
+}
+
 function generateWeeklyDates(startDateStr: string, endDateStr: string): string[] {
   if (!endDateStr) return [startDateStr];
   const dates: string[] = [];
@@ -134,6 +140,134 @@ function pickActivePricing(
     })
     .sort((a, b) => b.priority - a.priority);
   return matching[0] ?? null;
+}
+
+function getPriceForSlot(date: Date, hour: number, rules: PricingRule[]): number {
+  const r = pickActivePricing(date, hour, rules);
+  return r ? Number(r.price_per_hour) : 0;
+}
+
+function calcSlotTotal(s: ParsedSlot, rules: PricingRule[]): number {
+  const startHour = parseInt(s.start.slice(0, 2), 10);
+  const endHour = parseInt(s.end.slice(0, 2), 10);
+  let total = 0;
+  for (let h = startHour; h < endHour; h++) {
+    total += getPriceForSlot(parseISODate(s.date), h, rules);
+  }
+  return total;
+}
+
+// ---------- BookingSlotsPreview ----------
+function BookingSlotsPreview({
+  allSlots,
+  excludedKeys,
+  onToggleExclusion,
+  pricing,
+  currency,
+}: {
+  allSlots: ParsedSlot[];
+  excludedKeys: Set<string>;
+  onToggleExclusion: (s: ParsedSlot) => void;
+  pricing: PricingRule[];
+  currency: string;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  const groupedByDate = useMemo(() => {
+    const map = new Map<string, ParsedSlot[]>();
+    for (const s of allSlots) {
+      if (!map.has(s.date)) map.set(s.date, []);
+      map.get(s.date)!.push(s);
+    }
+    return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
+  }, [allSlots]);
+
+  if (allSlots.length <= 1) return null;
+
+  const includedCount = allSlots.filter((s) => !excludedKeys.has(slotKey(s))).length;
+  const excludedCount = allSlots.length - includedCount;
+
+  return (
+    <div className="mt-4 rounded-xl border border-border bg-secondary/30 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setExpanded(!expanded)}
+        className="flex w-full items-center justify-between p-4 hover:bg-secondary/50 transition cursor-pointer"
+      >
+        <div className="text-left">
+          <div className="font-medium text-sm">
+            Detalii rezervări ({includedCount} {includedCount === 1 ? "rezervare" : "rezervări"})
+          </div>
+          {excludedCount > 0 && (
+            <div className="text-xs text-muted-foreground mt-0.5">
+              {excludedCount} {excludedCount === 1 ? "exclusă" : "excluse"} manual
+            </div>
+          )}
+        </div>
+        {expanded ? (
+          <ChevronUp className="h-4 w-4 text-muted-foreground" />
+        ) : (
+          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+        )}
+      </button>
+
+      {expanded && (
+        <div className="border-t border-border bg-background p-3 max-h-96 overflow-y-auto">
+          <p className="text-xs text-muted-foreground mb-3">
+            Click pe orice rezervare pentru a o exclude din acest checkout. Slot-urile excluse vor fi sărite la submit.
+          </p>
+          <ul className="space-y-3">
+            {groupedByDate.map(([date, slots]) => {
+              const dateObj = parseISODate(date);
+              const dow = getDayOfWeek(dateObj);
+              return (
+                <li key={date}>
+                  <div className="text-sm font-medium mb-1">
+                    {DAY_NAMES_RO[dow]}, {dateObj.getDate()}.
+                    {String(dateObj.getMonth() + 1).padStart(2, "0")}.
+                    {dateObj.getFullYear()}
+                  </div>
+                  <ul className="space-y-1 ml-2">
+                    {slots.map((s, i) => {
+                      const isExcluded = excludedKeys.has(slotKey(s));
+                      const price = calcSlotTotal(s, pricing);
+                      return (
+                        <li key={i}>
+                          <button
+                            type="button"
+                            onClick={() => onToggleExclusion(s)}
+                            className={`w-full flex items-center justify-between rounded-md border px-3 py-2 text-sm transition cursor-pointer ${
+                              isExcluded
+                                ? "border-border bg-muted/40 text-muted-foreground line-through"
+                                : "border-border bg-background hover:border-primary"
+                            }`}
+                          >
+                            <span className="flex items-center gap-2">
+                              {isExcluded ? (
+                                <X className="h-3.5 w-3.5 text-destructive" />
+                              ) : (
+                                <Check className="h-3.5 w-3.5 text-primary" />
+                              )}
+                              <span className="font-medium">
+                                {s.start}–{s.end}
+                              </span>
+                            </span>
+                            <span className={isExcluded ? "text-muted-foreground/60" : "font-medium"}>
+                              {price} {currency}
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ---------- Page ----------
