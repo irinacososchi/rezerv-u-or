@@ -545,7 +545,7 @@ function CheckoutPage() {
         reference: succeeded[0].reference ?? "",
         group: bookingGroupId ?? "",
         recurrent: isRecurrent ? "true" : "false",
-        recurrenceCount: isRecurrent ? dates.length : 0,
+        recurrenceCount: isRecurrent ? recurrenceDateCount : 0,
       } as never,
     });
   }
