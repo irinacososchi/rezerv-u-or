@@ -10,6 +10,8 @@ import {
   Heart,
   View,
   ExternalLink,
+  X,
+  Plus,
 } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
