@@ -242,7 +242,9 @@ function BookingSlotsPreview({
       >
         <div className="text-left">
           <div className="font-medium text-sm">
-            Detalii rezervări ({includedCount} {includedCount === 1 ? "rezervare" : "rezervări"})
+            {hasMultipleSlots
+              ? `Detalii rezervări (${includedCount} ${includedCount === 1 ? "rezervare" : "rezervări"})`
+              : "Defalcare tarife"}
           </div>
           {excludedCount > 0 && (
             <div className="text-xs text-muted-foreground mt-0.5">
