@@ -281,6 +281,31 @@ function BookingSlotsPreview({
                     {slots.map((s, i) => {
                       const isExcluded = excludedKeys.has(slotKey(s));
                       const { totalPrice, labels } = calcSlotPricing(s, pricing);
+                      const isReadOnly = allSlots.length === 1;
+
+                      if (isReadOnly) {
+                        return (
+                          <li
+                            key={i}
+                            className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm"
+                          >
+                            <span className="font-medium">
+                              {s.start}–{s.end}
+                            </span>
+                            <div className="flex flex-col items-end">
+                              <span className="font-medium">
+                                {totalPrice} {currency}
+                              </span>
+                              {labels.length > 0 && (
+                                <span className="text-[10px] text-muted-foreground">
+                                  {labels.join(", ")}
+                                </span>
+                              )}
+                            </div>
+                          </li>
+                        );
+                      }
+
                       return (
                         <li key={i}>
                           <button
