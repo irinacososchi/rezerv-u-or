@@ -812,7 +812,7 @@ function CheckoutPage() {
                   )}
                   {voucherDisabled && (
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Voucherele se aplică doar la rezervări cu un singur interval, fără recurență.
+                      Voucherele se aplică doar la rezervări cu un singur interval, fără recurență sau multi-zi.
                     </p>
                   )}
                 </>
