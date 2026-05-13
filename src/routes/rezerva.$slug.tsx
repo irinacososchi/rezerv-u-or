@@ -305,8 +305,6 @@ function CheckoutPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   // ---------- Parse slots (new multi-day format) with fallbacks ----------
-  type ParsedSlot = { date: string; start: string; end: string };
-
   const parsedSlots: ParsedSlot[] = useMemo(() => {
     // Format nou (multi-day): "DATE:HH:MM-HH:MM,DATE:HH:MM-HH:MM,..."
     if (search.slots) {
