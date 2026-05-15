@@ -441,7 +441,7 @@ function CereriPage() {
                         </tr>
                       );
                     }
-                    const b = item.booking;
+                    const b = item.booking as unknown as BookingFull;
                     return (
                     <tr
                       key={b.id}
