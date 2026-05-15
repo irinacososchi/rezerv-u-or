@@ -283,7 +283,34 @@ function RoomCalendarPage() {
       setEntries([]);
       return;
     }
-    setEntries((data ?? []) as Entry[]);
+    const list = (data ?? []) as Entry[];
+    // Hydrate `reason` for blocked entries from bookings table (the view may omit it)
+    const blockedIds = list
+      .filter((e) => e.entry_type === "blocat" && (e.reason == null || e.reason === ""))
+      .map((e) => e.id);
+    if (blockedIds.length > 0) {
+      const { data: rows } = await supabase
+        .from("bookings")
+        .select("id, reason, notes, renter_notes")
+        .in("id", blockedIds);
+      if (rows && rows.length) {
+        const byId = new Map<string, string | null>();
+        for (const r of rows as Array<{
+          id: string;
+          reason?: string | null;
+          notes?: string | null;
+          renter_notes?: string | null;
+        }>) {
+          byId.set(r.id, r.reason ?? r.notes ?? r.renter_notes ?? null);
+        }
+        for (const e of list) {
+          if (e.entry_type === "blocat" && byId.has(e.id)) {
+            e.reason = byId.get(e.id) ?? null;
+          }
+        }
+      }
+    }
+    setEntries(list);
   }, [id, view, weekStart, monthAnchor, selectedDay]);
 
   useEffect(() => {
