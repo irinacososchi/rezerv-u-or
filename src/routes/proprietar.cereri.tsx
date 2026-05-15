@@ -160,7 +160,8 @@ function ActionButtons({
 }
 
 function CereriPage() {
-  const { q: initialQ } = Route.useSearch();
+  const { q: initialQ, group: groupParam } = Route.useSearch();
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState<BookingFull[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState("");
