@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/external-client";
 import { OwnerLayout } from "@/components/owner-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
