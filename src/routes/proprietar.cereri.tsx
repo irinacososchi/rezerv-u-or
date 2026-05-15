@@ -1,9 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { OwnerLayout } from "@/components/owner-layout";
 import { supabase } from "@/integrations/supabase/external-client";
 import { BookingTimestamps } from "@/components/booking-timestamps";
+import { groupRecurringBookings } from "@/lib/group-recurring-bookings";
+import { RecurringGroupCard } from "@/components/owner/recurring-group-card";
+import { RecurringBadge } from "@/components/owner/recurring-badge";
 
 export const Route = createFileRoute("/proprietar/cereri")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -34,6 +37,8 @@ type BookingFull = {
   status: string;
   payment_status: string;
   recurrence_id: string | null;
+  is_recurring?: boolean;
+  booking_group_id?: string | null;
   created_at?: string;
   updated_at?: string;
 };
@@ -157,7 +162,7 @@ function CereriPage() {
   const { q: initialQ } = Route.useSearch();
   const [bookings, setBookings] = useState<BookingFull[]>([]);
   const [loading, setLoading] = useState(true);
-  const [, setUserId] = useState("");
+  const [userId, setUserId] = useState("");
 
   const [filterStatus, setFilterStatus] = useState("toate");
   const [filterRoom, setFilterRoom] = useState("toate");
@@ -267,6 +272,24 @@ function CereriPage() {
       prev.map((b) => (b.id === bookingId ? { ...b, ...updates } : b)),
     );
   }
+
+  async function refetch() {
+    if (userId) await fetchBookings(userId);
+  }
+
+  async function bulkUpdateStatus(filter: { groupId?: string; ids?: string[] }, newStatus: string) {
+    let q = supabase.from("bookings").update({ status: newStatus }).eq("status", "în așteptare");
+    if (filter.groupId) q = q.eq("booking_group_id", filter.groupId);
+    if (filter.ids) q = q.in("id", filter.ids);
+    const { error } = await q;
+    if (error) {
+      alert("Eroare: " + error.message);
+      return;
+    }
+    await refetch();
+  }
+
+  const groupedItems = useMemo(() => groupRecurringBookings(filtered as any), [filtered]);
 
   const hasActiveFilters =
     filterStatus !== "toate" ||
@@ -394,21 +417,40 @@ function CereriPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.length === 0 ? (
+                {groupedItems.length === 0 ? (
                   <tr>
                     <td colSpan={9} className="px-4 py-12 text-center text-muted-foreground">
                       Nicio rezervare găsită.
                     </td>
                   </tr>
                 ) : (
-                  filtered.map((b) => (
+                  groupedItems.map((item) => {
+                    if (item.kind === "recurring_group") {
+                      return (
+                        <tr key={`grp-${item.groupId}`} className="border-b border-border last:border-b-0">
+                          <td colSpan={9} className="p-3 bg-blue-50/20">
+                            <RecurringGroupCard
+                              groupId={item.groupId}
+                              bookings={item.bookings}
+                              onApproveAll={(gid) => bulkUpdateStatus({ groupId: gid }, "confirmată")}
+                              onRefuseAll={(gid) => bulkUpdateStatus({ groupId: gid }, "refuzată")}
+                              onApproveSelected={(ids) => bulkUpdateStatus({ ids }, "confirmată")}
+                              onRefuseSelected={(ids) => bulkUpdateStatus({ ids }, "refuzată")}
+                            />
+                          </td>
+                        </tr>
+                      );
+                    }
+                    const b = item.booking as unknown as BookingFull;
+                    return (
                     <tr
                       key={b.id}
                       className="border-b border-border last:border-b-0 hover:bg-muted/20 transition"
                     >
                       <td className="px-4 py-3">
                         <span className="font-mono text-xs text-muted-foreground">#{b.reference}</span>
-                        {b.recurrence_id && <span className="ml-1 text-xs text-primary">↻</span>}
+                        {b.is_recurring && <span className="ml-1.5 inline-block align-middle"><RecurringBadge /></span>}
+                        {b.recurrence_id && !b.is_recurring && <span className="ml-1 text-xs text-primary">↻</span>}
                         <BookingTimestamps createdAt={b.created_at} updatedAt={b.updated_at} className="mt-1" />
                       </td>
                       <td className="px-4 py-3">
@@ -443,7 +485,8 @@ function CereriPage() {
                         />
                       </td>
                     </tr>
-                  ))
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -451,17 +494,33 @@ function CereriPage() {
 
           {/* Mobile — carduri */}
           <div className="lg:hidden space-y-3">
-            {filtered.length === 0 ? (
+            {groupedItems.length === 0 ? (
               <div className="rounded-xl border border-border bg-background p-8 text-center text-muted-foreground">
                 Nicio rezervare găsită.
               </div>
             ) : (
-              filtered.map((b) => (
+              groupedItems.map((item) => {
+                if (item.kind === "recurring_group") {
+                  return (
+                    <RecurringGroupCard
+                      key={`grp-${item.groupId}`}
+                      groupId={item.groupId}
+                      bookings={item.bookings}
+                      onApproveAll={(gid) => bulkUpdateStatus({ groupId: gid }, "confirmată")}
+                      onRefuseAll={(gid) => bulkUpdateStatus({ groupId: gid }, "refuzată")}
+                      onApproveSelected={(ids) => bulkUpdateStatus({ ids }, "confirmată")}
+                      onRefuseSelected={(ids) => bulkUpdateStatus({ ids }, "refuzată")}
+                    />
+                  );
+                }
+                const b = item.booking as unknown as BookingFull;
+                return (
                 <div key={b.id} className="rounded-xl border border-border bg-background p-4">
                   <div className="flex items-start justify-between gap-2 mb-3">
                     <div>
                       <span className="font-mono text-xs text-muted-foreground">#{b.reference}</span>
-                      {b.recurrence_id && <span className="ml-1 text-xs text-primary">↻</span>}
+                      {b.is_recurring && <span className="ml-1.5 inline-block align-middle"><RecurringBadge /></span>}
+                      {b.recurrence_id && !b.is_recurring && <span className="ml-1 text-xs text-primary">↻</span>}
                       <div className="font-medium mt-0.5">{b.renter_name}</div>
                       <div className="text-xs text-muted-foreground">{b.renter_phone}</div>
                     </div>
@@ -500,7 +559,8 @@ function CereriPage() {
                   </div>
                   <BookingTimestamps createdAt={b.created_at} updatedAt={b.updated_at} className="mt-3" />
                 </div>
-              ))
+                );
+              })
             )}
           </div>
         </>
