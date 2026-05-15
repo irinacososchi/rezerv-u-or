@@ -843,11 +843,7 @@ function RoomCalendarPage() {
             <div className="flex flex-wrap gap-3 text-xs text-muted-foreground pt-2">
               <LegendDot className="bg-primary/30" label="Confirmată" />
               <LegendDot className="bg-orange-200/80" label="În așteptare" />
-              <LegendDot
-                className="bg-[repeating-linear-gradient(45deg,hsl(var(--muted))_0,hsl(var(--muted))_4px,hsl(var(--muted-foreground)/0.25)_4px,hsl(var(--muted-foreground)/0.25)_8px)]"
-                label="Blocat de proprietar"
-              />
-              <LegendDot className="bg-muted/70" label="Finalizată" />
+              <LegendDot className="bg-muted border border-muted-foreground/30" label="Blocat de proprietar" />
             </div>
           </>
         )}
