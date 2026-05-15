@@ -411,33 +411,80 @@ function DashboardPage() {
 
               {/* Mobile cards */}
               <div className="md:hidden space-y-3">
-                {recentList.map((b) => (
-                  <Link
-                    key={b.id}
-                    to="/proprietar/cereri"
-                    search={{ q: b.reference ?? "" }}
-                    className="block"
-                  >
-                    <Card className="hover:bg-muted/50 transition-colors">
-                      <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between space-y-0">
-                        <div>
-                          <CardTitle className="text-sm">{b.room_name}</CardTitle>
-                          <p className="text-xs text-muted-foreground mt-1">{b.renter_name ?? b.renter_email ?? "—"}</p>
-                        </div>
-                        <span className="font-mono text-[10px] text-primary">{b.reference ?? ""}</span>
-                      </CardHeader>
-                      <CardContent className="p-4 pt-2 space-y-2">
-                        <p className="text-sm">{formatDateShort(b.booking_date)} · {formatTimeRange(b.start_time, b.end_time)}</p>
-                        <p className="text-sm font-semibold text-primary">{formatRON(totalOf(b))}</p>
-                        <div className="flex gap-2 flex-wrap">
-                          <StatusBadge status={b.status} />
-                          <PaymentBadge status={b.payment_status} />
-                        </div>
-                        <BookingTimestamps createdAt={b.created_at} updatedAt={b.updated_at} />
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
+                {recentGrouped.map((item) => {
+                  if (item.kind === "recurring_group") {
+                    const rep = item.bookings[0] as unknown as BookingFull;
+                    const firstDate = item.bookings[0].booking_date;
+                    const lastDate = item.bookings[item.bookings.length - 1].booking_date;
+                    const totalAmount = item.bookings.reduce(
+                      (s, x) => s + Number(x.total_amount ?? 0),
+                      0,
+                    );
+                    const summary = getGroupStatusSummary(item.bookings);
+                    const statusLabel = getGroupStatusLabel(summary);
+                    const renterName = rep.renter_name ?? rep.renter_email ?? "—";
+                    return (
+                      <Link
+                        key={`grp-${item.groupId}`}
+                        to="/proprietar/cereri"
+                        search={{ q: "", group: item.groupId }}
+                        className="block"
+                      >
+                        <Card className="border-blue-200 bg-blue-50/30 hover:bg-blue-50/60 transition-colors">
+                          <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between space-y-0">
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <CardTitle className="text-sm">{rep.room_name}</CardTitle>
+                                <RecurringBadge count={item.bookings.length} />
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-1">{renterName}</p>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="p-4 pt-2 space-y-2">
+                            <p className="text-sm">
+                              {formatDateShort(firstDate)} → {formatDateShort(lastDate)} · {formatTimeRange(rep.start_time, rep.end_time)}
+                            </p>
+                            <p className="text-sm font-semibold text-primary">
+                              {totalAmount.toFixed(2)} {rep.room_currency ?? "RON"}
+                            </p>
+                            <p className="text-xs text-muted-foreground">{statusLabel.label}</p>
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    );
+                  }
+                  const b = item.booking as unknown as BookingFull;
+                  return (
+                    <Link
+                      key={b.id}
+                      to="/proprietar/cereri"
+                      search={{ q: b.reference ?? "", group: "" }}
+                      className="block"
+                    >
+                      <Card className="hover:bg-muted/50 transition-colors">
+                        <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between space-y-0">
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <CardTitle className="text-sm">{b.room_name}</CardTitle>
+                              {b.is_recurring && <RecurringBadge />}
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">{b.renter_name ?? b.renter_email ?? "—"}</p>
+                          </div>
+                          <span className="font-mono text-[10px] text-primary">{b.reference ?? ""}</span>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-2 space-y-2">
+                          <p className="text-sm">{formatDateShort(b.booking_date)} · {formatTimeRange(b.start_time, b.end_time)}</p>
+                          <p className="text-sm font-semibold text-primary">{formatRON(totalOf(b))}</p>
+                          <div className="flex gap-2 flex-wrap">
+                            <StatusBadge status={b.status} />
+                            <PaymentBadge status={b.payment_status} />
+                          </div>
+                          <BookingTimestamps createdAt={b.created_at} updatedAt={b.updated_at} />
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  );
+                })}
               </div>
             </>
           )}
