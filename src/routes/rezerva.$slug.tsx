@@ -836,6 +836,7 @@ function CheckoutPage() {
     try {
       const freshBusy = await checkSlotAvailability(finalSlotsToCreate);
       if (freshBusy.size > 0) {
+        console.warn("=== EARLY RETURN ===", { reason: "precheck_busy", count: freshBusy.size });
         setBusySlotKeys((prev) => {
           const merged = new Set(prev);
           freshBusy.forEach((k) => merged.add(k));
@@ -850,6 +851,7 @@ function CheckoutPage() {
         return;
       }
     } catch {
+      console.warn("=== EARLY RETURN ===", { reason: "precheck_threw" });
       setSubmitting(false);
       setSubmitError("Nu am putut verifica disponibilitatea. Reîncearcă peste câteva secunde.");
       return;
