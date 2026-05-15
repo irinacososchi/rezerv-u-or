@@ -417,21 +417,40 @@ function CereriPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.length === 0 ? (
+                {groupedItems.length === 0 ? (
                   <tr>
                     <td colSpan={9} className="px-4 py-12 text-center text-muted-foreground">
                       Nicio rezervare găsită.
                     </td>
                   </tr>
                 ) : (
-                  filtered.map((b) => (
+                  groupedItems.map((item) => {
+                    if (item.kind === "recurring_group") {
+                      return (
+                        <tr key={`grp-${item.groupId}`} className="border-b border-border last:border-b-0">
+                          <td colSpan={9} className="p-3 bg-blue-50/20">
+                            <RecurringGroupCard
+                              groupId={item.groupId}
+                              bookings={item.bookings}
+                              onApproveAll={(gid) => bulkUpdateStatus({ groupId: gid }, "confirmată")}
+                              onRefuseAll={(gid) => bulkUpdateStatus({ groupId: gid }, "refuzată")}
+                              onApproveSelected={(ids) => bulkUpdateStatus({ ids }, "confirmată")}
+                              onRefuseSelected={(ids) => bulkUpdateStatus({ ids }, "refuzată")}
+                            />
+                          </td>
+                        </tr>
+                      );
+                    }
+                    const b = item.booking;
+                    return (
                     <tr
                       key={b.id}
                       className="border-b border-border last:border-b-0 hover:bg-muted/20 transition"
                     >
                       <td className="px-4 py-3">
                         <span className="font-mono text-xs text-muted-foreground">#{b.reference}</span>
-                        {b.recurrence_id && <span className="ml-1 text-xs text-primary">↻</span>}
+                        {b.is_recurring && <span className="ml-1.5 inline-block align-middle"><RecurringBadge /></span>}
+                        {b.recurrence_id && !b.is_recurring && <span className="ml-1 text-xs text-primary">↻</span>}
                         <BookingTimestamps createdAt={b.created_at} updatedAt={b.updated_at} className="mt-1" />
                       </td>
                       <td className="px-4 py-3">
@@ -466,7 +485,8 @@ function CereriPage() {
                         />
                       </td>
                     </tr>
-                  ))
+                    );
+                  })
                 )}
               </tbody>
             </table>
