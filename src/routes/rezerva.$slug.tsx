@@ -985,11 +985,21 @@ function CheckoutPage() {
 
       console.warn("=== PAYLOAD CHEI ===", Object.keys(payload));
 
-      const { error: insErr } = await supabase
+      const { data: insertData, error: insErr } = await supabase
         .from("bookings")
-        .insert(payload);
+        .insert(payload)
+        .select()
+        .single();
+
+      console.warn("=== INSERT BOOKING RESULT ===", {
+        bookingId: (insertData as { id?: string } | null)?.id,
+        is_recurring_returned: (insertData as { is_recurring?: boolean } | null)?.is_recurring,
+        booking_group_id_returned: (insertData as { booking_group_id?: string } | null)?.booking_group_id,
+        error: insErr?.message,
+      });
 
       if (insErr) {
+        console.warn("=== EARLY RETURN (per-slot) ===", { reason: "booking_insert_failed", slot, error: insErr.message });
         results.push({ slot, success: false, error: insErr.message });
         continue;
       }
