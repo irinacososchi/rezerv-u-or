@@ -162,7 +162,7 @@ function CereriPage() {
   const { q: initialQ } = Route.useSearch();
   const [bookings, setBookings] = useState<BookingFull[]>([]);
   const [loading, setLoading] = useState(true);
-  const [, setUserId] = useState("");
+  const [userId, setUserId] = useState("");
 
   const [filterStatus, setFilterStatus] = useState("toate");
   const [filterRoom, setFilterRoom] = useState("toate");
