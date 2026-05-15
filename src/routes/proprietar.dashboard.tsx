@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { OwnerLayout } from "@/components/owner-layout";
 import { supabase } from "@/integrations/supabase/external-client";
@@ -9,6 +9,13 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDateRO, parseISODate } from "@/lib/date-utils";
 import { BookingTimestamps } from "@/components/booking-timestamps";
+import {
+  groupRecurringBookings,
+  getGroupStatusSummary,
+  getGroupStatusLabel,
+} from "@/lib/group-recurring-bookings";
+import { RecurringGroupCard } from "@/components/owner/recurring-group-card";
+import { RecurringBadge } from "@/components/owner/recurring-badge";
 
 export const Route = createFileRoute("/proprietar/dashboard")({
   component: DashboardPage,
