@@ -312,6 +312,20 @@ function CereriPage() {
         </div>
       </div>
 
+      {groupParam && (
+        <div className="mb-4 flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-4 py-2">
+          <span className="text-sm text-blue-800">
+            Filtrat la o serie recurentă specifică
+          </span>
+          <button
+            onClick={() => navigate({ to: "/proprietar/cereri", search: { q: "", group: "" } })}
+            className="text-xs text-primary hover:underline"
+          >
+            Curăță filtru
+          </button>
+        </div>
+      )}
+
       {/* Filtre */}
       <div className="rounded-xl border border-border bg-background p-4 mb-6">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
