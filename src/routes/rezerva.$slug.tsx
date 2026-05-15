@@ -867,6 +867,14 @@ function CheckoutPage() {
         : 1;
     if (isRecurrent && !isMultiDay && parsedSlots.length === 1 && recurrenceDateCount > 1) {
       const dayOfWeek = getDayOfWeek(dateObj);
+      console.warn("=== INSERT RECURRENCES START ===", {
+        isRecurrenceCheckout: isRecurrent && search.recurrenceCount > 1,
+        room_id: room.id,
+        day_of_week: dayOfWeek,
+        total_bookings: recurrenceDateCount,
+        first_date: allDateIntervals[0].date,
+        last_date: allDateIntervals[allDateIntervals.length - 1].date,
+      });
       const { data: rec, error: recError } = await supabase
         .from("recurrences")
         .insert({
@@ -882,7 +890,14 @@ function CheckoutPage() {
         })
         .select()
         .single();
+      console.warn("=== INSERT RECURRENCES RESULT ===", {
+        data: rec,
+        error: recError,
+        errorMessage: recError?.message,
+        errorCode: (recError as { code?: string } | null)?.code,
+      });
       if (recError || !rec) {
+        console.warn("=== EARLY RETURN ===", { reason: "recurrences_insert_failed", error: recError?.message });
         setSubmitting(false);
         setSubmitError("Eroare la crearea rezervării recurente.");
         return;
