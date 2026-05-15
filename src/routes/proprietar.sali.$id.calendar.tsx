@@ -1298,29 +1298,46 @@ function BlockDetails({
   onChanged: () => void;
 }) {
   const [busy, setBusy] = useState(false);
-  const [reason, setReason] = useState<string | null>(entry.reason ?? null);
+  const [saving, setSaving] = useState(false);
+  const [reason, setReason] = useState<string>(entry.renter_notes ?? entry.reason ?? "");
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("bookings")
-        .select("reason, notes, renter_notes")
+        .select("id, room_id, booking_date, start_time, end_time, renter_notes, status")
         .eq("id", entry.id)
+        .eq("status", "blocată")
         .maybeSingle();
-      if (cancelled || !data) return;
-      const val =
-        (data as { reason?: string | null; notes?: string | null; renter_notes?: string | null })
-          .reason ??
-        (data as { notes?: string | null }).notes ??
-        (data as { renter_notes?: string | null }).renter_notes ??
-        null;
-      setReason(val);
+      if (cancelled) return;
+      if (error) {
+        console.error("load block reason error", error);
+        return;
+      }
+      if (!data) return;
+      setReason((data as { renter_notes?: string | null }).renter_notes ?? "");
     })();
     return () => {
       cancelled = true;
     };
   }, [entry.id]);
+
+  async function saveReason() {
+    setSaving(true);
+    const { error } = await supabase
+      .from("bookings")
+      .update({ renter_notes: reason.trim() || null })
+      .eq("id", entry.id)
+      .eq("status", "blocată");
+    setSaving(false);
+    if (error) {
+      toast.error(error.message || "Eroare la salvarea motivului");
+      return;
+    }
+    toast.success("Motiv salvat");
+    onChanged();
+  }
 
   async function unblock() {
     setBusy(true);
@@ -1341,7 +1358,19 @@ function BlockDetails({
         </DialogDescription>
       </DialogHeader>
       <div className="space-y-2 text-sm">
-        <Row label="Motiv" value={reason && reason.trim() ? reason : "—"} />
+        <Label htmlFor="block-reason">Motiv blocare</Label>
+        <Textarea
+          id="block-reason"
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder="Ex: Curs privat, mentenanță..."
+          rows={3}
+        />
+        <div className="flex justify-end">
+          <Button size="sm" variant="secondary" onClick={saveReason} disabled={saving}>
+            {saving ? "Se salvează..." : "Salvează motiv"}
+          </Button>
+        </div>
       </div>
       <DialogFooter className="gap-2">
         <Button onClick={unblock} disabled={busy}>
