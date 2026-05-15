@@ -26,8 +26,10 @@ type BookingFull = {
   reference: string | null;
   room_id: string;
   room_name: string | null;
+  room_currency: string | null;
   renter_name: string | null;
   renter_email: string | null;
+  renter_phone: string | null;
   booking_date: string;
   start_time: string;
   end_time: string;
@@ -38,6 +40,8 @@ type BookingFull = {
   payment_method: string | null;
   created_at: string;
   updated_at?: string;
+  is_recurring?: boolean;
+  booking_group_id?: string | null;
 };
 
 type Room = { id: string; name: string; is_active: boolean };
