@@ -273,6 +273,24 @@ function CereriPage() {
     );
   }
 
+  async function refetch() {
+    if (userId) await fetchBookings(userId);
+  }
+
+  async function bulkUpdateStatus(filter: { groupId?: string; ids?: string[] }, newStatus: string) {
+    let q = supabase.from("bookings").update({ status: newStatus }).eq("status", "în așteptare");
+    if (filter.groupId) q = q.eq("booking_group_id", filter.groupId);
+    if (filter.ids) q = q.in("id", filter.ids);
+    const { error } = await q;
+    if (error) {
+      alert("Eroare: " + error.message);
+      return;
+    }
+    await refetch();
+  }
+
+  const groupedItems = useMemo(() => groupRecurringBookings(filtered), [filtered]);
+
   const hasActiveFilters =
     filterStatus !== "toate" ||
     filterRoom !== "toate" ||
