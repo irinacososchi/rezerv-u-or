@@ -662,13 +662,18 @@ function RoomCalendarPage() {
                               <div className="font-medium truncate flex items-center gap-1">
                                 <span className="truncate">
                                   {e!.entry_type === "blocat"
-                                    ? (e!.reason ?? "Blocat")
+                                    ? "Blocat"
                                     : (e!.renter_name ?? e!.reference ?? "Rezervare")}
                                 </span>
                                 {e!.recurrence_id && (
                                   <span className="text-[10px]" title="Rezervare recurentă">↻</span>
                                 )}
                               </div>
+                              {e!.entry_type === "blocat" && blockNotePreview(e!.renter_notes) && (
+                                <div className="text-[11px] text-muted-foreground truncate overflow-hidden text-ellipsis whitespace-nowrap">
+                                  {blockNotePreview(e!.renter_notes)}
+                                </div>
+                              )}
                               <div className="text-xs text-muted-foreground mt-0.5">
                                 {e!.start_time?.slice(0, 5)}–{e!.end_time?.slice(0, 5)}
                                 {e!.entry_type !== "blocat" &&
