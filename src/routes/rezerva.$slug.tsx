@@ -784,13 +784,32 @@ function CheckoutPage() {
     e.preventDefault();
     setSubmitError(null);
 
+    const _isRecurrentEarly = search.recurrent === "true" && search.recurrenceCount > 1;
+    console.warn("=== HANDLE SUBMIT START ===", {
+      parsedSlotsCount: parsedSlots?.length,
+      finalSlotsToCreateCount: finalSlotsToCreate?.length,
+      isRecurrent: _isRecurrentEarly,
+      isRecurrenceCheckout: _isRecurrentEarly && search.recurrenceCount > 1,
+      recurrenceCount: search.recurrenceCount,
+    });
+
     if (!room || !paramsValid || !dateObj) {
+      console.warn("=== EARLY RETURN ===", { reason: "missing_room_or_params" });
       setSubmitError("Date de rezervare incomplete.");
       return;
     }
-    if (!name.trim()) return setSubmitError("Completează numele complet.");
-    if (!isValidEmail(email)) return setSubmitError("Email invalid.");
-    if (!isValidPhone(phone)) return setSubmitError("Telefon invalid (minim 10 cifre).");
+    if (!name.trim()) {
+      console.warn("=== EARLY RETURN ===", { reason: "validation_failed_name" });
+      return setSubmitError("Completează numele complet.");
+    }
+    if (!isValidEmail(email)) {
+      console.warn("=== EARLY RETURN ===", { reason: "validation_failed_email" });
+      return setSubmitError("Email invalid.");
+    }
+    if (!isValidPhone(phone)) {
+      console.warn("=== EARLY RETURN ===", { reason: "validation_failed_phone" });
+      return setSubmitError("Telefon invalid (minim 10 cifre).");
+    }
 
     const isRecurrent = search.recurrent === "true" && search.recurrenceCount > 1;
 
@@ -799,10 +818,12 @@ function CheckoutPage() {
       finalSlotsToCreate.map((s) => ({ date: s.date, start: s.start, end: s.end }));
 
     if (allDateIntervals.length === 0) {
+      console.warn("=== EARLY RETURN ===", { reason: "no_final_slots" });
       setSubmitError("Niciun interval selectat.");
       return;
     }
     if (allDateIntervals.length > 50) {
+      console.warn("=== EARLY RETURN ===", { reason: "too_many_slots", count: allDateIntervals.length });
       setSubmitError(
         `Prea multe rezervări (${allDateIntervals.length}). Limita e 50. Reduce numărul de intervale sau perioada de recurență.`,
       );
@@ -815,6 +836,7 @@ function CheckoutPage() {
     try {
       const freshBusy = await checkSlotAvailability(finalSlotsToCreate);
       if (freshBusy.size > 0) {
+        console.warn("=== EARLY RETURN ===", { reason: "precheck_busy", count: freshBusy.size });
         setBusySlotKeys((prev) => {
           const merged = new Set(prev);
           freshBusy.forEach((k) => merged.add(k));
@@ -829,6 +851,7 @@ function CheckoutPage() {
         return;
       }
     } catch {
+      console.warn("=== EARLY RETURN ===", { reason: "precheck_threw" });
       setSubmitting(false);
       setSubmitError("Nu am putut verifica disponibilitatea. Reîncearcă peste câteva secunde.");
       return;
@@ -844,6 +867,14 @@ function CheckoutPage() {
         : 1;
     if (isRecurrent && !isMultiDay && parsedSlots.length === 1 && recurrenceDateCount > 1) {
       const dayOfWeek = getDayOfWeek(dateObj);
+      console.warn("=== INSERT RECURRENCES START ===", {
+        isRecurrenceCheckout: isRecurrent && search.recurrenceCount > 1,
+        room_id: room.id,
+        day_of_week: dayOfWeek,
+        total_bookings: recurrenceDateCount,
+        first_date: allDateIntervals[0].date,
+        last_date: allDateIntervals[allDateIntervals.length - 1].date,
+      });
       const { data: rec, error: recError } = await supabase
         .from("recurrences")
         .insert({
@@ -859,7 +890,14 @@ function CheckoutPage() {
         })
         .select()
         .single();
+      console.warn("=== INSERT RECURRENCES RESULT ===", {
+        data: rec,
+        error: recError,
+        errorMessage: recError?.message,
+        errorCode: (recError as { code?: string } | null)?.code,
+      });
       if (recError || !rec) {
+        console.warn("=== EARLY RETURN ===", { reason: "recurrences_insert_failed", error: recError?.message });
         setSubmitting(false);
         setSubmitError("Eroare la crearea rezervării recurente.");
         return;
@@ -947,11 +985,21 @@ function CheckoutPage() {
 
       console.warn("=== PAYLOAD CHEI ===", Object.keys(payload));
 
-      const { error: insErr } = await supabase
+      const { data: insertData, error: insErr } = await supabase
         .from("bookings")
-        .insert(payload);
+        .insert(payload)
+        .select()
+        .single();
+
+      console.warn("=== INSERT BOOKING RESULT ===", {
+        bookingId: (insertData as { id?: string } | null)?.id,
+        is_recurring_returned: (insertData as { is_recurring?: boolean } | null)?.is_recurring,
+        booking_group_id_returned: (insertData as { booking_group_id?: string } | null)?.booking_group_id,
+        error: insErr?.message,
+      });
 
       if (insErr) {
+        console.warn("=== EARLY RETURN (per-slot) ===", { reason: "booking_insert_failed", slot, error: insErr.message });
         results.push({ slot, success: false, error: insErr.message });
         continue;
       }
