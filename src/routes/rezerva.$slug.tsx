@@ -784,13 +784,32 @@ function CheckoutPage() {
     e.preventDefault();
     setSubmitError(null);
 
+    const _isRecurrentEarly = search.recurrent === "true" && search.recurrenceCount > 1;
+    console.warn("=== HANDLE SUBMIT START ===", {
+      parsedSlotsCount: parsedSlots?.length,
+      finalSlotsToCreateCount: finalSlotsToCreate?.length,
+      isRecurrent: _isRecurrentEarly,
+      isRecurrenceCheckout: _isRecurrentEarly && search.recurrenceCount > 1,
+      recurrenceCount: search.recurrenceCount,
+    });
+
     if (!room || !paramsValid || !dateObj) {
+      console.warn("=== EARLY RETURN ===", { reason: "missing_room_or_params" });
       setSubmitError("Date de rezervare incomplete.");
       return;
     }
-    if (!name.trim()) return setSubmitError("Completează numele complet.");
-    if (!isValidEmail(email)) return setSubmitError("Email invalid.");
-    if (!isValidPhone(phone)) return setSubmitError("Telefon invalid (minim 10 cifre).");
+    if (!name.trim()) {
+      console.warn("=== EARLY RETURN ===", { reason: "validation_failed_name" });
+      return setSubmitError("Completează numele complet.");
+    }
+    if (!isValidEmail(email)) {
+      console.warn("=== EARLY RETURN ===", { reason: "validation_failed_email" });
+      return setSubmitError("Email invalid.");
+    }
+    if (!isValidPhone(phone)) {
+      console.warn("=== EARLY RETURN ===", { reason: "validation_failed_phone" });
+      return setSubmitError("Telefon invalid (minim 10 cifre).");
+    }
 
     const isRecurrent = search.recurrent === "true" && search.recurrenceCount > 1;
 
