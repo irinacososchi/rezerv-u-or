@@ -1,9 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { OwnerLayout } from "@/components/owner-layout";
 import { supabase } from "@/integrations/supabase/external-client";
 import { BookingTimestamps } from "@/components/booking-timestamps";
+import { groupRecurringBookings } from "@/lib/group-recurring-bookings";
+import { RecurringGroupCard } from "@/components/owner/recurring-group-card";
+import { RecurringBadge } from "@/components/owner/recurring-badge";
 
 export const Route = createFileRoute("/proprietar/cereri")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -34,6 +37,8 @@ type BookingFull = {
   status: string;
   payment_status: string;
   recurrence_id: string | null;
+  is_recurring?: boolean;
+  booking_group_id?: string | null;
   created_at?: string;
   updated_at?: string;
 };
