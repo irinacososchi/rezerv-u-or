@@ -936,13 +936,16 @@ function CheckoutPage() {
         invoice_address: needsInvoice ? invoiceAddress.trim() : null,
       };
 
-      console.log("[DEBUG submit] payload:", {
+      console.warn("=== DEBUG SUBMIT ===", {
         is_recurring: payload.is_recurring,
         booking_group_id: payload.booking_group_id,
         isRecurrent: isRecurrent,
+        isRecurrenceCheckout: isRecurrenceCheckout,
         recurrenceCount: search.recurrenceCount,
         searchRecurrent: search.recurrent,
       });
+
+      console.warn("=== PAYLOAD CHEI ===", Object.keys(payload));
 
       const { error: insErr } = await supabase
         .from("bookings")
