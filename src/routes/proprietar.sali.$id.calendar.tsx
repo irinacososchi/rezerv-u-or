@@ -688,7 +688,7 @@ function RoomCalendarPage() {
                               <div className="font-medium truncate flex items-center gap-1">
                                 <span className="truncate">
                                   {e!.entry_type === "blocat"
-                                    ? (e!.reason ?? "Blocat")
+                                    ? previewReason(e!.reason)
                                     : (e!.renter_name ?? e!.reference ?? "Rezervare")}
                                 </span>
                                 {e!.recurrence_id && (
