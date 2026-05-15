@@ -254,40 +254,61 @@ function DashboardPage() {
               </Badge>
             </div>
             <div className="space-y-3">
-              {pendingList.map((b) => (
-                <Card key={b.id} className="border-orange-200">
-                  <CardContent className="p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div className="space-y-1">
-                      <p className="font-medium">{b.renter_name ?? b.renter_email ?? "Chiriaș"}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {b.room_name} · {formatDateRO(parseISODate(b.booking_date))} · {formatTimeRange(b.start_time, b.end_time)}
-                      </p>
-                      <p className="text-sm font-semibold text-primary">{formatRON(totalOf(b))}</p>
-                      <BookingTimestamps createdAt={b.created_at} updatedAt={b.updated_at} />
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        onClick={() => handleDecision(b.id, "confirmată")}
-                        disabled={actionId === b.id}
-                      >
-                        <Check className="h-4 w-4" />
-                        Aprobă
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDecision(b.id, "refuzată")}
-                        disabled={actionId === b.id}
-                        className="border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
-                      >
-                        <X className="h-4 w-4" />
-                        Refuză
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+              {pendingGrouped.map((item) => {
+                if (item.kind === "recurring_group") {
+                  return (
+                    <RecurringGroupCard
+                      key={`pgrp-${item.groupId}`}
+                      groupId={item.groupId}
+                      bookings={item.bookings}
+                      onApproveAll={(gid) => bulkUpdateStatus({ groupId: gid }, "confirmată")}
+                      onRefuseAll={(gid) => bulkUpdateStatus({ groupId: gid }, "refuzată")}
+                      onApproveSelected={(ids) => bulkUpdateStatus({ ids }, "confirmată")}
+                      onRefuseSelected={(ids) => bulkUpdateStatus({ ids }, "refuzată")}
+                    />
+                  );
+                }
+                const b = item.booking as unknown as BookingFull;
+                return (
+                  <Card key={b.id} className="border-orange-200">
+                    <CardContent className="p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                      <div className="space-y-1">
+                        <p className="font-medium">
+                          {b.renter_name ?? b.renter_email ?? "Chiriaș"}
+                          {b.is_recurring && (
+                            <span className="ml-2 inline-block align-middle"><RecurringBadge /></span>
+                          )}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {b.room_name} · {formatDateRO(parseISODate(b.booking_date))} · {formatTimeRange(b.start_time, b.end_time)}
+                        </p>
+                        <p className="text-sm font-semibold text-primary">{formatRON(totalOf(b))}</p>
+                        <BookingTimestamps createdAt={b.created_at} updatedAt={b.updated_at} />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleDecision(b.id, "confirmată")}
+                          disabled={actionId === b.id}
+                        >
+                          <Check className="h-4 w-4" />
+                          Aprobă
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDecision(b.id, "refuzată")}
+                          disabled={actionId === b.id}
+                          className="border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
+                        >
+                          <X className="h-4 w-4" />
+                          Refuză
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </section>
         )}
