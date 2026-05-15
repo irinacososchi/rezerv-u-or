@@ -877,6 +877,8 @@ function CheckoutPage() {
     const applyVoucher =
       allDateIntervals.length === 1 && !!voucher && discountAmount > 0;
 
+    const isRecurrenceCheckout = isRecurrent && search.recurrenceCount > 1;
+
     const results: {
       slot: { date: string; start: string; end: string };
       success: boolean;
