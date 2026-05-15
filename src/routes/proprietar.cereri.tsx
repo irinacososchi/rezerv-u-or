@@ -11,6 +11,7 @@ import { RecurringBadge } from "@/components/owner/recurring-badge";
 export const Route = createFileRoute("/proprietar/cereri")({
   validateSearch: (s: Record<string, unknown>) => ({
     q: typeof s.q === "string" ? s.q : "",
+    group: typeof s.group === "string" ? s.group : "",
   }),
   head: () => ({
     meta: [
