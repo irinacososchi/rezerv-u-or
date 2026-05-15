@@ -1333,7 +1333,9 @@ function BlockDetails({
   onChanged: () => void;
 }) {
   const [busy, setBusy] = useState(false);
-  const [reason, setReason] = useState<string | null>(entry.reason ?? null);
+  const [saving, setSaving] = useState(false);
+  const [reason, setReason] = useState<string>(entry.reason ?? "");
+  const [initialReason, setInitialReason] = useState<string>(entry.reason ?? "");
 
   useEffect(() => {
     let cancelled = false;
@@ -1349,8 +1351,9 @@ function BlockDetails({
           .reason ??
         (data as { notes?: string | null }).notes ??
         (data as { renter_notes?: string | null }).renter_notes ??
-        null;
-      setReason(val);
+        "";
+      setReason(val ?? "");
+      setInitialReason(val ?? "");
     })();
     return () => {
       cancelled = true;
@@ -1367,6 +1370,24 @@ function BlockDetails({
     onClose();
   }
 
+  async function saveReason() {
+    setSaving(true);
+    const { error } = await supabase
+      .from("bookings")
+      .update({ reason: reason.trim() || null })
+      .eq("id", entry.id);
+    setSaving(false);
+    if (error) {
+      toast.error("Eroare la salvarea motivului");
+      return;
+    }
+    setInitialReason(reason);
+    toast.success("Motiv actualizat");
+    onChanged();
+  }
+
+  const dirty = reason.trim() !== (initialReason ?? "").trim();
+
   return (
     <>
       <DialogHeader>
@@ -1376,7 +1397,19 @@ function BlockDetails({
         </DialogDescription>
       </DialogHeader>
       <div className="space-y-2 text-sm">
-        <Row label="Motiv" value={reason && reason.trim() ? reason : "—"} />
+        <Label htmlFor="block-reason">Motiv</Label>
+        <Textarea
+          id="block-reason"
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder="Adaugă un motiv (opțional)"
+          rows={3}
+        />
+        <div className="flex justify-end">
+          <Button size="sm" variant="outline" onClick={saveReason} disabled={!dirty || saving}>
+            {saving ? "Se salvează…" : "Salvează motivul"}
+          </Button>
+        </div>
       </div>
       <DialogFooter className="gap-2">
         <Button onClick={unblock} disabled={busy}>
