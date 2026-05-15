@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { OwnerLayout } from "@/components/owner-layout";
 import { supabase } from "@/integrations/supabase/external-client";
@@ -11,6 +11,7 @@ import { RecurringBadge } from "@/components/owner/recurring-badge";
 export const Route = createFileRoute("/proprietar/cereri")({
   validateSearch: (s: Record<string, unknown>) => ({
     q: typeof s.q === "string" ? s.q : "",
+    group: typeof s.group === "string" ? s.group : "",
   }),
   head: () => ({
     meta: [
@@ -159,7 +160,8 @@ function ActionButtons({
 }
 
 function CereriPage() {
-  const { q: initialQ } = Route.useSearch();
+  const { q: initialQ, group: groupParam } = Route.useSearch();
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState<BookingFull[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState("");
@@ -220,6 +222,7 @@ function CereriPage() {
   }
 
   const filtered = bookings.filter((b) => {
+    if (groupParam && b.booking_group_id !== groupParam) return false;
     if (filterStatus !== "toate" && b.status !== filterStatus) return false;
     if (filterRoom !== "toate" && b.room_id !== filterRoom) return false;
     if (filterDateFrom && b.booking_date < filterDateFrom) return false;
@@ -308,6 +311,20 @@ function CereriPage() {
           </p>
         </div>
       </div>
+
+      {groupParam && (
+        <div className="mb-4 flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-4 py-2">
+          <span className="text-sm text-blue-800">
+            Filtrat la o serie recurentă specifică
+          </span>
+          <button
+            onClick={() => navigate({ to: "/proprietar/cereri", search: { q: "", group: "" } })}
+            className="text-xs text-primary hover:underline"
+          >
+            Curăță filtru
+          </button>
+        </div>
+      )}
 
       {/* Filtre */}
       <div className="rounded-xl border border-border bg-background p-4 mb-6">

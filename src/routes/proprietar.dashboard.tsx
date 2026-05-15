@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { OwnerLayout } from "@/components/owner-layout";
 import { supabase } from "@/integrations/supabase/external-client";
@@ -9,6 +9,13 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDateRO, parseISODate } from "@/lib/date-utils";
 import { BookingTimestamps } from "@/components/booking-timestamps";
+import {
+  groupRecurringBookings,
+  getGroupStatusSummary,
+  getGroupStatusLabel,
+} from "@/lib/group-recurring-bookings";
+import { RecurringGroupCard } from "@/components/owner/recurring-group-card";
+import { RecurringBadge } from "@/components/owner/recurring-badge";
 
 export const Route = createFileRoute("/proprietar/dashboard")({
   component: DashboardPage,
@@ -19,8 +26,10 @@ type BookingFull = {
   reference: string | null;
   room_id: string;
   room_name: string | null;
+  room_currency: string | null;
   renter_name: string | null;
   renter_email: string | null;
+  renter_phone: string | null;
   booking_date: string;
   start_time: string;
   end_time: string;
@@ -31,6 +40,8 @@ type BookingFull = {
   payment_method: string | null;
   created_at: string;
   updated_at?: string;
+  is_recurring?: boolean;
+  booking_group_id?: string | null;
 };
 
 type Room = { id: string; name: string; is_active: boolean };
@@ -161,6 +172,27 @@ function DashboardPage() {
     await loadDashboard();
   }
 
+  async function bulkUpdateStatus(filter: { groupId?: string; ids?: string[] }, newStatus: string) {
+    let q = supabase.from("bookings").update({ status: newStatus }).eq("status", "în așteptare");
+    if (filter.groupId) q = q.eq("booking_group_id", filter.groupId);
+    if (filter.ids) q = q.in("id", filter.ids);
+    const { error } = await q;
+    if (error) {
+      alert("Eroare: " + error.message);
+      return;
+    }
+    await loadDashboard();
+  }
+
+  const pendingGrouped = useMemo(
+    () => groupRecurringBookings(pendingList as any),
+    [pendingList],
+  );
+  const recentGrouped = useMemo(
+    () => groupRecurringBookings(recentList as any),
+    [recentList],
+  );
+
   if (loading) {
     return (
       <OwnerLayout>
@@ -222,40 +254,61 @@ function DashboardPage() {
               </Badge>
             </div>
             <div className="space-y-3">
-              {pendingList.map((b) => (
-                <Card key={b.id} className="border-orange-200">
-                  <CardContent className="p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div className="space-y-1">
-                      <p className="font-medium">{b.renter_name ?? b.renter_email ?? "Chiriaș"}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {b.room_name} · {formatDateRO(parseISODate(b.booking_date))} · {formatTimeRange(b.start_time, b.end_time)}
-                      </p>
-                      <p className="text-sm font-semibold text-primary">{formatRON(totalOf(b))}</p>
-                      <BookingTimestamps createdAt={b.created_at} updatedAt={b.updated_at} />
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        onClick={() => handleDecision(b.id, "confirmată")}
-                        disabled={actionId === b.id}
-                      >
-                        <Check className="h-4 w-4" />
-                        Aprobă
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDecision(b.id, "refuzată")}
-                        disabled={actionId === b.id}
-                        className="border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
-                      >
-                        <X className="h-4 w-4" />
-                        Refuză
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+              {pendingGrouped.map((item) => {
+                if (item.kind === "recurring_group") {
+                  return (
+                    <RecurringGroupCard
+                      key={`pgrp-${item.groupId}`}
+                      groupId={item.groupId}
+                      bookings={item.bookings}
+                      onApproveAll={(gid) => bulkUpdateStatus({ groupId: gid }, "confirmată")}
+                      onRefuseAll={(gid) => bulkUpdateStatus({ groupId: gid }, "refuzată")}
+                      onApproveSelected={(ids) => bulkUpdateStatus({ ids }, "confirmată")}
+                      onRefuseSelected={(ids) => bulkUpdateStatus({ ids }, "refuzată")}
+                    />
+                  );
+                }
+                const b = item.booking as unknown as BookingFull;
+                return (
+                  <Card key={b.id} className="border-orange-200">
+                    <CardContent className="p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                      <div className="space-y-1">
+                        <p className="font-medium">
+                          {b.renter_name ?? b.renter_email ?? "Chiriaș"}
+                          {b.is_recurring && (
+                            <span className="ml-2 inline-block align-middle"><RecurringBadge /></span>
+                          )}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {b.room_name} · {formatDateRO(parseISODate(b.booking_date))} · {formatTimeRange(b.start_time, b.end_time)}
+                        </p>
+                        <p className="text-sm font-semibold text-primary">{formatRON(totalOf(b))}</p>
+                        <BookingTimestamps createdAt={b.created_at} updatedAt={b.updated_at} />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleDecision(b.id, "confirmată")}
+                          disabled={actionId === b.id}
+                        >
+                          <Check className="h-4 w-4" />
+                          Aprobă
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDecision(b.id, "refuzată")}
+                          disabled={actionId === b.id}
+                          className="border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
+                        >
+                          <X className="h-4 w-4" />
+                          Refuză
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </section>
         )}
@@ -283,62 +336,155 @@ function DashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {recentList.map((b) => (
-                      <tr
-                        key={b.id}
-                        className="border-t cursor-pointer hover:bg-muted/50 transition-colors"
-                        onClick={() =>
-                          navigate({
-                            to: "/proprietar/cereri",
-                            search: { q: b.reference ?? "" },
-                          })
-                        }
-                      >
-                        <td className="px-3 py-2 font-mono text-xs text-primary underline-offset-2 hover:underline">
-                          {b.reference ?? "—"}
-                        </td>
-                        <td className="px-3 py-2">{b.room_name}</td>
-                        <td className="px-3 py-2">{b.renter_name ?? b.renter_email ?? "—"}</td>
-                        <td className="px-3 py-2">{formatDateShort(b.booking_date)}</td>
-                        <td className="px-3 py-2">{formatTimeRange(b.start_time, b.end_time)}</td>
-                        <td className="px-3 py-2 font-medium">{formatRON(totalOf(b))}</td>
-                        <td className="px-3 py-2"><StatusBadge status={b.status} /></td>
-                        <td className="px-3 py-2"><PaymentBadge status={b.payment_status} /></td>
-                      </tr>
-                    ))}
+                    {recentGrouped.map((item) => {
+                      if (item.kind === "recurring_group") {
+                        const rep = item.bookings[0] as unknown as BookingFull;
+                        const firstDate = item.bookings[0].booking_date;
+                        const lastDate = item.bookings[item.bookings.length - 1].booking_date;
+                        const totalAmount = item.bookings.reduce(
+                          (s, x) => s + Number(x.total_amount ?? 0),
+                          0,
+                        );
+                        const summary = getGroupStatusSummary(item.bookings);
+                        const statusLabel = getGroupStatusLabel(summary);
+                        const renterName = rep.renter_name ?? rep.renter_email ?? "—";
+                        return (
+                          <tr
+                            key={`grp-${item.groupId}`}
+                            className="border-t cursor-pointer hover:bg-blue-50/50 bg-blue-50/20 transition-colors"
+                            onClick={() =>
+                              navigate({
+                                to: "/proprietar/cereri",
+                                search: { q: "", group: item.groupId },
+                              })
+                            }
+                          >
+                            <td className="px-3 py-2">
+                              <RecurringBadge count={item.bookings.length} />
+                            </td>
+                            <td className="px-3 py-2">{rep.room_name}</td>
+                            <td className="px-3 py-2">{renterName}</td>
+                            <td className="px-3 py-2">
+                              {formatDateShort(firstDate)} → {formatDateShort(lastDate)}
+                            </td>
+                            <td className="px-3 py-2">{formatTimeRange(rep.start_time, rep.end_time)}</td>
+                            <td className="px-3 py-2 font-medium">
+                              {totalAmount.toFixed(2)} {rep.room_currency ?? "RON"}
+                            </td>
+                            <td className="px-3 py-2" colSpan={2}>
+                              <span className="text-xs text-muted-foreground">{statusLabel.label}</span>
+                            </td>
+                          </tr>
+                        );
+                      }
+                      const b = item.booking as unknown as BookingFull;
+                      return (
+                        <tr
+                          key={b.id}
+                          className="border-t cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() =>
+                            navigate({
+                              to: "/proprietar/cereri",
+                              search: { q: b.reference ?? "", group: "" },
+                            })
+                          }
+                        >
+                          <td className="px-3 py-2 font-mono text-xs text-primary underline-offset-2 hover:underline">
+                            {b.reference ?? "—"}
+                            {b.is_recurring && (
+                              <span className="ml-1.5 inline-block align-middle"><RecurringBadge /></span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2">{b.room_name}</td>
+                          <td className="px-3 py-2">{b.renter_name ?? b.renter_email ?? "—"}</td>
+                          <td className="px-3 py-2">{formatDateShort(b.booking_date)}</td>
+                          <td className="px-3 py-2">{formatTimeRange(b.start_time, b.end_time)}</td>
+                          <td className="px-3 py-2 font-medium">{formatRON(totalOf(b))}</td>
+                          <td className="px-3 py-2"><StatusBadge status={b.status} /></td>
+                          <td className="px-3 py-2"><PaymentBadge status={b.payment_status} /></td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
 
               {/* Mobile cards */}
               <div className="md:hidden space-y-3">
-                {recentList.map((b) => (
-                  <Link
-                    key={b.id}
-                    to="/proprietar/cereri"
-                    search={{ q: b.reference ?? "" }}
-                    className="block"
-                  >
-                    <Card className="hover:bg-muted/50 transition-colors">
-                      <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between space-y-0">
-                        <div>
-                          <CardTitle className="text-sm">{b.room_name}</CardTitle>
-                          <p className="text-xs text-muted-foreground mt-1">{b.renter_name ?? b.renter_email ?? "—"}</p>
-                        </div>
-                        <span className="font-mono text-[10px] text-primary">{b.reference ?? ""}</span>
-                      </CardHeader>
-                      <CardContent className="p-4 pt-2 space-y-2">
-                        <p className="text-sm">{formatDateShort(b.booking_date)} · {formatTimeRange(b.start_time, b.end_time)}</p>
-                        <p className="text-sm font-semibold text-primary">{formatRON(totalOf(b))}</p>
-                        <div className="flex gap-2 flex-wrap">
-                          <StatusBadge status={b.status} />
-                          <PaymentBadge status={b.payment_status} />
-                        </div>
-                        <BookingTimestamps createdAt={b.created_at} updatedAt={b.updated_at} />
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
+                {recentGrouped.map((item) => {
+                  if (item.kind === "recurring_group") {
+                    const rep = item.bookings[0] as unknown as BookingFull;
+                    const firstDate = item.bookings[0].booking_date;
+                    const lastDate = item.bookings[item.bookings.length - 1].booking_date;
+                    const totalAmount = item.bookings.reduce(
+                      (s, x) => s + Number(x.total_amount ?? 0),
+                      0,
+                    );
+                    const summary = getGroupStatusSummary(item.bookings);
+                    const statusLabel = getGroupStatusLabel(summary);
+                    const renterName = rep.renter_name ?? rep.renter_email ?? "—";
+                    return (
+                      <Link
+                        key={`grp-${item.groupId}`}
+                        to="/proprietar/cereri"
+                        search={{ q: "", group: item.groupId }}
+                        className="block"
+                      >
+                        <Card className="border-blue-200 bg-blue-50/30 hover:bg-blue-50/60 transition-colors">
+                          <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between space-y-0">
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <CardTitle className="text-sm">{rep.room_name}</CardTitle>
+                                <RecurringBadge count={item.bookings.length} />
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-1">{renterName}</p>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="p-4 pt-2 space-y-2">
+                            <p className="text-sm">
+                              {formatDateShort(firstDate)} → {formatDateShort(lastDate)} · {formatTimeRange(rep.start_time, rep.end_time)}
+                            </p>
+                            <p className="text-sm font-semibold text-primary">
+                              {totalAmount.toFixed(2)} {rep.room_currency ?? "RON"}
+                            </p>
+                            <p className="text-xs text-muted-foreground">{statusLabel.label}</p>
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    );
+                  }
+                  const b = item.booking as unknown as BookingFull;
+                  return (
+                    <Link
+                      key={b.id}
+                      to="/proprietar/cereri"
+                      search={{ q: b.reference ?? "", group: "" }}
+                      className="block"
+                    >
+                      <Card className="hover:bg-muted/50 transition-colors">
+                        <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between space-y-0">
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <CardTitle className="text-sm">{b.room_name}</CardTitle>
+                              {b.is_recurring && <RecurringBadge />}
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">{b.renter_name ?? b.renter_email ?? "—"}</p>
+                          </div>
+                          <span className="font-mono text-[10px] text-primary">{b.reference ?? ""}</span>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-2 space-y-2">
+                          <p className="text-sm">{formatDateShort(b.booking_date)} · {formatTimeRange(b.start_time, b.end_time)}</p>
+                          <p className="text-sm font-semibold text-primary">{formatRON(totalOf(b))}</p>
+                          <div className="flex gap-2 flex-wrap">
+                            <StatusBadge status={b.status} />
+                            <PaymentBadge status={b.payment_status} />
+                          </div>
+                          <BookingTimestamps createdAt={b.created_at} updatedAt={b.updated_at} />
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  );
+                })}
               </div>
             </>
           )}
