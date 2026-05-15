@@ -172,6 +172,27 @@ function DashboardPage() {
     await loadDashboard();
   }
 
+  async function bulkUpdateStatus(filter: { groupId?: string; ids?: string[] }, newStatus: string) {
+    let q = supabase.from("bookings").update({ status: newStatus }).eq("status", "în așteptare");
+    if (filter.groupId) q = q.eq("booking_group_id", filter.groupId);
+    if (filter.ids) q = q.in("id", filter.ids);
+    const { error } = await q;
+    if (error) {
+      alert("Eroare: " + error.message);
+      return;
+    }
+    await loadDashboard();
+  }
+
+  const pendingGrouped = useMemo(
+    () => groupRecurringBookings(pendingList as any),
+    [pendingList],
+  );
+  const recentGrouped = useMemo(
+    () => groupRecurringBookings(recentList as any),
+    [recentList],
+  );
+
   if (loading) {
     return (
       <OwnerLayout>
