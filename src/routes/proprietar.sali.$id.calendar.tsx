@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/external-client";
 import { OwnerLayout } from "@/components/owner-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -97,14 +96,6 @@ type Entry = {
   recurrence_id?: string | null;
   recurrence_index?: number | null;
 };
-
-function previewReason(reason?: string | null): string {
-  const r = (reason ?? "").trim();
-  if (!r) return "Blocat";
-  const words = r.split(/\s+/);
-  if (words.length <= 2) return r;
-  return words.slice(0, 2).join(" ") + "…";
-}
 
 function startOfWeek(d: Date): Date {
   const dow = getDayOfWeek(d);
@@ -283,34 +274,7 @@ function RoomCalendarPage() {
       setEntries([]);
       return;
     }
-    const list = (data ?? []) as Entry[];
-    // Hydrate `reason` for blocked entries from bookings table (the view may omit it)
-    const blockedIds = list
-      .filter((e) => e.entry_type === "blocat" && (e.reason == null || e.reason === ""))
-      .map((e) => e.id);
-    if (blockedIds.length > 0) {
-      const { data: rows } = await supabase
-        .from("bookings")
-        .select("id, reason, notes, renter_notes")
-        .in("id", blockedIds);
-      if (rows && rows.length) {
-        const byId = new Map<string, string | null>();
-        for (const r of rows as Array<{
-          id: string;
-          reason?: string | null;
-          notes?: string | null;
-          renter_notes?: string | null;
-        }>) {
-          byId.set(r.id, r.reason ?? r.notes ?? r.renter_notes ?? null);
-        }
-        for (const e of list) {
-          if (e.entry_type === "blocat" && byId.has(e.id)) {
-            e.reason = byId.get(e.id) ?? null;
-          }
-        }
-      }
-    }
-    setEntries(list);
+    setEntries((data ?? []) as Entry[]);
   }, [id, view, weekStart, monthAnchor, selectedDay]);
 
   useEffect(() => {
@@ -688,7 +652,7 @@ function RoomCalendarPage() {
                               <div className="font-medium truncate flex items-center gap-1">
                                 <span className="truncate">
                                   {e!.entry_type === "blocat"
-                                    ? previewReason(e!.reason)
+                                    ? (e!.reason ?? "Blocat")
                                     : (e!.renter_name ?? e!.reference ?? "Rezervare")}
                                 </span>
                                 {e!.recurrence_id && (
@@ -773,7 +737,7 @@ function RoomCalendarPage() {
                               <div className="truncate font-medium flex items-center gap-1">
                                 <span className="truncate">
                                   {e!.entry_type === "blocat"
-                                    ? previewReason(e!.reason)
+                                    ? (e!.reason ?? "Blocat")
                                     : (e!.renter_name ?? e!.reference ?? "Rezervare")}
                                 </span>
                                 {e!.recurrence_id && (
@@ -1333,9 +1297,7 @@ function BlockDetails({
   onChanged: () => void;
 }) {
   const [busy, setBusy] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [reason, setReason] = useState<string>(entry.reason ?? "");
-  const [initialReason, setInitialReason] = useState<string>(entry.reason ?? "");
+  const [reason, setReason] = useState<string | null>(entry.reason ?? null);
 
   useEffect(() => {
     let cancelled = false;
@@ -1351,9 +1313,8 @@ function BlockDetails({
           .reason ??
         (data as { notes?: string | null }).notes ??
         (data as { renter_notes?: string | null }).renter_notes ??
-        "";
-      setReason(val ?? "");
-      setInitialReason(val ?? "");
+        null;
+      setReason(val);
     })();
     return () => {
       cancelled = true;
@@ -1370,24 +1331,6 @@ function BlockDetails({
     onClose();
   }
 
-  async function saveReason() {
-    setSaving(true);
-    const { error } = await supabase
-      .from("bookings")
-      .update({ reason: reason.trim() || null })
-      .eq("id", entry.id);
-    setSaving(false);
-    if (error) {
-      toast.error("Eroare la salvarea motivului");
-      return;
-    }
-    setInitialReason(reason);
-    toast.success("Motiv actualizat");
-    onChanged();
-  }
-
-  const dirty = reason.trim() !== (initialReason ?? "").trim();
-
   return (
     <>
       <DialogHeader>
@@ -1397,19 +1340,7 @@ function BlockDetails({
         </DialogDescription>
       </DialogHeader>
       <div className="space-y-2 text-sm">
-        <Label htmlFor="block-reason">Motiv</Label>
-        <Textarea
-          id="block-reason"
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-          placeholder="Adaugă un motiv (opțional)"
-          rows={3}
-        />
-        <div className="flex justify-end">
-          <Button size="sm" variant="outline" onClick={saveReason} disabled={!dirty || saving}>
-            {saving ? "Se salvează…" : "Salvează motivul"}
-          </Button>
-        </div>
+        <Row label="Motiv" value={reason && reason.trim() ? reason : "—"} />
       </div>
       <DialogFooter className="gap-2">
         <Button onClick={unblock} disabled={busy}>
