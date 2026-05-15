@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/external-client";
 import { OwnerLayout } from "@/components/owner-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -96,6 +97,15 @@ type Entry = {
   recurrence_id?: string | null;
   recurrence_index?: number | null;
 };
+
+function blockNotePreview(notes?: string | null): string | null {
+  if (!notes) return null;
+  const t = notes.trim();
+  if (!t || t === "Rezervat de proprietar") return null;
+  const words = t.split(/\s+/);
+  if (words.length <= 2) return words.join(" ");
+  return words.slice(0, 2).join(" ") + "...";
+}
 
 function startOfWeek(d: Date): Date {
   const dow = getDayOfWeek(d);
@@ -652,13 +662,18 @@ function RoomCalendarPage() {
                               <div className="font-medium truncate flex items-center gap-1">
                                 <span className="truncate">
                                   {e!.entry_type === "blocat"
-                                    ? (e!.reason ?? "Blocat")
+                                    ? "Blocat"
                                     : (e!.renter_name ?? e!.reference ?? "Rezervare")}
                                 </span>
                                 {e!.recurrence_id && (
                                   <span className="text-[10px]" title="Rezervare recurentă">↻</span>
                                 )}
                               </div>
+                              {e!.entry_type === "blocat" && blockNotePreview(e!.renter_notes) && (
+                                <div className="text-[11px] text-muted-foreground truncate overflow-hidden text-ellipsis whitespace-nowrap">
+                                  {blockNotePreview(e!.renter_notes)}
+                                </div>
+                              )}
                               <div className="text-xs text-muted-foreground mt-0.5">
                                 {e!.start_time?.slice(0, 5)}–{e!.end_time?.slice(0, 5)}
                                 {e!.entry_type !== "blocat" &&
@@ -734,18 +749,25 @@ function RoomCalendarPage() {
                             }
                           >
                             {showLabel && (
-                              <div className="truncate font-medium flex items-center gap-1">
-                                <span className="truncate">
-                                  {e!.entry_type === "blocat"
-                                    ? (e!.reason ?? "Blocat")
-                                    : (e!.renter_name ?? e!.reference ?? "Rezervare")}
-                                </span>
-                                {e!.recurrence_id && (
-                                  <span className="text-[9px] leading-none" title="Rezervare recurentă">
-                                    ↻
+                              <>
+                                <div className="truncate font-medium flex items-center gap-1">
+                                  <span className="truncate">
+                                    {e!.entry_type === "blocat"
+                                      ? "Blocat"
+                                      : (e!.renter_name ?? e!.reference ?? "Rezervare")}
                                   </span>
+                                  {e!.recurrence_id && (
+                                    <span className="text-[9px] leading-none" title="Rezervare recurentă">
+                                      ↻
+                                    </span>
+                                  )}
+                                </div>
+                                {e!.entry_type === "blocat" && blockNotePreview(e!.renter_notes) && (
+                                  <div className="text-[10px] text-muted-foreground truncate overflow-hidden text-ellipsis whitespace-nowrap leading-tight">
+                                    {blockNotePreview(e!.renter_notes)}
+                                  </div>
                                 )}
-                              </div>
+                              </>
                             )}
                           </button>
                         );
@@ -1297,29 +1319,46 @@ function BlockDetails({
   onChanged: () => void;
 }) {
   const [busy, setBusy] = useState(false);
-  const [reason, setReason] = useState<string | null>(entry.reason ?? null);
+  const [saving, setSaving] = useState(false);
+  const [reason, setReason] = useState<string>(entry.renter_notes ?? entry.reason ?? "");
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("bookings")
-        .select("reason, notes, renter_notes")
+        .select("id, room_id, booking_date, start_time, end_time, renter_notes, status")
         .eq("id", entry.id)
+        .eq("status", "blocată")
         .maybeSingle();
-      if (cancelled || !data) return;
-      const val =
-        (data as { reason?: string | null; notes?: string | null; renter_notes?: string | null })
-          .reason ??
-        (data as { notes?: string | null }).notes ??
-        (data as { renter_notes?: string | null }).renter_notes ??
-        null;
-      setReason(val);
+      if (cancelled) return;
+      if (error) {
+        console.error("load block reason error", error);
+        return;
+      }
+      if (!data) return;
+      setReason((data as { renter_notes?: string | null }).renter_notes ?? "");
     })();
     return () => {
       cancelled = true;
     };
   }, [entry.id]);
+
+  async function saveReason() {
+    setSaving(true);
+    const { error } = await supabase
+      .from("bookings")
+      .update({ renter_notes: reason.trim() || null })
+      .eq("id", entry.id)
+      .eq("status", "blocată");
+    setSaving(false);
+    if (error) {
+      toast.error(error.message || "Eroare la salvarea motivului");
+      return;
+    }
+    toast.success("Motiv salvat");
+    onChanged();
+  }
 
   async function unblock() {
     setBusy(true);
@@ -1340,7 +1379,19 @@ function BlockDetails({
         </DialogDescription>
       </DialogHeader>
       <div className="space-y-2 text-sm">
-        <Row label="Motiv" value={reason && reason.trim() ? reason : "—"} />
+        <Label htmlFor="block-reason">Motiv blocare</Label>
+        <Textarea
+          id="block-reason"
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder="Ex: Curs privat, mentenanță..."
+          rows={3}
+        />
+        <div className="flex justify-end">
+          <Button size="sm" variant="secondary" onClick={saveReason} disabled={saving}>
+            {saving ? "Se salvează..." : "Salvează motiv"}
+          </Button>
+        </div>
       </div>
       <DialogFooter className="gap-2">
         <Button onClick={unblock} disabled={busy}>
