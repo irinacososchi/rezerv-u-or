@@ -98,6 +98,15 @@ type Entry = {
   recurrence_index?: number | null;
 };
 
+function blockNotePreview(notes?: string | null): string | null {
+  if (!notes) return null;
+  const t = notes.trim();
+  if (!t || t === "Rezervat de proprietar") return null;
+  const words = t.split(/\s+/);
+  if (words.length <= 2) return words.join(" ");
+  return words.slice(0, 2).join(" ") + "...";
+}
+
 function startOfWeek(d: Date): Date {
   const dow = getDayOfWeek(d);
   return addDays(d, -(dow - 1));
