@@ -336,29 +336,75 @@ function DashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {recentList.map((b) => (
-                      <tr
-                        key={b.id}
-                        className="border-t cursor-pointer hover:bg-muted/50 transition-colors"
-                        onClick={() =>
-                          navigate({
-                            to: "/proprietar/cereri",
-                            search: { q: b.reference ?? "" },
-                          })
-                        }
-                      >
-                        <td className="px-3 py-2 font-mono text-xs text-primary underline-offset-2 hover:underline">
-                          {b.reference ?? "—"}
-                        </td>
-                        <td className="px-3 py-2">{b.room_name}</td>
-                        <td className="px-3 py-2">{b.renter_name ?? b.renter_email ?? "—"}</td>
-                        <td className="px-3 py-2">{formatDateShort(b.booking_date)}</td>
-                        <td className="px-3 py-2">{formatTimeRange(b.start_time, b.end_time)}</td>
-                        <td className="px-3 py-2 font-medium">{formatRON(totalOf(b))}</td>
-                        <td className="px-3 py-2"><StatusBadge status={b.status} /></td>
-                        <td className="px-3 py-2"><PaymentBadge status={b.payment_status} /></td>
-                      </tr>
-                    ))}
+                    {recentGrouped.map((item) => {
+                      if (item.kind === "recurring_group") {
+                        const rep = item.bookings[0] as unknown as BookingFull;
+                        const firstDate = item.bookings[0].booking_date;
+                        const lastDate = item.bookings[item.bookings.length - 1].booking_date;
+                        const totalAmount = item.bookings.reduce(
+                          (s, x) => s + Number(x.total_amount ?? 0),
+                          0,
+                        );
+                        const summary = getGroupStatusSummary(item.bookings);
+                        const statusLabel = getGroupStatusLabel(summary);
+                        const renterName = rep.renter_name ?? rep.renter_email ?? "—";
+                        return (
+                          <tr
+                            key={`grp-${item.groupId}`}
+                            className="border-t cursor-pointer hover:bg-blue-50/50 bg-blue-50/20 transition-colors"
+                            onClick={() =>
+                              navigate({
+                                to: "/proprietar/cereri",
+                                search: { q: "", group: item.groupId },
+                              })
+                            }
+                          >
+                            <td className="px-3 py-2">
+                              <RecurringBadge count={item.bookings.length} />
+                            </td>
+                            <td className="px-3 py-2">{rep.room_name}</td>
+                            <td className="px-3 py-2">{renterName}</td>
+                            <td className="px-3 py-2">
+                              {formatDateShort(firstDate)} → {formatDateShort(lastDate)}
+                            </td>
+                            <td className="px-3 py-2">{formatTimeRange(rep.start_time, rep.end_time)}</td>
+                            <td className="px-3 py-2 font-medium">
+                              {totalAmount.toFixed(2)} {rep.room_currency ?? "RON"}
+                            </td>
+                            <td className="px-3 py-2" colSpan={2}>
+                              <span className="text-xs text-muted-foreground">{statusLabel.label}</span>
+                            </td>
+                          </tr>
+                        );
+                      }
+                      const b = item.booking as unknown as BookingFull;
+                      return (
+                        <tr
+                          key={b.id}
+                          className="border-t cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() =>
+                            navigate({
+                              to: "/proprietar/cereri",
+                              search: { q: b.reference ?? "", group: "" },
+                            })
+                          }
+                        >
+                          <td className="px-3 py-2 font-mono text-xs text-primary underline-offset-2 hover:underline">
+                            {b.reference ?? "—"}
+                            {b.is_recurring && (
+                              <span className="ml-1.5 inline-block align-middle"><RecurringBadge /></span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2">{b.room_name}</td>
+                          <td className="px-3 py-2">{b.renter_name ?? b.renter_email ?? "—"}</td>
+                          <td className="px-3 py-2">{formatDateShort(b.booking_date)}</td>
+                          <td className="px-3 py-2">{formatTimeRange(b.start_time, b.end_time)}</td>
+                          <td className="px-3 py-2 font-medium">{formatRON(totalOf(b))}</td>
+                          <td className="px-3 py-2"><StatusBadge status={b.status} /></td>
+                          <td className="px-3 py-2"><PaymentBadge status={b.payment_status} /></td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
