@@ -98,6 +98,14 @@ type Entry = {
   recurrence_index?: number | null;
 };
 
+function previewReason(reason?: string | null): string {
+  const r = (reason ?? "").trim();
+  if (!r) return "Blocat";
+  const words = r.split(/\s+/);
+  if (words.length <= 2) return r;
+  return words.slice(0, 2).join(" ") + "…";
+}
+
 function startOfWeek(d: Date): Date {
   const dow = getDayOfWeek(d);
   return addDays(d, -(dow - 1));
