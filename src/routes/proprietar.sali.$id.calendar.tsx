@@ -749,18 +749,25 @@ function RoomCalendarPage() {
                             }
                           >
                             {showLabel && (
-                              <div className="truncate font-medium flex items-center gap-1">
-                                <span className="truncate">
-                                  {e!.entry_type === "blocat"
-                                    ? (e!.reason ?? "Blocat")
-                                    : (e!.renter_name ?? e!.reference ?? "Rezervare")}
-                                </span>
-                                {e!.recurrence_id && (
-                                  <span className="text-[9px] leading-none" title="Rezervare recurentă">
-                                    ↻
+                              <>
+                                <div className="truncate font-medium flex items-center gap-1">
+                                  <span className="truncate">
+                                    {e!.entry_type === "blocat"
+                                      ? "Blocat"
+                                      : (e!.renter_name ?? e!.reference ?? "Rezervare")}
                                   </span>
+                                  {e!.recurrence_id && (
+                                    <span className="text-[9px] leading-none" title="Rezervare recurentă">
+                                      ↻
+                                    </span>
+                                  )}
+                                </div>
+                                {e!.entry_type === "blocat" && blockNotePreview(e!.renter_notes) && (
+                                  <div className="text-[10px] text-muted-foreground truncate overflow-hidden text-ellipsis whitespace-nowrap leading-tight">
+                                    {blockNotePreview(e!.renter_notes)}
+                                  </div>
                                 )}
-                              </div>
+                              </>
                             )}
                           </button>
                         );
