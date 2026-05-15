@@ -289,7 +289,7 @@ function CereriPage() {
     await refetch();
   }
 
-  const groupedItems = useMemo(() => groupRecurringBookings(filtered), [filtered]);
+  const groupedItems = useMemo(() => groupRecurringBookings(filtered as any), [filtered]);
 
   const hasActiveFilters =
     filterStatus !== "toate" ||
