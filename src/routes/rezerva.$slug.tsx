@@ -912,6 +912,7 @@ function CheckoutPage() {
         recurrence_id: recurrenceId,
         recurrence_index: recurrenceId ? idx + 1 : null,
         booking_group_id: bookingGroupId,
+        is_recurring: isRecurrenceCheckout,
         guest_name: name.trim(),
         guest_email: email.trim(),
         guest_phone: phone.trim(),
