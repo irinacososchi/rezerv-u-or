@@ -818,10 +818,12 @@ function CheckoutPage() {
       finalSlotsToCreate.map((s) => ({ date: s.date, start: s.start, end: s.end }));
 
     if (allDateIntervals.length === 0) {
+      console.warn("=== EARLY RETURN ===", { reason: "no_final_slots" });
       setSubmitError("Niciun interval selectat.");
       return;
     }
     if (allDateIntervals.length > 50) {
+      console.warn("=== EARLY RETURN ===", { reason: "too_many_slots", count: allDateIntervals.length });
       setSubmitError(
         `Prea multe rezervări (${allDateIntervals.length}). Limita e 50. Reduce numărul de intervale sau perioada de recurență.`,
       );
