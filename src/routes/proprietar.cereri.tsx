@@ -222,6 +222,7 @@ function CereriPage() {
   }
 
   const filtered = bookings.filter((b) => {
+    if (groupParam && b.booking_group_id !== groupParam) return false;
     if (filterStatus !== "toate" && b.status !== filterStatus) return false;
     if (filterRoom !== "toate" && b.room_id !== filterRoom) return false;
     if (filterDateFrom && b.booking_date < filterDateFrom) return false;
