@@ -58,7 +58,6 @@ type Room = {
   has_air_conditioning: boolean | null;
   rules_and_notes: string | null;
   currency: string | null;
-  advance_booking_days: number | null;
   is_active: boolean | null;
   cover_url?: string | null;
 };
@@ -315,15 +314,11 @@ function RoomDetailsPage() {
     d.setHours(0, 0, 0, 0);
     return d;
   }, []);
-
-  // Min advance days from room config (default 0 = same-day allowed with 2h buffer)
-  const minAdvanceDays = Math.max(0, room?.advance_booking_days ?? 0);
+  // Global 2-hour buffer before slot start — applies to all rooms
   const SAME_DAY_BUFFER_HOURS = 2;
 
-  // Earliest bookable date (start of day)
-  const minBookingDate = useMemo(() => {
-    return addDays(today0, minAdvanceDays);
-  }, [today0, minAdvanceDays]);
+  // Earliest bookable date (start of day) — today
+  const minBookingDate = today0;
 
   function isDayDisabled(date: Date): boolean {
     const dayStart = new Date(date);
@@ -354,7 +349,7 @@ function RoomDetailsPage() {
     const now = new Date();
     const isToday = isSameDay(activeDay.date, now);
     let earliestStartHour = -Infinity;
-    if (minAdvanceDays === 0 && isToday) {
+    if (isToday) {
       const cutoffMs = now.getTime() + SAME_DAY_BUFFER_HOURS * 60 * 60 * 1000;
       const cutoff = new Date(cutoffMs);
       earliestStartHour =
@@ -379,7 +374,7 @@ function RoomDetailsPage() {
       });
     }
     return result;
-  }, [activeDay, scheduleByDay, bookings, pricing, minAdvanceDays]);
+  }, [activeDay, scheduleByDay, bookings, pricing]);
 
   // Reset recurrence if user transitions to multi-day (recurrence ambiguous)
   useEffect(() => {
