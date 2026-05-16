@@ -349,7 +349,7 @@ function RoomDetailsPage() {
     const now = new Date();
     const isToday = isSameDay(activeDay.date, now);
     let earliestStartHour = -Infinity;
-    if (minAdvanceDays === 0 && isToday) {
+    if (isToday) {
       const cutoffMs = now.getTime() + SAME_DAY_BUFFER_HOURS * 60 * 60 * 1000;
       const cutoff = new Date(cutoffMs);
       earliestStartHour =
