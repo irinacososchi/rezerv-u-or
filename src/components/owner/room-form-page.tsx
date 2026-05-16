@@ -68,7 +68,6 @@ type FormState = {
   has_air_conditioning: boolean;
   extra_equipment: string;
   booking_type: "instant" | "manual";
-  advance_booking_days: string;
   min_booking_hours: string;
   free_cancellation_hours: string;
   rules_and_notes: string;
