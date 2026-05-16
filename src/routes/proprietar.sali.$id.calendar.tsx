@@ -15,7 +15,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ChevronLeft, ChevronRight, CalendarPlus, Ban, ChevronDown, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarPlus, Ban, ChevronDown, Check, Repeat } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import {
   getDayOfWeek,
@@ -96,6 +97,7 @@ type Entry = {
   renter_notes?: string | null;
   recurrence_id?: string | null;
   recurrence_index?: number | null;
+  is_recurring?: boolean | null;
 };
 
 function blockNotePreview(notes?: string | null): string | null {
@@ -379,7 +381,10 @@ function RoomCalendarPage() {
   function cellClass(e: Entry | undefined): string {
     if (!e) return "bg-background hover:bg-muted/60 cursor-pointer";
     if (e.entry_type === "blocat") {
-      return "bg-muted text-foreground cursor-pointer bg-[repeating-linear-gradient(45deg,hsl(var(--muted))_0,hsl(var(--muted))_6px,hsl(var(--muted-foreground)/0.15)_6px,hsl(var(--muted-foreground)/0.15)_12px)]";
+      if (e.recurrence_id) {
+        return "bg-sky-100 text-sky-950 border-sky-300 cursor-pointer dark:bg-sky-950/40 dark:text-sky-100";
+      }
+      return "bg-muted text-foreground cursor-pointer";
     }
     if (e.status === "confirmată") return "bg-primary/30 text-foreground cursor-pointer";
     if (e.status === "în așteptare") return "bg-orange-200/80 text-orange-950 cursor-pointer";
@@ -665,7 +670,16 @@ function RoomCalendarPage() {
                                     ? "Blocat"
                                     : (e!.renter_name ?? e!.reference ?? "Rezervare")}
                                 </span>
-                                {e!.recurrence_id && (
+                                {e!.recurrence_id && e!.entry_type === "blocat" && (
+                                  <span
+                                    className="inline-flex items-center gap-0.5 text-[10px] px-1 py-px rounded bg-sky-200 text-sky-900 dark:bg-sky-800 dark:text-sky-50"
+                                    title="Blocare recurentă (săptămânală)"
+                                  >
+                                    <Repeat className="h-2.5 w-2.5" />
+                                    recurent
+                                  </span>
+                                )}
+                                {e!.recurrence_id && e!.entry_type !== "blocat" && (
                                   <span className="text-[10px]" title="Rezervare recurentă">↻</span>
                                 )}
                               </div>
@@ -756,7 +770,13 @@ function RoomCalendarPage() {
                                       ? "Blocat"
                                       : (e!.renter_name ?? e!.reference ?? "Rezervare")}
                                   </span>
-                                  {e!.recurrence_id && (
+                                  {e!.recurrence_id && e!.entry_type === "blocat" && (
+                                    <Repeat
+                                      className="h-3 w-3 text-sky-700 dark:text-sky-300 shrink-0"
+                                      aria-label="Blocare recurentă"
+                                    />
+                                  )}
+                                  {e!.recurrence_id && e!.entry_type !== "blocat" && (
                                     <span className="text-[9px] leading-none" title="Rezervare recurentă">
                                       ↻
                                     </span>
@@ -844,6 +864,7 @@ function RoomCalendarPage() {
               <LegendDot className="bg-primary/30" label="Confirmată" />
               <LegendDot className="bg-orange-200/80" label="În așteptare" />
               <LegendDot className="bg-muted border border-muted-foreground/30" label="Blocat de proprietar" />
+              <LegendDot className="bg-sky-100 border border-sky-300 dark:bg-sky-950/40" label="Blocat recurent" />
             </div>
           </>
         )}
@@ -1305,6 +1326,22 @@ function BookingDetails({
   );
 }
 
+type RecurrenceInfo = {
+  id: string;
+  frequency: string | null;
+  is_active: boolean | null;
+  total_bookings: number | null;
+  first_date: string | null;
+  last_date: string | null;
+};
+
+const FREQUENCY_LABEL_RO: Record<string, string> = {
+  weekly: "săptămânală",
+  biweekly: "bi-săptămânală",
+  monthly: "lunară",
+  daily: "zilnică",
+};
+
 function BlockDetails({
   entry,
   onClose,
@@ -1317,6 +1354,11 @@ function BlockDetails({
   const [busy, setBusy] = useState(false);
   const [saving, setSaving] = useState(false);
   const [reason, setReason] = useState<string>(entry.renter_notes ?? entry.reason ?? "");
+  const [recurrenceInfo, setRecurrenceInfo] = useState<RecurrenceInfo | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleteScope, setDeleteScope] = useState<"single" | "future" | "all">("single");
+
+  const isRecurrent = !!entry.recurrence_id;
 
   useEffect(() => {
     let cancelled = false;
@@ -1340,6 +1382,30 @@ function BlockDetails({
     };
   }, [entry.id]);
 
+  useEffect(() => {
+    if (!entry.recurrence_id) {
+      setRecurrenceInfo(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("recurrences")
+        .select("id, frequency, is_active, total_bookings, first_date, last_date")
+        .eq("id", entry.recurrence_id!)
+        .maybeSingle();
+      if (cancelled || error || !data) return;
+      setRecurrenceInfo(data as RecurrenceInfo);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [entry.recurrence_id]);
+
+  const frequencyLabel = recurrenceInfo?.frequency
+    ? (FREQUENCY_LABEL_RO[recurrenceInfo.frequency] ?? recurrenceInfo.frequency)
+    : "săptămânală";
+
   async function saveReason() {
     setSaving(true);
     const { error } = await supabase
@@ -1356,22 +1422,126 @@ function BlockDetails({
     onChanged();
   }
 
-  async function unblock() {
+  async function deleteSingle() {
+    const { error } = await supabase.from("bookings").delete().eq("id", entry.id);
+    if (error) throw error;
+
+    // If part of a series, decrement counter
+    if (entry.recurrence_id) {
+      const { count } = await supabase
+        .from("bookings")
+        .select("id", { count: "exact", head: true })
+        .eq("recurrence_id", entry.recurrence_id);
+      await supabase
+        .from("recurrences")
+        .update({ total_bookings: count ?? 0 })
+        .eq("id", entry.recurrence_id);
+    }
+  }
+
+  async function deleteFuture() {
+    if (!entry.recurrence_id) return;
+    const { error } = await supabase
+      .from("bookings")
+      .delete()
+      .eq("recurrence_id", entry.recurrence_id)
+      .gte("booking_date", entry.booking_date);
+    if (error) throw error;
+
+    // Recompute last_date and total_bookings from remaining rows
+    const { data: remaining } = await supabase
+      .from("bookings")
+      .select("booking_date")
+      .eq("recurrence_id", entry.recurrence_id)
+      .order("booking_date", { ascending: false })
+      .limit(1);
+
+    const { count } = await supabase
+      .from("bookings")
+      .select("id", { count: "exact", head: true })
+      .eq("recurrence_id", entry.recurrence_id);
+
+    const newLast = remaining?.[0]?.booking_date ?? null;
+    await supabase
+      .from("recurrences")
+      .update({
+        last_date: newLast,
+        total_bookings: count ?? 0,
+        is_active: (count ?? 0) > 0,
+      })
+      .eq("id", entry.recurrence_id);
+  }
+
+  async function deleteAll() {
+    if (!entry.recurrence_id) return;
+    const { error } = await supabase
+      .from("bookings")
+      .delete()
+      .eq("recurrence_id", entry.recurrence_id);
+    if (error) throw error;
+    await supabase
+      .from("recurrences")
+      .update({ is_active: false, total_bookings: 0 })
+      .eq("id", entry.recurrence_id);
+  }
+
+  async function performDelete() {
     setBusy(true);
-    const { error } = await supabase.rpc("unblock_slot", { p_booking_id: entry.id });
-    setBusy(false);
-    if (error) return toast.error("Eroare la deblocare");
-    toast.success("Slot deblocat");
-    onChanged();
-    onClose();
+    try {
+      if (!isRecurrent || deleteScope === "single") {
+        await deleteSingle();
+        toast.success("Slot deblocat");
+      } else if (deleteScope === "future") {
+        await deleteFuture();
+        toast.success("Acest slot și toate viitoarele au fost șterse");
+      } else {
+        await deleteAll();
+        toast.success("Toată seria a fost ștearsă");
+      }
+      setConfirmOpen(false);
+      onChanged();
+      onClose();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Eroare la ștergere";
+      toast.error(msg);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function openDelete() {
+    if (isRecurrent) {
+      setDeleteScope("single");
+      setConfirmOpen(true);
+    } else {
+      void performDelete();
+    }
   }
 
   return (
     <>
       <DialogHeader>
-        <DialogTitle>Interval blocat</DialogTitle>
+        <DialogTitle className="flex items-center gap-2">
+          Interval blocat
+          {isRecurrent && (
+            <span
+              className="inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded bg-sky-200 text-sky-900 dark:bg-sky-800 dark:text-sky-50"
+              title={`Blocare recurentă (${frequencyLabel})`}
+            >
+              <Repeat className="h-3 w-3" />
+              recurent
+            </span>
+          )}
+        </DialogTitle>
         <DialogDescription>
           {entry.booking_date} · {entry.start_time?.slice(0, 5)}–{entry.end_time?.slice(0, 5)}
+          {isRecurrent && (
+            <>
+              {" · "}
+              <span>Serie {frequencyLabel}</span>
+              {recurrenceInfo?.total_bookings ? ` · ${recurrenceInfo.total_bookings} blocări` : ""}
+            </>
+          )}
         </DialogDescription>
       </DialogHeader>
       <div className="space-y-2 text-sm">
@@ -1390,16 +1560,69 @@ function BlockDetails({
         </div>
       </div>
       <DialogFooter className="gap-2">
-        <Button onClick={unblock} disabled={busy}>
-          Deblochează
+        <Button onClick={openDelete} disabled={busy} variant="destructive">
+          {isRecurrent ? "Șterge..." : "Deblochează"}
         </Button>
         <Button variant="outline" onClick={onClose}>
           Închide
         </Button>
       </DialogFooter>
+
+      <Dialog open={confirmOpen} onOpenChange={(o) => !busy && setConfirmOpen(o)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Șterge blocare recurentă?</DialogTitle>
+            <DialogDescription>
+              Această blocare face parte dintr-o serie {frequencyLabel}. Alege ce vrei să ștergi:
+            </DialogDescription>
+          </DialogHeader>
+          <RadioGroup
+            value={deleteScope}
+            onValueChange={(v) => setDeleteScope(v as "single" | "future" | "all")}
+            className="gap-3 py-2"
+          >
+            <label className="flex items-start gap-2 cursor-pointer">
+              <RadioGroupItem value="single" id="scope-single" className="mt-0.5" />
+              <div>
+                <div className="text-sm font-medium">Doar acest slot</div>
+                <div className="text-xs text-muted-foreground">
+                  Șterge doar blocarea din {entry.booking_date}, restul seriei rămâne.
+                </div>
+              </div>
+            </label>
+            <label className="flex items-start gap-2 cursor-pointer">
+              <RadioGroupItem value="future" id="scope-future" className="mt-0.5" />
+              <div>
+                <div className="text-sm font-medium">Acesta și toate viitoarele</div>
+                <div className="text-xs text-muted-foreground">
+                  Șterge această blocare și toate cele de după.
+                </div>
+              </div>
+            </label>
+            <label className="flex items-start gap-2 cursor-pointer">
+              <RadioGroupItem value="all" id="scope-all" className="mt-0.5" />
+              <div>
+                <div className="text-sm font-medium">Toată seria</div>
+                <div className="text-xs text-muted-foreground">
+                  Șterge TOATE blocările din serie (inclusiv trecutul) și dezactivează seria.
+                </div>
+              </div>
+            </label>
+          </RadioGroup>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setConfirmOpen(false)} disabled={busy}>
+              Anulează
+            </Button>
+            <Button variant="destructive" onClick={performDelete} disabled={busy}>
+              {busy ? "Se șterge..." : "Confirmă"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
+
 
 function BlockSlotForm({
   roomId,
