@@ -62,7 +62,8 @@ function RoomsPage() {
       .from("rooms")
       .select(
         `id, name, slug, address, city, neighbourhood, is_active, booking_type, created_at,
-         room_photos(storage_url, is_cover)`,
+         room_photos(storage_url, is_cover),
+         pricing_rules(id, is_active)`,
       )
       .eq("owner_id", user.id)
       .order("created_at", { ascending: false });
