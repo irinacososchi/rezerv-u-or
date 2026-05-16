@@ -770,7 +770,13 @@ function RoomCalendarPage() {
                                       ? "Blocat"
                                       : (e!.renter_name ?? e!.reference ?? "Rezervare")}
                                   </span>
-                                  {e!.recurrence_id && (
+                                  {e!.recurrence_id && e!.entry_type === "blocat" && (
+                                    <Repeat
+                                      className="h-3 w-3 text-sky-700 dark:text-sky-300 shrink-0"
+                                      aria-label="Blocare recurentă"
+                                    />
+                                  )}
+                                  {e!.recurrence_id && e!.entry_type !== "blocat" && (
                                     <span className="text-[9px] leading-none" title="Rezervare recurentă">
                                       ↻
                                     </span>
