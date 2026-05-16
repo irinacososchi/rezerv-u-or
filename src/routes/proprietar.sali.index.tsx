@@ -143,6 +143,9 @@ function RoomsPage() {
                 .filter(Boolean)
                 .join(", ");
               const isInstant = room.booking_type === "instant";
+              const hasPricing = (room.pricing_rules ?? []).some(
+                (p) => p.is_active !== false,
+              );
               return (
                 <Card key={room.id}>
                   <CardContent className="p-4 flex flex-col md:flex-row md:items-center gap-4">
@@ -176,6 +179,11 @@ function RoomsPage() {
                         >
                           {isInstant ? "Instant" : "Manual"}
                         </span>
+                        {!hasPricing && (
+                          <span className="inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-900 border-yellow-300">
+                            Lipsesc tarifele — sala nu este vizibilă public
+                          </span>
+                        )}
                       </div>
                       <p className="text-sm text-muted-foreground truncate mt-0.5">
                         {addressLine || "Fără adresă"}
