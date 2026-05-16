@@ -374,7 +374,7 @@ function RoomDetailsPage() {
       });
     }
     return result;
-  }, [activeDay, scheduleByDay, bookings, pricing, minAdvanceDays]);
+  }, [activeDay, scheduleByDay, bookings, pricing]);
 
   // Reset recurrence if user transitions to multi-day (recurrence ambiguous)
   useEffect(() => {
