@@ -14,6 +14,7 @@ export const Route = createFileRoute("/proprietar/sali/")({
 });
 
 type RoomPhoto = { storage_url: string | null; is_cover: boolean | null };
+type PricingRuleRef = { id: string; is_active: boolean | null };
 type Room = {
   id: string;
   name: string;
@@ -25,6 +26,7 @@ type Room = {
   booking_type: string | null;
   created_at: string;
   room_photos: RoomPhoto[] | null;
+  pricing_rules: PricingRuleRef[] | null;
 };
 
 function getCover(room: Room): string | null {
