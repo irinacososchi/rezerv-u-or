@@ -97,6 +97,7 @@ type Entry = {
   renter_notes?: string | null;
   recurrence_id?: string | null;
   recurrence_index?: number | null;
+  is_recurring?: boolean | null;
 };
 
 function blockNotePreview(notes?: string | null): string | null {
