@@ -174,6 +174,7 @@ function RoomDetailsPage() {
 
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [unavailable, setUnavailable] = useState(false);
   const [room, setRoom] = useState<Room | null>(null);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [schedule, setSchedule] = useState<ScheduleRow[]>([]);
