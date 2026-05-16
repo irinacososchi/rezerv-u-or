@@ -14,6 +14,7 @@ export const Route = createFileRoute("/proprietar/sali/")({
 });
 
 type RoomPhoto = { storage_url: string | null; is_cover: boolean | null };
+type PricingRuleRef = { id: string; is_active: boolean | null };
 type Room = {
   id: string;
   name: string;
@@ -25,6 +26,7 @@ type Room = {
   booking_type: string | null;
   created_at: string;
   room_photos: RoomPhoto[] | null;
+  pricing_rules: PricingRuleRef[] | null;
 };
 
 function getCover(room: Room): string | null {
@@ -60,7 +62,8 @@ function RoomsPage() {
       .from("rooms")
       .select(
         `id, name, slug, address, city, neighbourhood, is_active, booking_type, created_at,
-         room_photos(storage_url, is_cover)`,
+         room_photos(storage_url, is_cover),
+         pricing_rules(id, is_active)`,
       )
       .eq("owner_id", user.id)
       .order("created_at", { ascending: false });
@@ -140,6 +143,9 @@ function RoomsPage() {
                 .filter(Boolean)
                 .join(", ");
               const isInstant = room.booking_type === "instant";
+              const hasPricing = (room.pricing_rules ?? []).some(
+                (p) => p.is_active !== false,
+              );
               return (
                 <Card key={room.id}>
                   <CardContent className="p-4 flex flex-col md:flex-row md:items-center gap-4">
@@ -173,6 +179,11 @@ function RoomsPage() {
                         >
                           {isInstant ? "Instant" : "Manual"}
                         </span>
+                        {!hasPricing && (
+                          <span className="inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-900 border-yellow-300">
+                            Lipsesc tarifele — sala nu este vizibilă public
+                          </span>
+                        )}
                       </div>
                       <p className="text-sm text-muted-foreground truncate mt-0.5">
                         {addressLine || "Fără adresă"}

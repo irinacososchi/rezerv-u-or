@@ -174,6 +174,7 @@ function RoomDetailsPage() {
 
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [unavailable, setUnavailable] = useState(false);
   const [room, setRoom] = useState<Room | null>(null);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [schedule, setSchedule] = useState<ScheduleRow[]>([]);
@@ -207,7 +208,7 @@ function RoomDetailsPage() {
     async function load() {
       setLoading(true);
       setNotFound(false);
-
+      setUnavailable(false);
       const { data: r, error: rErr } = await supabase
         .from("rooms_with_cover")
         .select("*")
@@ -278,7 +279,8 @@ function RoomDetailsPage() {
       setActivePhoto(cover);
 
       setSchedule((schedRes.data ?? []) as ScheduleRow[]);
-      setPricing((priceRes.data ?? []) as PricingRule[]);
+      const pricingData = (priceRes.data ?? []) as PricingRule[];
+      setPricing(pricingData);
       setBlockedDates(
         new Set(
           ((blockRes.data ?? []) as { blocked_date: string }[]).map(
@@ -287,6 +289,10 @@ function RoomDetailsPage() {
         ),
       );
       setBookings((bookRes.data ?? []) as Booking[]);
+
+      if (pricingData.length === 0) {
+        setUnavailable(true);
+      }
 
       setLoading(false);
     }
@@ -536,6 +542,24 @@ function RoomDetailsPage() {
           <h1 className="text-2xl font-bold">Sala nu a fost găsită</h1>
           <p className="mt-2 text-muted-foreground">
             Linkul nu este valid sau sala nu mai este disponibilă.
+          </p>
+          <Button asChild className="mt-6">
+            <Link to="/sali">
+              <ArrowLeft className="mr-2 h-4 w-4" /> Înapoi la săli
+            </Link>
+          </Button>
+        </div>
+      </PageShell>
+    );
+  }
+
+  if (unavailable) {
+    return (
+      <PageShell>
+        <div className="container mx-auto flex max-w-2xl flex-col items-center px-4 py-24 text-center">
+          <h1 className="text-2xl font-bold">Sală indisponibilă</h1>
+          <p className="mt-2 text-muted-foreground">
+            Această sală nu este disponibilă pentru rezervări momentan.
           </p>
           <Button asChild className="mt-6">
             <Link to="/sali">
