@@ -221,10 +221,6 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
           (r.booking_type as "instant" | "manual") === "manual"
             ? "manual"
             : "instant",
-        advance_booking_days:
-          r.advance_booking_days != null
-            ? String(r.advance_booking_days)
-            : "30",
         min_booking_hours:
           r.min_booking_hours != null ? String(r.min_booking_hours) : "1",
         free_cancellation_hours:
