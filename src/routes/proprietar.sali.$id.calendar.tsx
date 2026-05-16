@@ -864,6 +864,7 @@ function RoomCalendarPage() {
               <LegendDot className="bg-primary/30" label="Confirmată" />
               <LegendDot className="bg-orange-200/80" label="În așteptare" />
               <LegendDot className="bg-muted border border-muted-foreground/30" label="Blocat de proprietar" />
+              <LegendDot className="bg-sky-100 border border-sky-300 dark:bg-sky-950/40" label="Blocat recurent" />
             </div>
           </>
         )}
