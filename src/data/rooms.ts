@@ -65,7 +65,9 @@ export async function fetchRooms(
     return [];
   }
 
-  const rows = (data ?? []) as RoomRow[];
+  const rows = ((data ?? []) as RoomRow[]).filter((row) =>
+    (row.pricing_rules ?? []).some((p) => p.is_active !== false),
+  );
   // Active rooms first, then inactive
   rows.sort((a, b) => Number(b.is_active ?? false) - Number(a.is_active ?? false));
   return rows.map((row, idx) => {
