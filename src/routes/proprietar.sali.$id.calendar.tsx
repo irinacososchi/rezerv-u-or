@@ -15,7 +15,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ChevronLeft, ChevronRight, CalendarPlus, Ban, ChevronDown, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarPlus, Ban, ChevronDown, Check, Repeat } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import {
   getDayOfWeek,
