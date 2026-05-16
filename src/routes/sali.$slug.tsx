@@ -553,6 +553,24 @@ function RoomDetailsPage() {
     );
   }
 
+  if (unavailable) {
+    return (
+      <PageShell>
+        <div className="container mx-auto flex max-w-2xl flex-col items-center px-4 py-24 text-center">
+          <h1 className="text-2xl font-bold">Sală indisponibilă</h1>
+          <p className="mt-2 text-muted-foreground">
+            Această sală nu este disponibilă pentru rezervări momentan.
+          </p>
+          <Button asChild className="mt-6">
+            <Link to="/sali">
+              <ArrowLeft className="mr-2 h-4 w-4" /> Înapoi la săli
+            </Link>
+          </Button>
+        </div>
+      </PageShell>
+    );
+  }
+
   const amenities: { key: string; label: string; on: boolean }[] = [
     { key: "mirrors", label: "Oglinzi", on: !!room.has_mirrors },
     { key: "sound", label: "Sistem audio", on: !!room.has_sound_system },
