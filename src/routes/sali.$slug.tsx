@@ -208,7 +208,7 @@ function RoomDetailsPage() {
     async function load() {
       setLoading(true);
       setNotFound(false);
-
+      setUnavailable(false);
       const { data: r, error: rErr } = await supabase
         .from("rooms_with_cover")
         .select("*")
