@@ -381,7 +381,10 @@ function RoomCalendarPage() {
   function cellClass(e: Entry | undefined): string {
     if (!e) return "bg-background hover:bg-muted/60 cursor-pointer";
     if (e.entry_type === "blocat") {
-      return "bg-muted text-foreground cursor-pointer bg-[repeating-linear-gradient(45deg,hsl(var(--muted))_0,hsl(var(--muted))_6px,hsl(var(--muted-foreground)/0.15)_6px,hsl(var(--muted-foreground)/0.15)_12px)]";
+      if (e.recurrence_id) {
+        return "bg-sky-100 text-sky-950 border-sky-300 cursor-pointer dark:bg-sky-950/40 dark:text-sky-100";
+      }
+      return "bg-muted text-foreground cursor-pointer";
     }
     if (e.status === "confirmată") return "bg-primary/30 text-foreground cursor-pointer";
     if (e.status === "în așteptare") return "bg-orange-200/80 text-orange-950 cursor-pointer";
