@@ -1680,19 +1680,58 @@ function BlockSlotForm({
     const skipped: string[] = [];
     const inserted: string[] = [];
 
-    for (const d of allDates) {
+    // Create recurrence group when recurrent so all slots share recurrence_id
+    let recurrenceId: string | null = null;
+    if (isRecurrent && allDates.length > 1) {
+      const { data: userData } = await supabase.auth.getUser();
+      const ownerEmail = userData.user?.email ?? `owner+${Date.now()}@rezervari.intern`;
+      const dayOfWeek = getDayOfWeek(parseISODate(date));
+      const { data: rec, error: recError } = await supabase
+        .from("recurrences")
+        .insert({
+          room_id: roomId,
+          created_by_email: ownerEmail,
+          frequency: "saptamanal",
+          day_of_week: dayOfWeek,
+          start_time: `${start}:00`,
+          end_time: `${end}:00`,
+          first_date: allDates[0],
+          last_date: allDates[allDates.length - 1],
+          is_active: true,
+          total_bookings: allDates.length,
+        })
+        .select("id")
+        .single();
+      if (recError) {
+        console.error("recurrences insert error:", recError);
+        setBusy(false);
+        setBlockError("Eroare la crearea grupului de recurență: " + recError.message);
+        return;
+      }
+      recurrenceId = (rec as { id: string }).id;
+    }
+
+    for (const [idx, d] of allDates.entries()) {
       const { error } = await supabase.rpc("block_slot", {
         p_room_id: roomId,
         p_date: d,
         p_start_time: start,
         p_end_time: end,
         p_reason: reason || "Rezervat de proprietar",
-      });
+        ...(recurrenceId
+          ? { p_recurrence_id: recurrenceId, p_recurrence_index: idx }
+          : {}),
+      } as never);
       if (error) {
         if (error.code === "23P01") {
           skipped.push(formatShortRO(d));
         } else {
           console.error("block_slot error:", error);
+          // Cleanup partially-created series so user can retry cleanly
+          if (recurrenceId) {
+            await supabase.from("bookings").delete().eq("recurrence_id", recurrenceId);
+            await supabase.from("recurrences").delete().eq("id", recurrenceId);
+          }
           setBusy(false);
           setBlockError(error.message || "Eroare la blocare.");
           return;
@@ -1700,6 +1739,21 @@ function BlockSlotForm({
       } else {
         inserted.push(d);
       }
+    }
+
+    // If some dates were skipped, sync recurrences totals to reflect reality
+    if (recurrenceId && skipped.length > 0 && inserted.length > 0) {
+      await supabase
+        .from("recurrences")
+        .update({
+          total_bookings: inserted.length,
+          last_date: inserted[inserted.length - 1],
+        })
+        .eq("id", recurrenceId);
+    }
+    // If nothing was inserted, remove the empty recurrence row
+    if (recurrenceId && inserted.length === 0) {
+      await supabase.from("recurrences").delete().eq("id", recurrenceId);
     }
 
     setBusy(false);
