@@ -279,7 +279,8 @@ function RoomDetailsPage() {
       setActivePhoto(cover);
 
       setSchedule((schedRes.data ?? []) as ScheduleRow[]);
-      setPricing((priceRes.data ?? []) as PricingRule[]);
+      const pricingData = (priceRes.data ?? []) as PricingRule[];
+      setPricing(pricingData);
       setBlockedDates(
         new Set(
           ((blockRes.data ?? []) as { blocked_date: string }[]).map(
@@ -288,6 +289,10 @@ function RoomDetailsPage() {
         ),
       );
       setBookings((bookRes.data ?? []) as Booking[]);
+
+      if (pricingData.length === 0) {
+        setUnavailable(true);
+      }
 
       setLoading(false);
     }
