@@ -1026,7 +1026,10 @@ function BookingDetails({
     total: number;
     index: number;
     id: string;
+    frequency: string;
   } | null>(null);
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelScope, setCancelScope] = useState<"this" | "future" | "series">("this");
 
   // Fetch full booking row (price_per_hour, discount_amount, renter_notes)
   useEffect(() => {
