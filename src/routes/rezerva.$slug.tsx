@@ -1353,6 +1353,9 @@ function CheckoutPage() {
                     required
                     maxLength={100}
                     autoComplete="name"
+                    readOnly={isLoggedIn}
+                    disabled={isLoggedIn}
+                    className={isLoggedIn ? "bg-muted/40 text-foreground/80 cursor-not-allowed focus-visible:ring-0" : ""}
                   />
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -1366,6 +1369,9 @@ function CheckoutPage() {
                       required
                       maxLength={255}
                       autoComplete="email"
+                      readOnly={isLoggedIn}
+                      disabled={isLoggedIn}
+                      className={isLoggedIn ? "bg-muted/40 text-foreground/80 cursor-not-allowed focus-visible:ring-0" : ""}
                     />
                   </div>
                   <div>
@@ -1379,9 +1385,20 @@ function CheckoutPage() {
                       required
                       maxLength={20}
                       autoComplete="tel"
+                      readOnly={isLoggedIn}
+                      disabled={isLoggedIn}
+                      className={isLoggedIn ? "bg-muted/40 text-foreground/80 cursor-not-allowed focus-visible:ring-0" : ""}
                     />
                   </div>
                 </div>
+                {isLoggedIn && (
+                  <p className="text-xs text-muted-foreground">
+                    Aceste date sunt preluate din contul tău.{" "}
+                    <Link to="/cont" className="text-primary hover:underline">
+                      Modifică în Cont →
+                    </Link>
+                  </p>
+                )}
               </div>
             </section>
 
