@@ -102,7 +102,7 @@ export function SiteHeader() {
             <Link to="/sali">Săli</Link>
           </Button>
           <Button variant="ghost" asChild className="text-foreground/80 hidden sm:inline-flex">
-            <Link to="/rezervarea-mea">Rezervarea mea</Link>
+            <Link to="/rezervari">Rezervarea mea</Link>
           </Button>
 
           {(hasRooms || isAdmin) && (
