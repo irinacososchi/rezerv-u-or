@@ -1134,31 +1134,91 @@ function BookingDetails({
     onChanged();
   }
 
-  async function cancelBooking(cancelAll: boolean) {
-    const message = cancelAll && recurrenceInfo
-      ? `Sigur vrei să anulezi TOATE cele ${recurrenceInfo.total} apariții ale acestei rezervări recurente?`
-      : "Sigur vrei să anulezi această rezervare?";
-    if (!confirm(message)) return;
+  async function cancelSingle() {
+    if (!confirm("Sigur vrei să anulezi această rezervare?")) return;
     setBusy(true);
-    let error;
-    if (cancelAll && recurrenceInfo) {
-      ({ error } = await supabase
-        .from("bookings")
-        .update({ status: "anulată" })
-        .eq("recurrence_id", recurrenceInfo.id)
-        .in("status", ["în așteptare", "confirmată"]));
-    } else {
-      ({ error } = await supabase
-        .from("bookings")
-        .update({ status: "anulată" })
-        .eq("id", entry.id));
-    }
+    const { error } = await supabase.rpc("cancel_booking", {
+      p_booking_id: entry.id,
+      p_guest_email: null,
+      p_owner_override: true,
+    });
     setBusy(false);
     if (error) {
       console.error("Cancel error:", error);
-      return toast.error("Eroare la anulare");
+      return toast.error(error.message || "Eroare la anulare");
     }
-    toast.success(cancelAll ? "Toate aparițiile au fost anulate" : "Rezervare anulată");
+    toast.success("Rezervare anulată");
+    onChanged();
+    onClose();
+  }
+
+  async function performBulkCancel() {
+    if (!recurrenceInfo) return;
+    let ids: string[] = [];
+    if (cancelScope === "this") {
+      ids = [entry.id];
+    } else {
+      const today = new Date().toISOString().split("T")[0];
+      const fromDate =
+        cancelScope === "future" ? entry.booking_date : today;
+      const { data, error: fetchErr } = await supabase
+        .from("bookings")
+        .select("id")
+        .eq("recurrence_id", recurrenceInfo.id)
+        .gte("booking_date", fromDate)
+        .in("status", ["în așteptare", "confirmată"]);
+      if (fetchErr) return toast.error(fetchErr.message);
+      ids = ((data ?? []) as { id: string }[]).map((b) => b.id);
+    }
+    if (ids.length === 0) {
+      toast.error("Nicio rezervare de anulat.");
+      setCancelOpen(false);
+      return;
+    }
+    if (
+      !confirm(
+        `Ești pe cale să anulezi ${ids.length} ${ids.length === 1 ? "rezervare" : "rezervări"}. Chiriașul nu va fi notificat automat (nu există încă sistemul de notificări). Continui?`,
+      )
+    )
+      return;
+
+    setBusy(true);
+    const results = await Promise.allSettled(
+      ids.map((id) =>
+        supabase.rpc("cancel_booking", {
+          p_booking_id: id,
+          p_guest_email: null,
+          p_owner_override: true,
+        }),
+      ),
+    );
+    setBusy(false);
+
+    let success = 0;
+    const errors: string[] = [];
+    for (const r of results) {
+      if (r.status === "fulfilled" && !(r.value as { error: unknown }).error) {
+        success++;
+      } else {
+        const msg =
+          r.status === "rejected"
+            ? String(r.reason)
+            : ((r.value as { error: { message?: string } }).error?.message ??
+              "eroare necunoscută");
+        errors.push(msg);
+      }
+    }
+
+    if (success === ids.length) {
+      toast.success(`Ai anulat ${success} ${success === 1 ? "rezervare" : "rezervări"} din serie.`);
+    } else if (success > 0) {
+      toast.warning(
+        `Ai anulat ${success} din ${ids.length}. ${errors.length} ${errors.length === 1 ? "eșec" : "eșecuri"}. Primul motiv: ${errors[0]}`,
+      );
+    } else {
+      toast.error(`Niciuna nu a putut fi anulată. Detalii: ${errors[0] ?? "?"}`);
+    }
+    setCancelOpen(false);
     onChanged();
     onClose();
   }
