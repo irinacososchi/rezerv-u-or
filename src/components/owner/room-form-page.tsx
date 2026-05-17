@@ -478,7 +478,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
   async function handleDelete() {
     if (!isEdit || !roomId) return;
     const confirmed = window.confirm(
-      "Ești sigur că vrei să ștergi această sală? Toate rezervările viitoare vor fi anulate. Această acțiune nu poate fi anulată.",
+      "Ești sigur că vrei să dezactivezi această sală? Toate rezervările viitoare vor fi anulate.",
     );
     if (!confirmed) return;
 
