@@ -39,6 +39,7 @@ type Booking = {
   payment_status: string;
   guest_email: string;
   recurrence_id: string | null;
+  is_recurring?: boolean | null;
   created_at?: string;
   updated_at?: string;
 };
