@@ -102,7 +102,7 @@ export function SiteHeader() {
             <Link to="/sali">Săli</Link>
           </Button>
           <Button variant="ghost" asChild className="text-foreground/80 hidden sm:inline-flex">
-            <Link to="/rezervarea-mea">Rezervarea mea</Link>
+            <Link to="/rezervari">Rezervarea mea</Link>
           </Button>
 
           {(hasRooms || isAdmin) && (
@@ -161,7 +161,7 @@ export function SiteHeader() {
                     </Link>
                     {hasBookings && (
                       <Link
-                        to="/cont/rezervari"
+                        to="/rezervari"
                         onClick={() => setDropdownOpen(false)}
                         className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted/40 hover:text-primary transition"
                       >
