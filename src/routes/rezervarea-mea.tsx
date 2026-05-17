@@ -1,11 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { CalendarX, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { supabase } from "@/integrations/supabase/external-client";
 import { BookingTimestamps } from "@/components/booking-timestamps";
+import { RecurringSeriesCard } from "@/components/recurring-series-card";
+import {
+  groupByRecurrence,
+  type RecurrenceInfo,
+} from "@/lib/recurrence-series";
 import {
   Dialog,
   DialogContent,
@@ -49,15 +54,27 @@ function RezervareaMeaPage() {
   const [searchValue, setSearchValue] = useState("");
   const [reference, setReference] = useState("");
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [recurrences, setRecurrences] = useState<Map<string, RecurrenceInfo>>(new Map());
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cancelLoading, setCancelLoading] = useState<string | null>(null);
   const [cancelError, setCancelError] = useState<{ id: string; msg: string } | null>(null);
   const [cancelSuccess, setCancelSuccess] = useState<string | null>(null);
-  const [seriesDialog, setSeriesDialog] = useState<{ booking: Booking } | null>(null);
+  const [seriesDialog, setSeriesDialog] = useState<
+    | { mode: "single"; booking: Booking }
+    | { mode: "series"; recurrenceId: string; guestEmail: string }
+    | null
+  >(null);
   const [seriesScope, setSeriesScope] = useState<"this" | "future">("this");
   const [seriesBusy, setSeriesBusy] = useState(false);
+
+  const todayISO = new Date().toISOString().split("T")[0];
+
+  const { series, singles } = useMemo(
+    () => groupByRecurrence(bookings),
+    [bookings],
+  );
 
   async function handleSearch() {
     setError(null);
@@ -97,7 +114,25 @@ function RezervareaMeaPage() {
       return;
     }
 
-    setBookings((data ?? []) as Booking[]);
+    const list = (data ?? []) as Booking[];
+    setBookings(list);
+
+    const recIds = Array.from(
+      new Set(list.map((b) => b.recurrence_id).filter((x): x is string => !!x)),
+    );
+    if (recIds.length > 0) {
+      const { data: recs } = await supabase
+        .from("recurrences")
+        .select(
+          "id, frequency, day_of_week, start_time, end_time, first_date, last_date, total_bookings",
+        )
+        .in("id", recIds);
+      const map = new Map<string, RecurrenceInfo>();
+      for (const r of (recs ?? []) as RecurrenceInfo[]) map.set(r.id, r);
+      setRecurrences(map);
+    } else {
+      setRecurrences(new Map());
+    }
   }
 
   async function handleCancel(bookingId: string, guestEmail: string) {
@@ -125,33 +160,48 @@ function RezervareaMeaPage() {
 
   async function handleSeriesCancel() {
     if (!seriesDialog) return;
-    const b = seriesDialog.booking;
 
-    if (seriesScope === "this") {
-      setSeriesBusy(true);
-      const { error } = await supabase.rpc("cancel_booking", {
-        p_booking_id: b.id,
-        p_guest_email: b.guest_email,
-      });
-      setSeriesBusy(false);
-      if (error) {
-        toast.error(error.message);
+    let recurrenceId: string | null;
+    let anchorDate: string;
+    let guestEmail: string;
+    let alsoSingleBookingId: string | null = null;
+
+    if (seriesDialog.mode === "single") {
+      const b = seriesDialog.booking;
+      guestEmail = b.guest_email;
+      if (seriesScope === "this") {
+        setSeriesBusy(true);
+        const { error } = await supabase.rpc("cancel_booking", {
+          p_booking_id: b.id,
+          p_guest_email: b.guest_email,
+        });
+        setSeriesBusy(false);
+        if (error) {
+          toast.error(error.message);
+          return;
+        }
+        toast.success("Rezervarea a fost anulată.");
+        setBookings((prev) =>
+          prev.map((x) => (x.id === b.id ? { ...x, status: "anulată" } : x)),
+        );
+        setSeriesDialog(null);
         return;
       }
-      toast.success("Rezervarea a fost anulată.");
-      setBookings((prev) =>
-        prev.map((x) => (x.id === b.id ? { ...x, status: "anulată" } : x)),
-      );
-      setSeriesDialog(null);
-      return;
+      recurrenceId = b.recurrence_id;
+      anchorDate = b.booking_date;
+      alsoSingleBookingId = b.id;
+    } else {
+      recurrenceId = seriesDialog.recurrenceId;
+      guestEmail = seriesDialog.guestEmail;
+      anchorDate = todayISO;
     }
 
-    if (!b.recurrence_id) return;
+    if (!recurrenceId) return;
     const { data: viitoare, error: fetchErr } = await supabase
       .from("bookings")
       .select("id")
-      .eq("recurrence_id", b.recurrence_id)
-      .gte("booking_date", b.booking_date)
+      .eq("recurrence_id", recurrenceId)
+      .gte("booking_date", anchorDate)
       .in("status", ["în așteptare", "confirmată"])
       .order("booking_date", { ascending: true });
 
@@ -160,6 +210,9 @@ function RezervareaMeaPage() {
       return;
     }
     const ids = ((viitoare ?? []) as { id: string }[]).map((x) => x.id);
+    if (alsoSingleBookingId && !ids.includes(alsoSingleBookingId)) {
+      ids.unshift(alsoSingleBookingId);
+    }
     if (ids.length === 0) {
       toast.error("Nicio rezervare de anulat.");
       setSeriesDialog(null);
@@ -177,7 +230,7 @@ function RezervareaMeaPage() {
       ids.map((id) =>
         supabase.rpc("cancel_booking", {
           p_booking_id: id,
-          p_guest_email: b.guest_email,
+          p_guest_email: guestEmail,
         }),
       ),
     );
@@ -332,11 +385,42 @@ function RezervareaMeaPage() {
               ) : (
                 <div className="space-y-4">
                   <div className="text-sm text-muted-foreground">
-                    {bookings.length}{" "}
-                    {bookings.length === 1 ? "rezervare găsită" : "rezervări găsite"}
+                    {series.length + singles.length}{" "}
+                    {series.length + singles.length === 1
+                      ? "card afișat"
+                      : "carduri afișate"}{" "}
+                    ({bookings.length} rezervări în total
+                    {series.length > 0
+                      ? `, ${series.length} ${series.length === 1 ? "serie recurentă" : "serii recurente"}`
+                      : ""}
+                    )
                   </div>
 
-                  {bookings.map((b) => (
+                  {series.map((s) => {
+                    const sampleEmail = s.bookings[0].guest_email;
+                    return (
+                      <RecurringSeriesCard
+                        key={`series-${s.recurrenceId}`}
+                        bookings={s.bookings}
+                        recurrence={recurrences.get(s.recurrenceId)}
+                        todayISO={todayISO}
+                        tabContext="all"
+                        cancelLoadingId={cancelLoading}
+                        onCancelSingle={(b) =>
+                          handleCancel(b.id, b.guest_email)
+                        }
+                        onCancelSeries={() => {
+                          setSeriesDialog({
+                            mode: "series",
+                            recurrenceId: s.recurrenceId,
+                            guestEmail: sampleEmail,
+                          });
+                        }}
+                      />
+                    );
+                  })}
+
+                  {singles.map((b) => (
                     <div
                       key={b.id}
                       className="rounded-xl border border-border bg-background p-5 shadow-sm"
@@ -400,12 +484,6 @@ function RezervareaMeaPage() {
                                 : "Neplatit — la sală"}
                           </dd>
                         </div>
-                        {b.recurrence_id && (
-                          <div>
-                            <dt className="text-xs text-muted-foreground">Tip</dt>
-                            <dd>↻ Recurentă</dd>
-                          </div>
-                        )}
                       </dl>
 
                       <BookingTimestamps createdAt={b.created_at} updatedAt={b.updated_at} className="mt-3" />
@@ -437,17 +515,6 @@ function RezervareaMeaPage() {
                               "Anulează această rezervare"
                             )}
                           </button>
-                          {b.recurrence_id && (
-                            <button
-                              onClick={() => {
-                                setSeriesScope("this");
-                                setSeriesDialog({ booking: b });
-                              }}
-                              className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-destructive/40 px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 transition"
-                            >
-                              Anulează în serie...
-                            </button>
-                          )}
                           <p className="mt-2 text-xs text-muted-foreground text-center">
                             Anularea este posibilă conform politicii sălii.
                           </p>
@@ -467,33 +534,37 @@ function RezervareaMeaPage() {
           <DialogHeader>
             <DialogTitle>Anulează rezervări recurente</DialogTitle>
             <DialogDescription>
-              Această rezervare face parte dintr-o serie recurentă. Alege ce vrei să anulezi:
+              {seriesDialog?.mode === "series"
+                ? "Vor fi anulate toate rezervările viitoare din această serie (de la data de azi). Acțiunea nu poate fi anulată."
+                : "Această rezervare face parte dintr-o serie recurentă. Alege ce vrei să anulezi:"}
             </DialogDescription>
           </DialogHeader>
-          <RadioGroup
-            value={seriesScope}
-            onValueChange={(v) => setSeriesScope(v as "this" | "future")}
-            className="gap-3"
-          >
-            <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer hover:bg-muted/40">
-              <RadioGroupItem value="this" className="mt-0.5" />
-              <div className="text-sm">
-                <div className="font-medium">Doar această rezervare</div>
-                <div className="text-xs text-muted-foreground">
-                  Anulează un singur booking din serie.
+          {seriesDialog?.mode === "single" && (
+            <RadioGroup
+              value={seriesScope}
+              onValueChange={(v) => setSeriesScope(v as "this" | "future")}
+              className="gap-3"
+            >
+              <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer hover:bg-muted/40">
+                <RadioGroupItem value="this" className="mt-0.5" />
+                <div className="text-sm">
+                  <div className="font-medium">Doar această rezervare</div>
+                  <div className="text-xs text-muted-foreground">
+                    Anulează un singur booking din serie.
+                  </div>
                 </div>
-              </div>
-            </label>
-            <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer hover:bg-muted/40">
-              <RadioGroupItem value="future" className="mt-0.5" />
-              <div className="text-sm">
-                <div className="font-medium">Aceasta și toate viitoarele</div>
-                <div className="text-xs text-muted-foreground">
-                  Anulează toate aparițiile din serie începând cu această dată.
+              </label>
+              <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer hover:bg-muted/40">
+                <RadioGroupItem value="future" className="mt-0.5" />
+                <div className="text-sm">
+                  <div className="font-medium">Aceasta și toate viitoarele</div>
+                  <div className="text-xs text-muted-foreground">
+                    Anulează toate aparițiile din serie începând cu această dată.
+                  </div>
                 </div>
-              </div>
-            </label>
-          </RadioGroup>
+              </label>
+            </RadioGroup>
+          )}
           <DialogFooter>
             <button
               type="button"
