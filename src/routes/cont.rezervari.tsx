@@ -385,22 +385,37 @@ function RezervariContPage() {
                     )}
                     {b.booking_date >= todayISO &&
                       (b.status === "confirmată" || b.status === "în așteptare") && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleCancel(b)}
-                          disabled={cancelLoading === b.id}
-                          className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                        >
-                          {cancelLoading === b.id ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Se anulează...
-                            </>
-                          ) : (
-                            "Anulează"
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleCancel(b)}
+                            disabled={cancelLoading === b.id}
+                            className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          >
+                            {cancelLoading === b.id ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Se anulează...
+                              </>
+                            ) : (
+                              "Anulează"
+                            )}
+                          </Button>
+                          {b.recurrence_id && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSeriesScope("this");
+                                setSeriesDialog({ booking: b });
+                              }}
+                              className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                            >
+                              Anulează în serie...
+                            </Button>
                           )}
-                        </Button>
+                        </>
                       )}
                   </div>
                 </article>
@@ -409,6 +424,64 @@ function RezervariContPage() {
           </div>
         </div>
       </main>
+
+      <Dialog open={!!seriesDialog} onOpenChange={(o) => !o && setSeriesDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Anulează rezervări recurente</DialogTitle>
+            <DialogDescription>
+              Această rezervare face parte dintr-o serie recurentă. Alege ce vrei să anulezi:
+            </DialogDescription>
+          </DialogHeader>
+          <RadioGroup
+            value={seriesScope}
+            onValueChange={(v) => setSeriesScope(v as "this" | "future")}
+            className="gap-3"
+          >
+            <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer hover:bg-muted/40">
+              <RadioGroupItem value="this" className="mt-0.5" />
+              <div className="text-sm">
+                <div className="font-medium">Doar această rezervare</div>
+                <div className="text-xs text-muted-foreground">
+                  Anulează un singur booking din serie.
+                </div>
+              </div>
+            </label>
+            <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer hover:bg-muted/40">
+              <RadioGroupItem value="future" className="mt-0.5" />
+              <div className="text-sm">
+                <div className="font-medium">Aceasta și toate viitoarele</div>
+                <div className="text-xs text-muted-foreground">
+                  Anulează toate aparițiile din serie începând cu această dată.
+                </div>
+              </div>
+            </label>
+          </RadioGroup>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setSeriesDialog(null)}
+              disabled={seriesBusy}
+            >
+              Renunță
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleSeriesCancel}
+              disabled={seriesBusy}
+            >
+              {seriesBusy ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Se anulează...
+                </>
+              ) : (
+                "Da, anulează"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Shell>
   );
 }
