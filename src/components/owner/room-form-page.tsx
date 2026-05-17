@@ -500,10 +500,10 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
 
     setDeleting(false);
     if (roomErr) {
-      toast.error("Nu am putut șterge sala.");
+      toast.error("Nu am putut dezactiva sala.");
       return;
     }
-    toast.success("Sala a fost ștearsă.");
+    toast.success("Sala a fost dezactivată.");
     navigate({ to: "/proprietar/sali" });
   }
 
