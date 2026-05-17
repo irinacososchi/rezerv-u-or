@@ -56,7 +56,7 @@ type Booking = {
 type Tab = "upcoming" | "past" | "all";
 
 function RezervariPage() {
-  const navigate = useNavigate();
+  
   const [authChecked, setAuthChecked] = useState(false);
   const [user, setUser] = useState<{ id: string; email: string } | null>(null);
 
