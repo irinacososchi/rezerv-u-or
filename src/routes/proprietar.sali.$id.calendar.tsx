@@ -1052,7 +1052,7 @@ function BookingDetails({
       if (merged.recurrence_id) {
         const { data: rec } = await supabase
           .from("recurrences")
-          .select("id, total_bookings")
+          .select("id, total_bookings, frequency")
           .eq("id", merged.recurrence_id)
           .single();
         if (cancelled) return;
@@ -1061,6 +1061,7 @@ function BookingDetails({
             total: (rec as { total_bookings: number }).total_bookings,
             index: merged.recurrence_index ?? 1,
             id: (rec as { id: string }).id,
+            frequency: (rec as { frequency: string }).frequency,
           });
         }
       } else {
