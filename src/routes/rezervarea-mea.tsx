@@ -55,6 +55,9 @@ function RezervareaMeaPage() {
   const [cancelLoading, setCancelLoading] = useState<string | null>(null);
   const [cancelError, setCancelError] = useState<{ id: string; msg: string } | null>(null);
   const [cancelSuccess, setCancelSuccess] = useState<string | null>(null);
+  const [seriesDialog, setSeriesDialog] = useState<{ booking: Booking } | null>(null);
+  const [seriesScope, setSeriesScope] = useState<"this" | "future">("this");
+  const [seriesBusy, setSeriesBusy] = useState(false);
 
   async function handleSearch() {
     setError(null);
