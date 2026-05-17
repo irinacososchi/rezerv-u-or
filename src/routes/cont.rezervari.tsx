@@ -57,10 +57,15 @@ function RezervariContPage() {
   const [user, setUser] = useState<{ id: string; email: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [recurrences, setRecurrences] = useState<Map<string, RecurrenceInfo>>(new Map());
   const [tab, setTab] = useState<Tab>("upcoming");
   const [cancelLoading, setCancelLoading] = useState<string | null>(null);
   const [cancelError, setCancelError] = useState<{ id: string; msg: string } | null>(null);
-  const [seriesDialog, setSeriesDialog] = useState<{ booking: Booking } | null>(null);
+  const [seriesDialog, setSeriesDialog] = useState<
+    | { mode: "single"; booking: Booking }
+    | { mode: "series"; recurrenceId: string; guestEmail: string }
+    | null
+  >(null);
   const [seriesScope, setSeriesScope] = useState<"this" | "future">("this");
   const [seriesBusy, setSeriesBusy] = useState(false);
 
