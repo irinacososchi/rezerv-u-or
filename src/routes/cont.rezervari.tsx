@@ -558,33 +558,37 @@ function RezervariContPage() {
           <DialogHeader>
             <DialogTitle>Anulează rezervări recurente</DialogTitle>
             <DialogDescription>
-              Această rezervare face parte dintr-o serie recurentă. Alege ce vrei să anulezi:
+              {seriesDialog?.mode === "series"
+                ? "Vor fi anulate toate rezervările viitoare din această serie (de la data de azi). Acțiunea nu poate fi anulată."
+                : "Această rezervare face parte dintr-o serie recurentă. Alege ce vrei să anulezi:"}
             </DialogDescription>
           </DialogHeader>
-          <RadioGroup
-            value={seriesScope}
-            onValueChange={(v) => setSeriesScope(v as "this" | "future")}
-            className="gap-3"
-          >
-            <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer hover:bg-muted/40">
-              <RadioGroupItem value="this" className="mt-0.5" />
-              <div className="text-sm">
-                <div className="font-medium">Doar această rezervare</div>
-                <div className="text-xs text-muted-foreground">
-                  Anulează un singur booking din serie.
+          {seriesDialog?.mode === "single" && (
+            <RadioGroup
+              value={seriesScope}
+              onValueChange={(v) => setSeriesScope(v as "this" | "future")}
+              className="gap-3"
+            >
+              <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer hover:bg-muted/40">
+                <RadioGroupItem value="this" className="mt-0.5" />
+                <div className="text-sm">
+                  <div className="font-medium">Doar această rezervare</div>
+                  <div className="text-xs text-muted-foreground">
+                    Anulează un singur booking din serie.
+                  </div>
                 </div>
-              </div>
-            </label>
-            <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer hover:bg-muted/40">
-              <RadioGroupItem value="future" className="mt-0.5" />
-              <div className="text-sm">
-                <div className="font-medium">Aceasta și toate viitoarele</div>
-                <div className="text-xs text-muted-foreground">
-                  Anulează toate aparițiile din serie începând cu această dată.
+              </label>
+              <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer hover:bg-muted/40">
+                <RadioGroupItem value="future" className="mt-0.5" />
+                <div className="text-sm">
+                  <div className="font-medium">Aceasta și toate viitoarele</div>
+                  <div className="text-xs text-muted-foreground">
+                    Anulează toate aparițiile din serie începând cu această dată.
+                  </div>
                 </div>
-              </div>
-            </label>
-          </RadioGroup>
+              </label>
+            </RadioGroup>
+          )}
           <DialogFooter>
             <Button
               variant="outline"
