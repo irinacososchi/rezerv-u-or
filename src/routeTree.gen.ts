@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SaliRouteImport } from './routes/sali'
+import { Route as RezervariRouteImport } from './routes/rezervari'
 import { Route as RezervareaMeaRouteImport } from './routes/rezervarea-mea'
 import { Route as ResetParolaRouteImport } from './routes/reset-parola'
 import { Route as ProprietarRouteImport } from './routes/proprietar'
@@ -45,6 +46,11 @@ const SignupRoute = SignupRouteImport.update({
 const SaliRoute = SaliRouteImport.update({
   id: '/sali',
   path: '/sali',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RezervariRoute = RezervariRouteImport.update({
+  id: '/rezervari',
+  path: '/rezervari',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RezervareaMeaRoute = RezervareaMeaRouteImport.update({
@@ -182,6 +188,7 @@ export interface FileRoutesByFullPath {
   '/proprietar': typeof ProprietarRouteWithChildren
   '/reset-parola': typeof ResetParolaRoute
   '/rezervarea-mea': typeof RezervareaMeaRoute
+  '/rezervari': typeof RezervariRoute
   '/sali': typeof SaliRouteWithChildren
   '/signup': typeof SignupRoute
   '/cont/favorite': typeof ContFavoriteRoute
@@ -209,6 +216,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/reset-parola': typeof ResetParolaRoute
   '/rezervarea-mea': typeof RezervareaMeaRoute
+  '/rezervari': typeof RezervariRoute
   '/signup': typeof SignupRoute
   '/cont/favorite': typeof ContFavoriteRoute
   '/cont/rezervari': typeof ContRezervariRoute
@@ -237,6 +245,7 @@ export interface FileRoutesById {
   '/proprietar': typeof ProprietarRouteWithChildren
   '/reset-parola': typeof ResetParolaRoute
   '/rezervarea-mea': typeof RezervareaMeaRoute
+  '/rezervari': typeof RezervariRoute
   '/sali': typeof SaliRouteWithChildren
   '/signup': typeof SignupRoute
   '/cont/favorite': typeof ContFavoriteRoute
@@ -268,6 +277,7 @@ export interface FileRouteTypes {
     | '/proprietar'
     | '/reset-parola'
     | '/rezervarea-mea'
+    | '/rezervari'
     | '/sali'
     | '/signup'
     | '/cont/favorite'
@@ -295,6 +305,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-parola'
     | '/rezervarea-mea'
+    | '/rezervari'
     | '/signup'
     | '/cont/favorite'
     | '/cont/rezervari'
@@ -322,6 +333,7 @@ export interface FileRouteTypes {
     | '/proprietar'
     | '/reset-parola'
     | '/rezervarea-mea'
+    | '/rezervari'
     | '/sali'
     | '/signup'
     | '/cont/favorite'
@@ -352,6 +364,7 @@ export interface RootRouteChildren {
   ProprietarRoute: typeof ProprietarRouteWithChildren
   ResetParolaRoute: typeof ResetParolaRoute
   RezervareaMeaRoute: typeof RezervareaMeaRoute
+  RezervariRoute: typeof RezervariRoute
   SaliRoute: typeof SaliRouteWithChildren
   SignupRoute: typeof SignupRoute
   RezervaSlugRoute: typeof RezervaSlugRoute
@@ -371,6 +384,13 @@ declare module '@tanstack/react-router' {
       path: '/sali'
       fullPath: '/sali'
       preLoaderRoute: typeof SaliRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rezervari': {
+      id: '/rezervari'
+      path: '/rezervari'
+      fullPath: '/rezervari'
+      preLoaderRoute: typeof RezervariRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/rezervarea-mea': {
@@ -638,6 +658,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProprietarRoute: ProprietarRouteWithChildren,
   ResetParolaRoute: ResetParolaRoute,
   RezervareaMeaRoute: RezervareaMeaRoute,
+  RezervariRoute: RezervariRoute,
   SaliRoute: SaliRouteWithChildren,
   SignupRoute: SignupRoute,
   RezervaSlugRoute: RezervaSlugRoute,
@@ -645,12 +666,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
