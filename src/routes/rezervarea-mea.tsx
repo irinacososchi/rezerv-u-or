@@ -54,15 +54,27 @@ function RezervareaMeaPage() {
   const [searchValue, setSearchValue] = useState("");
   const [reference, setReference] = useState("");
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [recurrences, setRecurrences] = useState<Map<string, RecurrenceInfo>>(new Map());
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cancelLoading, setCancelLoading] = useState<string | null>(null);
   const [cancelError, setCancelError] = useState<{ id: string; msg: string } | null>(null);
   const [cancelSuccess, setCancelSuccess] = useState<string | null>(null);
-  const [seriesDialog, setSeriesDialog] = useState<{ booking: Booking } | null>(null);
+  const [seriesDialog, setSeriesDialog] = useState<
+    | { mode: "single"; booking: Booking }
+    | { mode: "series"; recurrenceId: string; guestEmail: string }
+    | null
+  >(null);
   const [seriesScope, setSeriesScope] = useState<"this" | "future">("this");
   const [seriesBusy, setSeriesBusy] = useState(false);
+
+  const todayISO = new Date().toISOString().split("T")[0];
+
+  const { series, singles } = useMemo(
+    () => groupByRecurrence(bookings),
+    [bookings],
+  );
 
   async function handleSearch() {
     setError(null);
