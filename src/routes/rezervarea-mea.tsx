@@ -1,11 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { CalendarX, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { supabase } from "@/integrations/supabase/external-client";
 import { BookingTimestamps } from "@/components/booking-timestamps";
+import { RecurringSeriesCard } from "@/components/recurring-series-card";
+import {
+  groupByRecurrence,
+  type RecurrenceInfo,
+} from "@/lib/recurrence-series";
 import {
   Dialog,
   DialogContent,
