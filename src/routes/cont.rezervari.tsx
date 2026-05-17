@@ -352,9 +352,9 @@ function RezervariContPage() {
           {/* Tabs */}
           <div className="mt-6 flex gap-2 border-b border-border">
             {([
-              { key: "upcoming", label: `Viitoare (${upcoming.length})` },
-              { key: "past", label: `Trecute (${past.length})` },
-              { key: "all", label: `Toate (${bookings.length})` },
+              { key: "upcoming", label: `Viitoare (${counts.upcoming})` },
+              { key: "past", label: `Trecute (${counts.past})` },
+              { key: "all", label: `Toate (${counts.all})` },
             ] as { key: Tab; label: string }[]).map((t) => (
               <button
                 key={t.key}
