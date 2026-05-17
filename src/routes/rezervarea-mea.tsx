@@ -1,10 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { CalendarX, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { supabase } from "@/integrations/supabase/external-client";
 import { BookingTimestamps } from "@/components/booking-timestamps";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export const Route = createFileRoute("/rezervarea-mea")({
   head: () => ({
@@ -45,6 +55,9 @@ function RezervareaMeaPage() {
   const [cancelLoading, setCancelLoading] = useState<string | null>(null);
   const [cancelError, setCancelError] = useState<{ id: string; msg: string } | null>(null);
   const [cancelSuccess, setCancelSuccess] = useState<string | null>(null);
+  const [seriesDialog, setSeriesDialog] = useState<{ booking: Booking } | null>(null);
+  const [seriesScope, setSeriesScope] = useState<"this" | "future">("this");
+  const [seriesBusy, setSeriesBusy] = useState(false);
 
   async function handleSearch() {
     setError(null);
@@ -108,6 +121,99 @@ function RezervareaMeaPage() {
     setBookings((prev) =>
       prev.map((b) => (b.id === bookingId ? { ...b, status: "anulată" } : b)),
     );
+  }
+
+  async function handleSeriesCancel() {
+    if (!seriesDialog) return;
+    const b = seriesDialog.booking;
+
+    if (seriesScope === "this") {
+      setSeriesBusy(true);
+      const { error } = await supabase.rpc("cancel_booking", {
+        p_booking_id: b.id,
+        p_guest_email: b.guest_email,
+      });
+      setSeriesBusy(false);
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      toast.success("Rezervarea a fost anulată.");
+      setBookings((prev) =>
+        prev.map((x) => (x.id === b.id ? { ...x, status: "anulată" } : x)),
+      );
+      setSeriesDialog(null);
+      return;
+    }
+
+    if (!b.recurrence_id) return;
+    const { data: viitoare, error: fetchErr } = await supabase
+      .from("bookings")
+      .select("id")
+      .eq("recurrence_id", b.recurrence_id)
+      .gte("booking_date", b.booking_date)
+      .in("status", ["în așteptare", "confirmată"])
+      .order("booking_date", { ascending: true });
+
+    if (fetchErr) {
+      toast.error(fetchErr.message);
+      return;
+    }
+    const ids = ((viitoare ?? []) as { id: string }[]).map((x) => x.id);
+    if (ids.length === 0) {
+      toast.error("Nicio rezervare de anulat.");
+      setSeriesDialog(null);
+      return;
+    }
+    if (
+      !confirm(
+        `Ești pe cale să anulezi ${ids.length} ${ids.length === 1 ? "rezervare" : "rezervări"} din serie. Continui?`,
+      )
+    ) {
+      return;
+    }
+    setSeriesBusy(true);
+    const results = await Promise.allSettled(
+      ids.map((id) =>
+        supabase.rpc("cancel_booking", {
+          p_booking_id: id,
+          p_guest_email: b.guest_email,
+        }),
+      ),
+    );
+    setSeriesBusy(false);
+
+    let success = 0;
+    const errors: string[] = [];
+    const successIds = new Set<string>();
+    for (let i = 0; i < results.length; i++) {
+      const r = results[i];
+      if (r.status === "fulfilled" && !(r.value as { error: unknown }).error) {
+        success++;
+        successIds.add(ids[i]);
+      } else {
+        const msg =
+          r.status === "rejected"
+            ? String(r.reason)
+            : ((r.value as { error: { message?: string } }).error?.message ??
+              "eroare necunoscută");
+        errors.push(msg);
+      }
+    }
+
+    if (success === ids.length) {
+      toast.success(`Ai anulat ${success} ${success === 1 ? "rezervare" : "rezervări"} din serie.`);
+    } else if (success > 0) {
+      toast.warning(
+        `Ai anulat ${success} din ${ids.length} rezervări. ${errors.length} nu au putut fi anulate (termenul de anulare gratuită a trecut pentru ele). Contactează proprietarul sălii dacă vrei să le anulezi totuși.`,
+      );
+    } else {
+      toast.error(`Niciuna nu a putut fi anulată. Detalii: ${errors[0] ?? "?"}`);
+    }
+    setBookings((prev) =>
+      prev.map((x) => (successIds.has(x.id) ? { ...x, status: "anulată" } : x)),
+    );
+    setSeriesDialog(null);
   }
 
   return (
@@ -316,7 +422,7 @@ function RezervareaMeaPage() {
                       )}
 
                       {(b.status === "confirmată" || b.status === "în așteptare") && (
-                        <div className="mt-4 border-t border-border pt-4">
+                        <div className="mt-4 border-t border-border pt-4 space-y-2">
                           <button
                             onClick={() => handleCancel(b.id, b.guest_email)}
                             disabled={cancelLoading === b.id}
@@ -331,6 +437,17 @@ function RezervareaMeaPage() {
                               "Anulează această rezervare"
                             )}
                           </button>
+                          {b.recurrence_id && (
+                            <button
+                              onClick={() => {
+                                setSeriesScope("this");
+                                setSeriesDialog({ booking: b });
+                              }}
+                              className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-destructive/40 px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 transition"
+                            >
+                              Anulează în serie...
+                            </button>
+                          )}
                           <p className="mt-2 text-xs text-muted-foreground text-center">
                             Anularea este posibilă conform politicii sălii.
                           </p>
@@ -344,6 +461,67 @@ function RezervareaMeaPage() {
           )}
         </div>
       </main>
+
+      <Dialog open={!!seriesDialog} onOpenChange={(o) => !o && setSeriesDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Anulează rezervări recurente</DialogTitle>
+            <DialogDescription>
+              Această rezervare face parte dintr-o serie recurentă. Alege ce vrei să anulezi:
+            </DialogDescription>
+          </DialogHeader>
+          <RadioGroup
+            value={seriesScope}
+            onValueChange={(v) => setSeriesScope(v as "this" | "future")}
+            className="gap-3"
+          >
+            <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer hover:bg-muted/40">
+              <RadioGroupItem value="this" className="mt-0.5" />
+              <div className="text-sm">
+                <div className="font-medium">Doar această rezervare</div>
+                <div className="text-xs text-muted-foreground">
+                  Anulează un singur booking din serie.
+                </div>
+              </div>
+            </label>
+            <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer hover:bg-muted/40">
+              <RadioGroupItem value="future" className="mt-0.5" />
+              <div className="text-sm">
+                <div className="font-medium">Aceasta și toate viitoarele</div>
+                <div className="text-xs text-muted-foreground">
+                  Anulează toate aparițiile din serie începând cu această dată.
+                </div>
+              </div>
+            </label>
+          </RadioGroup>
+          <DialogFooter>
+            <button
+              type="button"
+              onClick={() => setSeriesDialog(null)}
+              disabled={seriesBusy}
+              className="rounded-md border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-muted/40 disabled:opacity-60"
+            >
+              Renunță
+            </button>
+            <button
+              type="button"
+              onClick={handleSeriesCancel}
+              disabled={seriesBusy}
+              className="rounded-md bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90 disabled:opacity-60 inline-flex items-center justify-center gap-2"
+            >
+              {seriesBusy ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Se anulează...
+                </>
+              ) : (
+                "Da, anulează"
+              )}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <SiteFooter />
     </div>
   );

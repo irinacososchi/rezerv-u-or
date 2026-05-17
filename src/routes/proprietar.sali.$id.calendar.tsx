@@ -1026,7 +1026,10 @@ function BookingDetails({
     total: number;
     index: number;
     id: string;
+    frequency: string;
   } | null>(null);
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelScope, setCancelScope] = useState<"this" | "future" | "series">("this");
 
   // Fetch full booking row (price_per_hour, discount_amount, renter_notes)
   useEffect(() => {
@@ -1049,7 +1052,7 @@ function BookingDetails({
       if (merged.recurrence_id) {
         const { data: rec } = await supabase
           .from("recurrences")
-          .select("id, total_bookings")
+          .select("id, total_bookings, frequency")
           .eq("id", merged.recurrence_id)
           .single();
         if (cancelled) return;
@@ -1058,6 +1061,7 @@ function BookingDetails({
             total: (rec as { total_bookings: number }).total_bookings,
             index: merged.recurrence_index ?? 1,
             id: (rec as { id: string }).id,
+            frequency: (rec as { frequency: string }).frequency,
           });
         }
       } else {
@@ -1130,31 +1134,91 @@ function BookingDetails({
     onChanged();
   }
 
-  async function cancelBooking(cancelAll: boolean) {
-    const message = cancelAll && recurrenceInfo
-      ? `Sigur vrei să anulezi TOATE cele ${recurrenceInfo.total} apariții ale acestei rezervări recurente?`
-      : "Sigur vrei să anulezi această rezervare?";
-    if (!confirm(message)) return;
+  async function cancelSingle() {
+    if (!confirm("Sigur vrei să anulezi această rezervare?")) return;
     setBusy(true);
-    let error;
-    if (cancelAll && recurrenceInfo) {
-      ({ error } = await supabase
-        .from("bookings")
-        .update({ status: "anulată" })
-        .eq("recurrence_id", recurrenceInfo.id)
-        .in("status", ["în așteptare", "confirmată"]));
-    } else {
-      ({ error } = await supabase
-        .from("bookings")
-        .update({ status: "anulată" })
-        .eq("id", entry.id));
-    }
+    const { error } = await supabase.rpc("cancel_booking", {
+      p_booking_id: entry.id,
+      p_guest_email: null,
+      p_owner_override: true,
+    });
     setBusy(false);
     if (error) {
       console.error("Cancel error:", error);
-      return toast.error("Eroare la anulare");
+      return toast.error(error.message || "Eroare la anulare");
     }
-    toast.success(cancelAll ? "Toate aparițiile au fost anulate" : "Rezervare anulată");
+    toast.success("Rezervare anulată");
+    onChanged();
+    onClose();
+  }
+
+  async function performBulkCancel() {
+    if (!recurrenceInfo) return;
+    let ids: string[] = [];
+    if (cancelScope === "this") {
+      ids = [entry.id];
+    } else {
+      const today = new Date().toISOString().split("T")[0];
+      const fromDate =
+        cancelScope === "future" ? entry.booking_date : today;
+      const { data, error: fetchErr } = await supabase
+        .from("bookings")
+        .select("id")
+        .eq("recurrence_id", recurrenceInfo.id)
+        .gte("booking_date", fromDate)
+        .in("status", ["în așteptare", "confirmată"]);
+      if (fetchErr) return toast.error(fetchErr.message);
+      ids = ((data ?? []) as { id: string }[]).map((b) => b.id);
+    }
+    if (ids.length === 0) {
+      toast.error("Nicio rezervare de anulat.");
+      setCancelOpen(false);
+      return;
+    }
+    if (
+      !confirm(
+        `Ești pe cale să anulezi ${ids.length} ${ids.length === 1 ? "rezervare" : "rezervări"}. Chiriașul nu va fi notificat automat (nu există încă sistemul de notificări). Continui?`,
+      )
+    )
+      return;
+
+    setBusy(true);
+    const results = await Promise.allSettled(
+      ids.map((id) =>
+        supabase.rpc("cancel_booking", {
+          p_booking_id: id,
+          p_guest_email: null,
+          p_owner_override: true,
+        }),
+      ),
+    );
+    setBusy(false);
+
+    let success = 0;
+    const errors: string[] = [];
+    for (const r of results) {
+      if (r.status === "fulfilled" && !(r.value as { error: unknown }).error) {
+        success++;
+      } else {
+        const msg =
+          r.status === "rejected"
+            ? String(r.reason)
+            : ((r.value as { error: { message?: string } }).error?.message ??
+              "eroare necunoscută");
+        errors.push(msg);
+      }
+    }
+
+    if (success === ids.length) {
+      toast.success(`Ai anulat ${success} ${success === 1 ? "rezervare" : "rezervări"} din serie.`);
+    } else if (success > 0) {
+      toast.warning(
+        `Ai anulat ${success} din ${ids.length}. ${errors.length} ${errors.length === 1 ? "eșec" : "eșecuri"}. Primul motiv: ${errors[0]}`,
+      );
+    } else {
+      toast.error(`Niciuna nu a putut fi anulată. Detalii: ${errors[0] ?? "?"}`);
+    }
+    setCancelOpen(false);
     onChanged();
     onClose();
   }
@@ -1294,25 +1358,18 @@ function BookingDetails({
           )}
           {details.status !== "anulată" && (
             recurrenceInfo ? (
-              <>
-                <Button
-                  variant="outline"
-                  className="border-destructive text-destructive hover:bg-destructive/10"
-                  onClick={() => cancelBooking(false)}
-                  disabled={busy}
-                >
-                  Anulează doar această apariție
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => cancelBooking(true)}
-                  disabled={busy}
-                >
-                  Anulează TOATE aparițiile ({recurrenceInfo.total})
-                </Button>
-              </>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  setCancelScope("this");
+                  setCancelOpen(true);
+                }}
+                disabled={busy}
+              >
+                Anulează rezervarea...
+              </Button>
             ) : (
-              <Button variant="destructive" onClick={() => cancelBooking(false)} disabled={busy}>
+              <Button variant="destructive" onClick={cancelSingle} disabled={busy}>
                 Anulează rezervarea
               </Button>
             )
@@ -1322,6 +1379,59 @@ function BookingDetails({
           Închide
         </Button>
       </DialogFooter>
+
+      {recurrenceInfo && (
+        <Dialog open={cancelOpen} onOpenChange={setCancelOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Anulează rezervare recurentă?</DialogTitle>
+              <DialogDescription>
+                Această rezervare face parte dintr-o serie{" "}
+                {recurrenceInfo.frequency ?? "recurentă"}. Alege ce vrei să anulezi:
+              </DialogDescription>
+            </DialogHeader>
+            <RadioGroup
+              value={cancelScope}
+              onValueChange={(v) => setCancelScope(v as "this" | "future" | "series")}
+              className="gap-3"
+            >
+              <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer hover:bg-muted/40">
+                <RadioGroupItem value="this" className="mt-0.5" />
+                <div className="text-sm">
+                  <div className="font-medium">Doar această apariție</div>
+                  <div className="text-xs text-muted-foreground">Anulează un singur booking.</div>
+                </div>
+              </label>
+              <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer hover:bg-muted/40">
+                <RadioGroupItem value="future" className="mt-0.5" />
+                <div className="text-sm">
+                  <div className="font-medium">Aceasta și toate viitoarele</div>
+                  <div className="text-xs text-muted-foreground">
+                    Anulează toate aparițiile începând cu această dată.
+                  </div>
+                </div>
+              </label>
+              <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer hover:bg-muted/40">
+                <RadioGroupItem value="series" className="mt-0.5" />
+                <div className="text-sm">
+                  <div className="font-medium">Toată seria (doar viitoarele)</div>
+                  <div className="text-xs text-muted-foreground">
+                    Anulează toate aparițiile începând de azi. Trecutul rămâne intact.
+                  </div>
+                </div>
+              </label>
+            </RadioGroup>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setCancelOpen(false)} disabled={busy}>
+                Renunță
+              </Button>
+              <Button variant="destructive" onClick={performBulkCancel} disabled={busy}>
+                Continuă
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 }
