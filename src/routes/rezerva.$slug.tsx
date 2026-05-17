@@ -495,7 +495,7 @@ function CheckoutPage() {
 
   // ---------- Auth / profile prefill ----------
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [, setProfileLoaded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
