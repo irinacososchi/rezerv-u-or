@@ -103,7 +103,25 @@ function RezervariContPage() {
       .or(`renter_id.eq.${usr.id},guest_email.ilike.${usr.email}`)
       .not("status", "eq", "blocată")
       .order("booking_date", { ascending: false });
-    setBookings((data ?? []) as Booking[]);
+    const list = (data ?? []) as Booking[];
+    setBookings(list);
+
+    const recIds = Array.from(
+      new Set(list.map((b) => b.recurrence_id).filter((x): x is string => !!x)),
+    );
+    if (recIds.length > 0) {
+      const { data: recs } = await supabase
+        .from("recurrences")
+        .select(
+          "id, frequency, day_of_week, start_time, end_time, first_date, last_date, total_bookings",
+        )
+        .in("id", recIds);
+      const map = new Map<string, RecurrenceInfo>();
+      for (const r of (recs ?? []) as RecurrenceInfo[]) map.set(r.id, r);
+      setRecurrences(map);
+    } else {
+      setRecurrences(new Map());
+    }
   }
 
   const todayISO = new Date().toISOString().split("T")[0];
