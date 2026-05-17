@@ -87,14 +87,15 @@ function ContactPage() {
       <SiteHeader />
       <main className="flex-1">
         <div className="container mx-auto max-w-3xl px-4 py-12 md:py-16">
-          <div className="mb-8 md:mb-10">
+          <div className="mb-8 md:mb-10 text-center">
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground">
               Contact
             </h1>
             <p className="mt-4 text-base md:text-lg text-muted-foreground leading-relaxed">
               Ai găsit ceva ce nu funcționează, sau poate ai idei noi pe care
-              am putea să le implementăm. Trimite formularul cu o descriere
-              amănunțită și te contactăm noi pentru detalii.
+              am putea să le implementăm?
+              <br />
+              Trimite formularul cu o descriere amănunțită și te contactăm noi pentru detalii.
             </p>
           </div>
 
