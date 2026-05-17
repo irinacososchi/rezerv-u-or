@@ -1358,25 +1358,18 @@ function BookingDetails({
           )}
           {details.status !== "anulată" && (
             recurrenceInfo ? (
-              <>
-                <Button
-                  variant="outline"
-                  className="border-destructive text-destructive hover:bg-destructive/10"
-                  onClick={() => cancelBooking(false)}
-                  disabled={busy}
-                >
-                  Anulează doar această apariție
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => cancelBooking(true)}
-                  disabled={busy}
-                >
-                  Anulează TOATE aparițiile ({recurrenceInfo.total})
-                </Button>
-              </>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  setCancelScope("this");
+                  setCancelOpen(true);
+                }}
+                disabled={busy}
+              >
+                Anulează rezervarea...
+              </Button>
             ) : (
-              <Button variant="destructive" onClick={() => cancelBooking(false)} disabled={busy}>
+              <Button variant="destructive" onClick={cancelSingle} disabled={busy}>
                 Anulează rezervarea
               </Button>
             )
@@ -1386,6 +1379,59 @@ function BookingDetails({
           Închide
         </Button>
       </DialogFooter>
+
+      {recurrenceInfo && (
+        <Dialog open={cancelOpen} onOpenChange={setCancelOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Anulează rezervare recurentă?</DialogTitle>
+              <DialogDescription>
+                Această rezervare face parte dintr-o serie{" "}
+                {recurrenceInfo.frequency ?? "recurentă"}. Alege ce vrei să anulezi:
+              </DialogDescription>
+            </DialogHeader>
+            <RadioGroup
+              value={cancelScope}
+              onValueChange={(v) => setCancelScope(v as "this" | "future" | "series")}
+              className="gap-3"
+            >
+              <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer hover:bg-muted/40">
+                <RadioGroupItem value="this" className="mt-0.5" />
+                <div className="text-sm">
+                  <div className="font-medium">Doar această apariție</div>
+                  <div className="text-xs text-muted-foreground">Anulează un singur booking.</div>
+                </div>
+              </label>
+              <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer hover:bg-muted/40">
+                <RadioGroupItem value="future" className="mt-0.5" />
+                <div className="text-sm">
+                  <div className="font-medium">Aceasta și toate viitoarele</div>
+                  <div className="text-xs text-muted-foreground">
+                    Anulează toate aparițiile începând cu această dată.
+                  </div>
+                </div>
+              </label>
+              <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer hover:bg-muted/40">
+                <RadioGroupItem value="series" className="mt-0.5" />
+                <div className="text-sm">
+                  <div className="font-medium">Toată seria (doar viitoarele)</div>
+                  <div className="text-xs text-muted-foreground">
+                    Anulează toate aparițiile începând de azi. Trecutul rămâne intact.
+                  </div>
+                </div>
+              </label>
+            </RadioGroup>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setCancelOpen(false)} disabled={busy}>
+                Renunță
+              </Button>
+              <Button variant="destructive" onClick={performBulkCancel} disabled={busy}>
+                Continuă
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 }
