@@ -54,6 +54,9 @@ function RezervariContPage() {
   const [tab, setTab] = useState<Tab>("upcoming");
   const [cancelLoading, setCancelLoading] = useState<string | null>(null);
   const [cancelError, setCancelError] = useState<{ id: string; msg: string } | null>(null);
+  const [seriesDialog, setSeriesDialog] = useState<{ booking: Booking } | null>(null);
+  const [seriesScope, setSeriesScope] = useState<"this" | "future">("this");
+  const [seriesBusy, setSeriesBusy] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
