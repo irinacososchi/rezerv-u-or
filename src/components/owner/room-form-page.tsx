@@ -478,7 +478,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
   async function handleDelete() {
     if (!isEdit || !roomId) return;
     const confirmed = window.confirm(
-      "Ești sigur că vrei să ștergi această sală? Toate rezervările viitoare vor fi anulate. Această acțiune nu poate fi anulată.",
+      "Ești sigur că vrei să dezactivezi această sală? Toate rezervările viitoare vor fi anulate.",
     );
     if (!confirmed) return;
 
@@ -500,10 +500,10 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
 
     setDeleting(false);
     if (roomErr) {
-      toast.error("Nu am putut șterge sala.");
+      toast.error("Nu am putut dezactiva sala.");
       return;
     }
-    toast.success("Sala a fost ștearsă.");
+    toast.success("Sala a fost dezactivată.");
     navigate({ to: "/proprietar/sali" });
   }
 
@@ -1034,7 +1034,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
                   className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
                 >
                   <Trash2 className="h-4 w-4" />
-                  {deleting ? "Se șterge..." : "Șterge sala"}
+                  {deleting ? "Se dezactivează..." : "Dezactivează sala"}
                 </Button>
               )}
             </div>
