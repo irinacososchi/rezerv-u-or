@@ -493,6 +493,35 @@ function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  // ---------- Auth / profile prefill ----------
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [, setProfileLoaded] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (cancelled) return;
+      if (!user) {
+        setIsLoggedIn(false);
+        setProfileLoaded(true);
+        return;
+      }
+      setIsLoggedIn(true);
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, email, phone")
+        .eq("id", user.id)
+        .single();
+      if (cancelled) return;
+      setName((profile?.full_name ?? "").trim());
+      setEmail((profile?.email ?? user.email ?? "").trim());
+      setPhone((profile?.phone ?? "").trim());
+      setProfileLoaded(true);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   // ---------- Parse slots (new multi-day format) with fallbacks ----------
   const parsedSlots: ParsedSlot[] = useMemo(() => {
     // Format nou (multi-day): "DATE:HH:MM-HH:MM,DATE:HH:MM-HH:MM,..."
@@ -800,15 +829,27 @@ function CheckoutPage() {
     }
     if (!name.trim()) {
       console.warn("=== EARLY RETURN ===", { reason: "validation_failed_name" });
-      return setSubmitError("Completează numele complet.");
+      return setSubmitError(
+        isLoggedIn
+          ? "Numele lipsește din contul tău. Te rugăm să-l completezi în Cont înainte de a continua."
+          : "Completează numele complet.",
+      );
     }
     if (!isValidEmail(email)) {
       console.warn("=== EARLY RETURN ===", { reason: "validation_failed_email" });
-      return setSubmitError("Email invalid.");
+      return setSubmitError(
+        isLoggedIn
+          ? "Emailul lipsește din contul tău. Te rugăm să-l completezi în Cont înainte de a continua."
+          : "Email invalid.",
+      );
     }
     if (!isValidPhone(phone)) {
       console.warn("=== EARLY RETURN ===", { reason: "validation_failed_phone" });
-      return setSubmitError("Telefon invalid (minim 10 cifre).");
+      return setSubmitError(
+        isLoggedIn
+          ? "Telefonul lipsește din contul tău. Te rugăm să-l completezi în Cont înainte de a continua."
+          : "Telefon invalid (minim 10 cifre).",
+      );
     }
 
     const isRecurrent = search.recurrent === "true" && search.recurrenceCount > 1;
@@ -1324,6 +1365,9 @@ function CheckoutPage() {
                     required
                     maxLength={100}
                     autoComplete="name"
+                    readOnly={isLoggedIn}
+                    disabled={isLoggedIn}
+                    className={isLoggedIn ? "bg-muted/40 text-foreground/80 cursor-not-allowed focus-visible:ring-0" : ""}
                   />
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -1337,6 +1381,9 @@ function CheckoutPage() {
                       required
                       maxLength={255}
                       autoComplete="email"
+                      readOnly={isLoggedIn}
+                      disabled={isLoggedIn}
+                      className={isLoggedIn ? "bg-muted/40 text-foreground/80 cursor-not-allowed focus-visible:ring-0" : ""}
                     />
                   </div>
                   <div>
@@ -1350,9 +1397,20 @@ function CheckoutPage() {
                       required
                       maxLength={20}
                       autoComplete="tel"
+                      readOnly={isLoggedIn}
+                      disabled={isLoggedIn}
+                      className={isLoggedIn ? "bg-muted/40 text-foreground/80 cursor-not-allowed focus-visible:ring-0" : ""}
                     />
                   </div>
                 </div>
+                {isLoggedIn && (
+                  <p className="text-xs text-muted-foreground">
+                    Aceste date sunt preluate din contul tău.{" "}
+                    <Link to="/cont" className="text-primary hover:underline">
+                      Modifică în Cont →
+                    </Link>
+                  </p>
+                )}
               </div>
             </section>
 
