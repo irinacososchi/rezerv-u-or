@@ -16,6 +16,12 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/external-client";
 import { BookingTimestamps } from "@/components/booking-timestamps";
+import { RecurringSeriesCard } from "@/components/recurring-series-card";
+import {
+  groupByRecurrence,
+  seriesStats,
+  type RecurrenceInfo,
+} from "@/lib/recurrence-series";
 
 export const Route = createFileRoute("/cont/rezervari")({
   head: () => ({
