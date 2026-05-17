@@ -114,7 +114,25 @@ function RezervareaMeaPage() {
       return;
     }
 
-    setBookings((data ?? []) as Booking[]);
+    const list = (data ?? []) as Booking[];
+    setBookings(list);
+
+    const recIds = Array.from(
+      new Set(list.map((b) => b.recurrence_id).filter((x): x is string => !!x)),
+    );
+    if (recIds.length > 0) {
+      const { data: recs } = await supabase
+        .from("recurrences")
+        .select(
+          "id, frequency, day_of_week, start_time, end_time, first_date, last_date, total_bookings",
+        )
+        .in("id", recIds);
+      const map = new Map<string, RecurrenceInfo>();
+      for (const r of (recs ?? []) as RecurrenceInfo[]) map.set(r.id, r);
+      setRecurrences(map);
+    } else {
+      setRecurrences(new Map());
+    }
   }
 
   async function handleCancel(bookingId: string, guestEmail: string) {
@@ -142,33 +160,48 @@ function RezervareaMeaPage() {
 
   async function handleSeriesCancel() {
     if (!seriesDialog) return;
-    const b = seriesDialog.booking;
 
-    if (seriesScope === "this") {
-      setSeriesBusy(true);
-      const { error } = await supabase.rpc("cancel_booking", {
-        p_booking_id: b.id,
-        p_guest_email: b.guest_email,
-      });
-      setSeriesBusy(false);
-      if (error) {
-        toast.error(error.message);
+    let recurrenceId: string | null;
+    let anchorDate: string;
+    let guestEmail: string;
+    let alsoSingleBookingId: string | null = null;
+
+    if (seriesDialog.mode === "single") {
+      const b = seriesDialog.booking;
+      guestEmail = b.guest_email;
+      if (seriesScope === "this") {
+        setSeriesBusy(true);
+        const { error } = await supabase.rpc("cancel_booking", {
+          p_booking_id: b.id,
+          p_guest_email: b.guest_email,
+        });
+        setSeriesBusy(false);
+        if (error) {
+          toast.error(error.message);
+          return;
+        }
+        toast.success("Rezervarea a fost anulată.");
+        setBookings((prev) =>
+          prev.map((x) => (x.id === b.id ? { ...x, status: "anulată" } : x)),
+        );
+        setSeriesDialog(null);
         return;
       }
-      toast.success("Rezervarea a fost anulată.");
-      setBookings((prev) =>
-        prev.map((x) => (x.id === b.id ? { ...x, status: "anulată" } : x)),
-      );
-      setSeriesDialog(null);
-      return;
+      recurrenceId = b.recurrence_id;
+      anchorDate = b.booking_date;
+      alsoSingleBookingId = b.id;
+    } else {
+      recurrenceId = seriesDialog.recurrenceId;
+      guestEmail = seriesDialog.guestEmail;
+      anchorDate = todayISO;
     }
 
-    if (!b.recurrence_id) return;
+    if (!recurrenceId) return;
     const { data: viitoare, error: fetchErr } = await supabase
       .from("bookings")
       .select("id")
-      .eq("recurrence_id", b.recurrence_id)
-      .gte("booking_date", b.booking_date)
+      .eq("recurrence_id", recurrenceId)
+      .gte("booking_date", anchorDate)
       .in("status", ["în așteptare", "confirmată"])
       .order("booking_date", { ascending: true });
 
@@ -177,6 +210,9 @@ function RezervareaMeaPage() {
       return;
     }
     const ids = ((viitoare ?? []) as { id: string }[]).map((x) => x.id);
+    if (alsoSingleBookingId && !ids.includes(alsoSingleBookingId)) {
+      ids.unshift(alsoSingleBookingId);
+    }
     if (ids.length === 0) {
       toast.error("Nicio rezervare de anulat.");
       setSeriesDialog(null);
@@ -194,7 +230,7 @@ function RezervareaMeaPage() {
       ids.map((id) =>
         supabase.rpc("cancel_booking", {
           p_booking_id: id,
-          p_guest_email: b.guest_email,
+          p_guest_email: guestEmail,
         }),
       ),
     );
