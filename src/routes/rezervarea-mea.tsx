@@ -123,6 +123,99 @@ function RezervareaMeaPage() {
     );
   }
 
+  async function handleSeriesCancel() {
+    if (!seriesDialog) return;
+    const b = seriesDialog.booking;
+
+    if (seriesScope === "this") {
+      setSeriesBusy(true);
+      const { error } = await supabase.rpc("cancel_booking", {
+        p_booking_id: b.id,
+        p_guest_email: b.guest_email,
+      });
+      setSeriesBusy(false);
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      toast.success("Rezervarea a fost anulată.");
+      setBookings((prev) =>
+        prev.map((x) => (x.id === b.id ? { ...x, status: "anulată" } : x)),
+      );
+      setSeriesDialog(null);
+      return;
+    }
+
+    if (!b.recurrence_id) return;
+    const { data: viitoare, error: fetchErr } = await supabase
+      .from("bookings")
+      .select("id")
+      .eq("recurrence_id", b.recurrence_id)
+      .gte("booking_date", b.booking_date)
+      .in("status", ["în așteptare", "confirmată"])
+      .order("booking_date", { ascending: true });
+
+    if (fetchErr) {
+      toast.error(fetchErr.message);
+      return;
+    }
+    const ids = ((viitoare ?? []) as { id: string }[]).map((x) => x.id);
+    if (ids.length === 0) {
+      toast.error("Nicio rezervare de anulat.");
+      setSeriesDialog(null);
+      return;
+    }
+    if (
+      !confirm(
+        `Ești pe cale să anulezi ${ids.length} ${ids.length === 1 ? "rezervare" : "rezervări"} din serie. Continui?`,
+      )
+    ) {
+      return;
+    }
+    setSeriesBusy(true);
+    const results = await Promise.allSettled(
+      ids.map((id) =>
+        supabase.rpc("cancel_booking", {
+          p_booking_id: id,
+          p_guest_email: b.guest_email,
+        }),
+      ),
+    );
+    setSeriesBusy(false);
+
+    let success = 0;
+    const errors: string[] = [];
+    const successIds = new Set<string>();
+    for (let i = 0; i < results.length; i++) {
+      const r = results[i];
+      if (r.status === "fulfilled" && !(r.value as { error: unknown }).error) {
+        success++;
+        successIds.add(ids[i]);
+      } else {
+        const msg =
+          r.status === "rejected"
+            ? String(r.reason)
+            : ((r.value as { error: { message?: string } }).error?.message ??
+              "eroare necunoscută");
+        errors.push(msg);
+      }
+    }
+
+    if (success === ids.length) {
+      toast.success(`Ai anulat ${success} ${success === 1 ? "rezervare" : "rezervări"} din serie.`);
+    } else if (success > 0) {
+      toast.warning(
+        `Ai anulat ${success} din ${ids.length} rezervări. ${errors.length} nu au putut fi anulate (termenul de anulare gratuită a trecut pentru ele). Contactează proprietarul sălii dacă vrei să le anulezi totuși.`,
+      );
+    } else {
+      toast.error(`Niciuna nu a putut fi anulată. Detalii: ${errors[0] ?? "?"}`);
+    }
+    setBookings((prev) =>
+      prev.map((x) => (successIds.has(x.id) ? { ...x, status: "anulată" } : x)),
+    );
+    setSeriesDialog(null);
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-secondary/30">
       <SiteHeader />
