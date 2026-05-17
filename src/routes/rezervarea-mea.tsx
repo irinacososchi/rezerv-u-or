@@ -385,11 +385,42 @@ function RezervareaMeaPage() {
               ) : (
                 <div className="space-y-4">
                   <div className="text-sm text-muted-foreground">
-                    {bookings.length}{" "}
-                    {bookings.length === 1 ? "rezervare găsită" : "rezervări găsite"}
+                    {series.length + singles.length}{" "}
+                    {series.length + singles.length === 1
+                      ? "card afișat"
+                      : "carduri afișate"}{" "}
+                    ({bookings.length} rezervări în total
+                    {series.length > 0
+                      ? `, ${series.length} ${series.length === 1 ? "serie recurentă" : "serii recurente"}`
+                      : ""}
+                    )
                   </div>
 
-                  {bookings.map((b) => (
+                  {series.map((s) => {
+                    const sampleEmail = s.bookings[0].guest_email;
+                    return (
+                      <RecurringSeriesCard
+                        key={`series-${s.recurrenceId}`}
+                        bookings={s.bookings}
+                        recurrence={recurrences.get(s.recurrenceId)}
+                        todayISO={todayISO}
+                        tabContext="all"
+                        cancelLoadingId={cancelLoading}
+                        onCancelSingle={(b) =>
+                          handleCancel(b.id, b.guest_email)
+                        }
+                        onCancelSeries={() => {
+                          setSeriesDialog({
+                            mode: "series",
+                            recurrenceId: s.recurrenceId,
+                            guestEmail: sampleEmail,
+                          });
+                        }}
+                      />
+                    );
+                  })}
+
+                  {singles.map((b) => (
                     <div
                       key={b.id}
                       className="rounded-xl border border-border bg-background p-5 shadow-sm"
@@ -453,12 +484,6 @@ function RezervareaMeaPage() {
                                 : "Neplatit — la sală"}
                           </dd>
                         </div>
-                        {b.recurrence_id && (
-                          <div>
-                            <dt className="text-xs text-muted-foreground">Tip</dt>
-                            <dd>↻ Recurentă</dd>
-                          </div>
-                        )}
                       </dl>
 
                       <BookingTimestamps createdAt={b.created_at} updatedAt={b.updated_at} className="mt-3" />
@@ -490,17 +515,6 @@ function RezervareaMeaPage() {
                               "Anulează această rezervare"
                             )}
                           </button>
-                          {b.recurrence_id && (
-                            <button
-                              onClick={() => {
-                                setSeriesScope("this");
-                                setSeriesDialog({ booking: b });
-                              }}
-                              className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-destructive/40 px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 transition"
-                            >
-                              Anulează în serie...
-                            </button>
-                          )}
                           <p className="mt-2 text-xs text-muted-foreground text-center">
                             Anularea este posibilă conform politicii sălii.
                           </p>
