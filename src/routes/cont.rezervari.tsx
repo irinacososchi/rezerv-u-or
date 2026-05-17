@@ -375,7 +375,7 @@ function RezervariContPage() {
 
           {/* List */}
           <div className="mt-6 space-y-4">
-            {visible.length === 0 ? (
+            {items.length === 0 ? (
               <div className="rounded-xl border border-dashed border-border bg-card/50 p-12 text-center">
                 <CalendarX className="mx-auto h-10 w-10 text-muted-foreground" />
                 <p className="mt-4 text-sm text-muted-foreground">
@@ -395,111 +395,138 @@ function RezervariContPage() {
                 )}
               </div>
             ) : (
-              visible.map((b) => (
-                <article
-                  key={b.id}
-                  className="rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-card)]"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="font-mono text-xs font-bold text-muted-foreground">
-                        #{b.reference}
+              items.map((it) => {
+                if (it.kind === "series") {
+                  const sampleEmail = it.bookings[0].guest_email;
+                  const slug = it.bookings[0].room_slug;
+                  return (
+                    <RecurringSeriesCard
+                      key={`series-${it.recurrenceId}`}
+                      bookings={it.bookings}
+                      recurrence={recurrences.get(it.recurrenceId)}
+                      todayISO={todayISO}
+                      tabContext={tab}
+                      cancelLoadingId={cancelLoading}
+                      onCancelSingle={(b) => handleCancel(b as Booking)}
+                      onCancelSeries={() => {
+                        setSeriesDialog({
+                          mode: "series",
+                          recurrenceId: it.recurrenceId,
+                          guestEmail: sampleEmail,
+                        });
+                      }}
+                      roomLink={
+                        slug ? (
+                          <Button asChild variant="outline" size="sm">
+                            <Link to="/sali/$slug" params={{ slug }}>
+                              Vezi sala
+                            </Link>
+                          </Button>
+                        ) : null
+                      }
+                    />
+                  );
+                }
+                const b = it.b;
+                return (
+                  <article
+                    key={b.id}
+                    className="rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-card)]"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="font-mono text-xs font-bold text-muted-foreground">
+                          #{b.reference}
+                        </div>
+                        <h3 className="mt-1 font-semibold">{b.room_name}</h3>
+                        {b.room_address && (
+                          <p className="text-xs text-muted-foreground">{b.room_address}</p>
+                        )}
                       </div>
-                      <h3 className="mt-1 font-semibold">{b.room_name}</h3>
-                      {b.room_address && (
-                        <p className="text-xs text-muted-foreground">{b.room_address}</p>
-                      )}
-                    </div>
-                    <div className="flex flex-col items-end gap-1">
-                      <span
-                        className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                          b.status === "confirmată"
-                            ? "bg-primary/10 text-primary"
-                            : b.status === "anulată" || b.status === "refuzată" || b.status === "expirată"
-                              ? "bg-destructive/10 text-destructive"
-                              : b.status === "finalizată"
-                                ? "bg-muted text-muted-foreground"
-                                : "bg-orange-500/10 text-orange-600"
-                        }`}
-                      >
-                        {b.status}
-                      </span>
-                      <span
-                        className={`rounded-full px-2.5 py-0.5 text-xs ${
-                          b.payment_status === "platit"
-                            ? "bg-primary/10 text-primary"
-                            : b.payment_status === "rambursat"
-                              ? "bg-muted text-muted-foreground"
-                              : "bg-amber-500/10 text-amber-700"
-                        }`}
-                      >
-                        {b.payment_status === "platit"
-                          ? "Plătit"
-                          : b.payment_status === "rambursat"
-                            ? "Rambursat"
-                            : "Neplătit"}
-                      </span>
-                      {b.recurrence_id && (
-                        <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs">
-                          ↻ Recurentă
+                      <div className="flex flex-col items-end gap-1">
+                        <span
+                          className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                            b.status === "confirmată"
+                              ? "bg-primary/10 text-primary"
+                              : b.status === "anulată" || b.status === "refuzată" || b.status === "expirată"
+                                ? "bg-destructive/10 text-destructive"
+                                : b.status === "finalizată"
+                                  ? "bg-muted text-muted-foreground"
+                                  : "bg-orange-500/10 text-orange-600"
+                          }`}
+                        >
+                          {b.status}
                         </span>
-                      )}
+                        <span
+                          className={`rounded-full px-2.5 py-0.5 text-xs ${
+                            b.payment_status === "platit"
+                              ? "bg-primary/10 text-primary"
+                              : b.payment_status === "rambursat"
+                                ? "bg-muted text-muted-foreground"
+                                : "bg-amber-500/10 text-amber-700"
+                          }`}
+                        >
+                          {b.payment_status === "platit"
+                            ? "Plătit"
+                            : b.payment_status === "rambursat"
+                              ? "Rambursat"
+                              : "Neplătit"}
+                        </span>
+                      </div>
                     </div>
-                  </div>
 
-                  <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-border pt-4 text-sm sm:grid-cols-4">
-                    <div>
-                      <dt className="text-xs text-muted-foreground">Data</dt>
-                      <dd>
-                        {new Date(b.booking_date).toLocaleDateString("ro-RO", {
-                          weekday: "long",
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                        })}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-xs text-muted-foreground">Interval</dt>
-                      <dd>
-                        {b.start_time?.slice(0, 5)} – {b.end_time?.slice(0, 5)}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-xs text-muted-foreground">Durată</dt>
-                      <dd>
-                        {b.duration_hours} {b.duration_hours === 1 ? "oră" : "ore"}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-xs text-muted-foreground">Total</dt>
-                      <dd className="font-semibold">{b.total_amount} RON</dd>
-                    </div>
-                  </dl>
+                    <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-border pt-4 text-sm sm:grid-cols-4">
+                      <div>
+                        <dt className="text-xs text-muted-foreground">Data</dt>
+                        <dd>
+                          {new Date(b.booking_date).toLocaleDateString("ro-RO", {
+                            weekday: "long",
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs text-muted-foreground">Interval</dt>
+                        <dd>
+                          {b.start_time?.slice(0, 5)} – {b.end_time?.slice(0, 5)}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs text-muted-foreground">Durată</dt>
+                        <dd>
+                          {b.duration_hours} {b.duration_hours === 1 ? "oră" : "ore"}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs text-muted-foreground">Total</dt>
+                        <dd className="font-semibold">{b.total_amount} RON</dd>
+                      </div>
+                    </dl>
 
-                  <BookingTimestamps
-                    createdAt={b.created_at}
-                    updatedAt={b.updated_at}
-                    className="mt-3"
-                  />
+                    <BookingTimestamps
+                      createdAt={b.created_at}
+                      updatedAt={b.updated_at}
+                      className="mt-3"
+                    />
 
-                  {cancelError?.id === b.id && (
-                    <div className="mt-3 rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">
-                      {cancelError.msg}
-                    </div>
-                  )}
-
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {b.room_slug && (
-                      <Button asChild variant="outline" size="sm">
-                        <Link to="/sali/$slug" params={{ slug: b.room_slug }}>
-                          Vezi sala
-                        </Link>
-                      </Button>
+                    {cancelError && cancelError.id === b.id && (
+                      <div className="mt-3 rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">
+                        {cancelError.msg}
+                      </div>
                     )}
-                    {b.booking_date >= todayISO &&
-                      (b.status === "confirmată" || b.status === "în așteptare") && (
-                        <>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {b.room_slug && (
+                        <Button asChild variant="outline" size="sm">
+                          <Link to="/sali/$slug" params={{ slug: b.room_slug }}>
+                            Vezi sala
+                          </Link>
+                        </Button>
+                      )}
+                      {b.booking_date >= todayISO &&
+                        (b.status === "confirmată" || b.status === "în așteptare") && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -516,24 +543,11 @@ function RezervariContPage() {
                               "Anulează"
                             )}
                           </Button>
-                          {b.recurrence_id && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setSeriesScope("this");
-                                setSeriesDialog({ booking: b });
-                              }}
-                              className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                            >
-                              Anulează în serie...
-                            </Button>
-                          )}
-                        </>
-                      )}
-                  </div>
-                </article>
-              ))
+                        )}
+                    </div>
+                  </article>
+                );
+              })
             )}
           </div>
         </div>
