@@ -493,6 +493,35 @@ function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  // ---------- Auth / profile prefill ----------
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (cancelled) return;
+      if (!user) {
+        setIsLoggedIn(false);
+        setProfileLoaded(true);
+        return;
+      }
+      setIsLoggedIn(true);
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, email, phone")
+        .eq("id", user.id)
+        .single();
+      if (cancelled) return;
+      setName((profile?.full_name ?? "").trim());
+      setEmail((profile?.email ?? user.email ?? "").trim());
+      setPhone((profile?.phone ?? "").trim());
+      setProfileLoaded(true);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   // ---------- Parse slots (new multi-day format) with fallbacks ----------
   const parsedSlots: ParsedSlot[] = useMemo(() => {
     // Format nou (multi-day): "DATE:HH:MM-HH:MM,DATE:HH:MM-HH:MM,..."
