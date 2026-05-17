@@ -823,8 +823,6 @@ function RezervariPage() {
 }
 
 function Shell({ children }: { children: React.ReactNode }) {
-  // Silence navigate import unused warning if any
-  void useNavigate;
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
