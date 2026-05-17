@@ -16,6 +16,7 @@ import { Route as RezervareaMeaRouteImport } from './routes/rezervarea-mea'
 import { Route as ResetParolaRouteImport } from './routes/reset-parola'
 import { Route as ProprietarRouteImport } from './routes/proprietar'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as ContRouteImport } from './routes/cont'
 import { Route as ConfirmareRouteImport } from './routes/confirmare'
 import { Route as IndexRouteImport } from './routes/index'
@@ -71,6 +72,11 @@ const ProprietarRoute = ProprietarRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContRoute = ContRouteImport.update({
@@ -184,6 +190,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/confirmare': typeof ConfirmareRoute
   '/cont': typeof ContRouteWithChildren
+  '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
   '/proprietar': typeof ProprietarRouteWithChildren
   '/reset-parola': typeof ResetParolaRoute
@@ -213,6 +220,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/confirmare': typeof ConfirmareRoute
+  '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
   '/reset-parola': typeof ResetParolaRoute
   '/rezervarea-mea': typeof RezervareaMeaRoute
@@ -241,6 +249,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/confirmare': typeof ConfirmareRoute
   '/cont': typeof ContRouteWithChildren
+  '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
   '/proprietar': typeof ProprietarRouteWithChildren
   '/reset-parola': typeof ResetParolaRoute
@@ -273,6 +282,7 @@ export interface FileRouteTypes {
     | '/'
     | '/confirmare'
     | '/cont'
+    | '/contact'
     | '/login'
     | '/proprietar'
     | '/reset-parola'
@@ -302,6 +312,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/confirmare'
+    | '/contact'
     | '/login'
     | '/reset-parola'
     | '/rezervarea-mea'
@@ -329,6 +340,7 @@ export interface FileRouteTypes {
     | '/'
     | '/confirmare'
     | '/cont'
+    | '/contact'
     | '/login'
     | '/proprietar'
     | '/reset-parola'
@@ -360,6 +372,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConfirmareRoute: typeof ConfirmareRoute
   ContRoute: typeof ContRouteWithChildren
+  ContactRoute: typeof ContactRoute
   LoginRoute: typeof LoginRoute
   ProprietarRoute: typeof ProprietarRouteWithChildren
   ResetParolaRoute: typeof ResetParolaRoute
@@ -419,6 +432,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cont': {
@@ -654,6 +674,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConfirmareRoute: ConfirmareRoute,
   ContRoute: ContRouteWithChildren,
+  ContactRoute: ContactRoute,
   LoginRoute: LoginRoute,
   ProprietarRoute: ProprietarRouteWithChildren,
   ResetParolaRoute: ResetParolaRoute,
