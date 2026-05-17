@@ -161,7 +161,7 @@ export function SiteHeader() {
                     </Link>
                     {hasBookings && (
                       <Link
-                        to="/cont/rezervari"
+                        to="/rezervari"
                         onClick={() => setDropdownOpen(false)}
                         className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted/40 hover:text-primary transition"
                       >
