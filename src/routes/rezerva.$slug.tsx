@@ -829,15 +829,27 @@ function CheckoutPage() {
     }
     if (!name.trim()) {
       console.warn("=== EARLY RETURN ===", { reason: "validation_failed_name" });
-      return setSubmitError("Completează numele complet.");
+      return setSubmitError(
+        isLoggedIn
+          ? "Numele lipsește din contul tău. Te rugăm să-l completezi în Cont înainte de a continua."
+          : "Completează numele complet.",
+      );
     }
     if (!isValidEmail(email)) {
       console.warn("=== EARLY RETURN ===", { reason: "validation_failed_email" });
-      return setSubmitError("Email invalid.");
+      return setSubmitError(
+        isLoggedIn
+          ? "Emailul lipsește din contul tău. Te rugăm să-l completezi în Cont înainte de a continua."
+          : "Email invalid.",
+      );
     }
     if (!isValidPhone(phone)) {
       console.warn("=== EARLY RETURN ===", { reason: "validation_failed_phone" });
-      return setSubmitError("Telefon invalid (minim 10 cifre).");
+      return setSubmitError(
+        isLoggedIn
+          ? "Telefonul lipsește din contul tău. Te rugăm să-l completezi în Cont înainte de a continua."
+          : "Telefon invalid (minim 10 cifre).",
+      );
     }
 
     const isRecurrent = search.recurrent === "true" && search.recurrenceCount > 1;
