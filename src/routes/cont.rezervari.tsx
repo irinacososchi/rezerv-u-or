@@ -126,21 +126,89 @@ function RezervariContPage() {
 
   const todayISO = new Date().toISOString().split("T")[0];
 
-  const upcoming = useMemo(
-    () =>
-      bookings.filter(
+  // Grupare per recurrence_id (singles rămân individuale)
+  const { series: allSeries, singles: allSingles } = useMemo(
+    () => groupByRecurrence(bookings),
+    [bookings],
+  );
+
+  // Aplică filtrul de tab pe singles
+  const filteredSingles = useMemo(() => {
+    if (tab === "upcoming") {
+      return allSingles.filter(
         (b) =>
           b.booking_date >= todayISO &&
           !["anulată", "refuzată", "expirată"].includes(b.status),
-      ),
-    [bookings, todayISO],
-  );
-  const past = useMemo(
-    () => bookings.filter((b) => b.booking_date < todayISO || b.status === "finalizată"),
-    [bookings, todayISO],
-  );
+      );
+    }
+    if (tab === "past") {
+      return allSingles.filter(
+        (b) => b.booking_date < todayISO || b.status === "finalizată",
+      );
+    }
+    return allSingles;
+  }, [allSingles, tab, todayISO]);
 
-  const visible = tab === "upcoming" ? upcoming : tab === "past" ? past : bookings;
+  // Aplică filtrul de tab pe serii
+  const filteredSeries = useMemo(() => {
+    return allSeries.filter((s) => {
+      const stats = seriesStats(s.bookings, todayISO);
+      if (tab === "upcoming") return stats.hasUpcoming;
+      if (tab === "past") return stats.hasPast;
+      return true;
+    });
+  }, [allSeries, tab, todayISO]);
+
+  // Counts pentru tab-uri (carduri, nu rezervări individuale)
+  const counts = useMemo(() => {
+    const upcomingCount =
+      allSingles.filter(
+        (b) =>
+          b.booking_date >= todayISO &&
+          !["anulată", "refuzată", "expirată"].includes(b.status),
+      ).length +
+      allSeries.filter((s) => seriesStats(s.bookings, todayISO).hasUpcoming).length;
+    const pastCount =
+      allSingles.filter(
+        (b) => b.booking_date < todayISO || b.status === "finalizată",
+      ).length +
+      allSeries.filter((s) => seriesStats(s.bookings, todayISO).hasPast).length;
+    const allCount = allSingles.length + allSeries.length;
+    return { upcoming: upcomingCount, past: pastCount, all: allCount };
+  }, [allSingles, allSeries, todayISO]);
+
+  // Sortare unificată pentru afișare
+  type RenderItem =
+    | { kind: "single"; b: Booking; anchor: string }
+    | { kind: "series"; recurrenceId: string; bookings: Booking[]; anchor: string };
+
+  const items: RenderItem[] = useMemo(() => {
+    const out: RenderItem[] = [];
+    for (const b of filteredSingles) {
+      out.push({ kind: "single", b, anchor: b.booking_date });
+    }
+    for (const s of filteredSeries) {
+      const stats = seriesStats(s.bookings, todayISO);
+      let anchor: string;
+      if (tab === "upcoming") {
+        anchor = stats.nextDate ?? s.bookings[0].booking_date;
+      } else if (tab === "past") {
+        anchor = stats.lastPastDate ?? s.bookings[s.bookings.length - 1].booking_date;
+      } else {
+        anchor = stats.nextDate ?? s.bookings[0].booking_date;
+      }
+      out.push({
+        kind: "series",
+        recurrenceId: s.recurrenceId,
+        bookings: s.bookings,
+        anchor,
+      });
+    }
+    out.sort((a, b) =>
+      tab === "past" ? b.anchor.localeCompare(a.anchor) : a.anchor.localeCompare(b.anchor),
+    );
+    return out;
+  }, [filteredSingles, filteredSeries, tab, todayISO]);
 
   async function handleCancel(b: Booking) {
     if (!user) return;
@@ -160,32 +228,45 @@ function RezervariContPage() {
 
   async function handleSeriesCancel() {
     if (!user || !seriesDialog) return;
-    const b = seriesDialog.booking;
 
-    if (seriesScope === "this") {
-      setSeriesBusy(true);
-      const { error } = await supabase.rpc("cancel_booking", {
-        p_booking_id: b.id,
-        p_guest_email: user.email,
-      });
-      setSeriesBusy(false);
-      if (error) {
-        toast.error(error.message);
+    // Determină recurrence_id și anchor date pentru filtrul .gte
+    let recurrenceId: string | null;
+    let anchorDate: string;
+    let alsoSingleBookingId: string | null = null;
+
+    if (seriesDialog.mode === "single") {
+      const b = seriesDialog.booking;
+      if (seriesScope === "this") {
+        setSeriesBusy(true);
+        const { error } = await supabase.rpc("cancel_booking", {
+          p_booking_id: b.id,
+          p_guest_email: user.email,
+        });
+        setSeriesBusy(false);
+        if (error) {
+          toast.error(error.message);
+          return;
+        }
+        toast.success("Rezervarea a fost anulată.");
+        setSeriesDialog(null);
+        await fetchBookings(user);
         return;
       }
-      toast.success("Rezervarea a fost anulată.");
-      setSeriesDialog(null);
-      await fetchBookings(user);
-      return;
+      recurrenceId = b.recurrence_id;
+      anchorDate = b.booking_date;
+      alsoSingleBookingId = b.id;
+    } else {
+      // mode === "series" — toate viitoarele din serie începând de azi
+      recurrenceId = seriesDialog.recurrenceId;
+      anchorDate = todayISO;
     }
 
-    // future
-    if (!b.recurrence_id) return;
+    if (!recurrenceId) return;
     const { data: viitoare, error: fetchErr } = await supabase
       .from("bookings")
       .select("id")
-      .eq("recurrence_id", b.recurrence_id)
-      .gte("booking_date", b.booking_date)
+      .eq("recurrence_id", recurrenceId)
+      .gte("booking_date", anchorDate)
       .in("status", ["în așteptare", "confirmată"])
       .order("booking_date", { ascending: true });
 
@@ -194,6 +275,10 @@ function RezervariContPage() {
       return;
     }
     const ids = ((viitoare ?? []) as { id: string }[]).map((x) => x.id);
+    // siguranța că includem și booking-ul anchor în modul single+future
+    if (alsoSingleBookingId && !ids.includes(alsoSingleBookingId)) {
+      ids.unshift(alsoSingleBookingId);
+    }
     if (ids.length === 0) {
       toast.error("Nicio rezervare de anulat.");
       setSeriesDialog(null);
