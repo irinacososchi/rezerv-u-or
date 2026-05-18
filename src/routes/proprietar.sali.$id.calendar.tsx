@@ -2157,6 +2157,7 @@ function ManualBookingForm({
         start_time: startTime,
         end_time: endTime,
         duration_hours: duration,
+        duration_minutes: duration * 60,
         price_per_hour: pricePerHour,
         subtotal: total,
         discount_amount: 0,
