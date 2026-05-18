@@ -60,6 +60,8 @@ type Room = {
   currency: string | null;
   is_active: boolean | null;
   cover_url?: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
 };
 
 type Photo = {
