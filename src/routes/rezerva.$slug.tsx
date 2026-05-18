@@ -754,9 +754,7 @@ function CheckoutPage() {
 
   const recalculatedDuration = useMemo(() => {
     return finalSlotsToCreate.reduce((sum, s) => {
-      const sh = parseInt(s.start.slice(0, 2), 10);
-      const eh = parseInt(s.end.slice(0, 2), 10);
-      return sum + (eh - sh);
+      return sum + (timeToMinutes(s.end) - timeToMinutes(s.start)) / 60;
     }, 0);
   }, [finalSlotsToCreate]);
 
