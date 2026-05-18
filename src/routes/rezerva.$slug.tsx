@@ -16,7 +16,13 @@ import {
   getDayOfWeek,
   DAY_NAMES_RO,
 } from "@/lib/date-utils";
-import { intervalsOverlap, slotFromTime } from "@/lib/time-slots";
+import {
+  intervalsOverlap,
+  slotFromTime,
+  SLOT_GRANULARITY_MINUTES,
+  timeToMinutes,
+  minutesToTime,
+} from "@/lib/time-slots";
 
 // ---------- Search params ----------
 type CheckoutSearch = {
@@ -124,11 +130,11 @@ function isValidPhone(s: string): boolean {
 
 function pickActivePricing(
   date: Date,
-  startHour: number,
+  slotStart: string,
   rules: PricingRule[],
 ): PricingRule | null {
   const dayOfWeek = getDayOfWeek(date);
-  const slotTime = `${startHour.toString().padStart(2, "0")}:00:00`;
+  const slotTime = `${slotStart}:00`;
   const matching = rules
     .filter((r) => {
       if (!r.is_active) return false;
@@ -143,29 +149,31 @@ function pickActivePricing(
   return matching[0] ?? null;
 }
 
-function getPriceForSlot(date: Date, hour: number, rules: PricingRule[]): number {
-  const r = pickActivePricing(date, hour, rules);
-  return r ? Number(r.price_per_hour) : 0;
+function getPriceForSlot(date: Date, slotStart: string, rules: PricingRule[]): number {
+  const r = pickActivePricing(date, slotStart, rules);
+  // price_per_hour is hourly; scale to slot granularity.
+  return r ? (Number(r.price_per_hour) * SLOT_GRANULARITY_MINUTES) / 60 : 0;
 }
 
 function getPriceForSlotDetailed(
   date: Date,
-  hour: number,
+  slotStart: string,
   rules: PricingRule[],
 ): { price: number; label: string | null } {
-  const r = pickActivePricing(date, hour, rules);
+  const r = pickActivePricing(date, slotStart, rules);
   return {
-    price: r ? Number(r.price_per_hour) : 0,
+    price: r ? (Number(r.price_per_hour) * SLOT_GRANULARITY_MINUTES) / 60 : 0,
     label: r?.label ?? null,
   };
 }
 
 function calcSlotTotal(s: ParsedSlot, rules: PricingRule[]): number {
-  const startHour = parseInt(s.start.slice(0, 2), 10);
-  const endHour = parseInt(s.end.slice(0, 2), 10);
+  const startMin = timeToMinutes(s.start);
+  const endMin = timeToMinutes(s.end);
+  const date = parseISODate(s.date);
   let total = 0;
-  for (let h = startHour; h < endHour; h++) {
-    total += getPriceForSlot(parseISODate(s.date), h, rules);
+  for (let m = startMin; m < endMin; m += SLOT_GRANULARITY_MINUTES) {
+    total += getPriceForSlot(date, minutesToTime(m), rules);
   }
   return total;
 }
@@ -174,12 +182,13 @@ function calcSlotPricing(
   s: ParsedSlot,
   rules: PricingRule[],
 ): { totalPrice: number; labels: string[] } {
-  const startHour = parseInt(s.start.slice(0, 2), 10);
-  const endHour = parseInt(s.end.slice(0, 2), 10);
+  const startMin = timeToMinutes(s.start);
+  const endMin = timeToMinutes(s.end);
+  const date = parseISODate(s.date);
   const labelsSet = new Set<string>();
   let total = 0;
-  for (let h = startHour; h < endHour; h++) {
-    const detail = getPriceForSlotDetailed(parseISODate(s.date), h, rules);
+  for (let m = startMin; m < endMin; m += SLOT_GRANULARITY_MINUTES) {
+    const detail = getPriceForSlotDetailed(date, minutesToTime(m), rules);
     total += detail.price;
     if (detail.label) labelsSet.add(detail.label);
   }
@@ -187,47 +196,54 @@ function calcSlotPricing(
 }
 
 type PricingSubInterval = {
-  startHour: number;
-  endHour: number;
+  start: string;
+  end: string;
   price: number;
   label: string | null;
 };
 
 function splitSlotByPricing(s: ParsedSlot, rules: PricingRule[]): PricingSubInterval[] {
-  const startHour = parseInt(s.start.slice(0, 2), 10);
-  const endHour = parseInt(s.end.slice(0, 2), 10);
+  const startMin = timeToMinutes(s.start);
+  const endMin = timeToMinutes(s.end);
   const date = parseISODate(s.date);
 
   const subIntervals: PricingSubInterval[] = [];
   let currentLabel: string | null = null;
-  let currentStart = startHour;
+  let currentStartMin = startMin;
   let currentSum = 0;
 
-  for (let h = startHour; h < endHour; h++) {
-    const detail = getPriceForSlotDetailed(date, h, rules);
-    if (h === startHour) {
+  for (let m = startMin; m < endMin; m += SLOT_GRANULARITY_MINUTES) {
+    const detail = getPriceForSlotDetailed(date, minutesToTime(m), rules);
+    if (m === startMin) {
       currentLabel = detail.label;
-      currentStart = h;
+      currentStartMin = m;
       currentSum = detail.price;
     } else if (detail.label !== currentLabel) {
-      subIntervals.push({ startHour: currentStart, endHour: h, price: currentSum, label: currentLabel });
+      subIntervals.push({
+        start: minutesToTime(currentStartMin),
+        end: minutesToTime(m),
+        price: currentSum,
+        label: currentLabel,
+      });
       currentLabel = detail.label;
-      currentStart = h;
+      currentStartMin = m;
       currentSum = detail.price;
     } else {
       currentSum += detail.price;
     }
   }
 
-  if (endHour > startHour) {
-    subIntervals.push({ startHour: currentStart, endHour, price: currentSum, label: currentLabel });
+  if (endMin > startMin) {
+    subIntervals.push({
+      start: minutesToTime(currentStartMin),
+      end: minutesToTime(endMin),
+      price: currentSum,
+      label: currentLabel,
+    });
   }
   return subIntervals;
 }
 
-function formatHour(h: number): string {
-  return `${h.toString().padStart(2, "0")}:00`;
-}
 
 function BookingSlotsPreview({
   allSlots,
@@ -266,10 +282,11 @@ function BookingSlotsPreview({
     (() => {
       const s = allSlots[0];
       const labelsSet = new Set<string | null>();
-      const startHour = parseInt(s.start.slice(0, 2), 10);
-      const endHour = parseInt(s.end.slice(0, 2), 10);
-      for (let h = startHour; h < endHour; h++) {
-        const detail = getPriceForSlotDetailed(parseISODate(s.date), h, pricing);
+      const startMin = timeToMinutes(s.start);
+      const endMin = timeToMinutes(s.end);
+      const date = parseISODate(s.date);
+      for (let m = startMin; m < endMin; m += SLOT_GRANULARITY_MINUTES) {
+        const detail = getPriceForSlotDetailed(date, minutesToTime(m), pricing);
         labelsSet.add(detail.label);
       }
       return labelsSet.size > 1;
@@ -352,7 +369,7 @@ function BookingSlotsPreview({
                                   className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm"
                                 >
                                   <span className="font-medium">
-                                    {formatHour(sub.startHour)}–{formatHour(sub.endHour)}
+                                    {sub.start}–{sub.end}
                                   </span>
                                   <div className="flex flex-col items-end">
                                     <span className="font-medium">
@@ -607,11 +624,11 @@ function CheckoutPage() {
   // ---------- Derived ----------
   const currency = room?.currency ?? "RON";
   const dateObj = paramsValid ? parseISODate(firstDate) : null;
-  const startHour = paramsValid ? parseInt(effectiveStart.slice(0, 2), 10) : 0;
+  const slotStart = paramsValid ? slotFromTime(effectiveStart) : "";
   const activeRule = useMemo(() => {
     if (!dateObj || !pricing.length) return null;
-    return pickActivePricing(dateObj, startHour, pricing);
-  }, [dateObj, startHour, pricing]);
+    return pickActivePricing(dateObj, slotStart, pricing);
+  }, [dateObj, slotStart, pricing]);
 
   const isRecurrentSearch = search.recurrent === "true";
 
@@ -734,9 +751,7 @@ function CheckoutPage() {
 
   const recalculatedDuration = useMemo(() => {
     return finalSlotsToCreate.reduce((sum, s) => {
-      const sh = parseInt(s.start.slice(0, 2), 10);
-      const eh = parseInt(s.end.slice(0, 2), 10);
-      return sum + (eh - sh);
+      return sum + (timeToMinutes(s.end) - timeToMinutes(s.start)) / 60;
     }, 0);
   }, [finalSlotsToCreate]);
 
@@ -970,17 +985,21 @@ function CheckoutPage() {
     for (let idx = 0; idx < allDateIntervals.length; idx++) {
       const slot = allDateIntervals[idx];
       const slotDateObj = parseISODate(slot.date);
-      const startHourN = parseInt(slot.start.slice(0, 2), 10);
-      const endHourN = parseInt(slot.end.slice(0, 2), 10);
-      const intervalHours = endHourN - startHourN;
+      const startMin = timeToMinutes(slot.start);
+      const endMin = timeToMinutes(slot.end);
+      const intervalMinutes = endMin - startMin;
+      const intervalHours = intervalMinutes / 60;
 
-      // Compute subtotal for this interval by summing per-hour prices
+      // Compute subtotal for this interval by summing per-slot prices.
       let intervalSubtotal = 0;
       let firstRule = null as PricingRule | null;
-      for (let h = startHourN; h < endHourN; h++) {
-        const r = pickActivePricing(slotDateObj, h, pricing);
+      for (let m = startMin; m < endMin; m += SLOT_GRANULARITY_MINUTES) {
+        const slotStartStr = minutesToTime(m);
+        const r = pickActivePricing(slotDateObj, slotStartStr, pricing);
         if (!firstRule) firstRule = r;
-        intervalSubtotal += r ? Number(r.price_per_hour) : 0;
+        intervalSubtotal += r
+          ? (Number(r.price_per_hour) * SLOT_GRANULARITY_MINUTES) / 60
+          : 0;
       }
       const intervalDiscount = applyVoucher ? discountAmount : 0;
       const intervalTotal = Math.max(0, intervalSubtotal - intervalDiscount);
@@ -1001,7 +1020,7 @@ function CheckoutPage() {
         start_time: `${slot.start}:00`,
         end_time: `${slot.end}:00`,
         duration_hours: intervalHours,
-        duration_minutes: intervalHours * 60,
+        duration_minutes: intervalMinutes,
         price_per_hour: intervalPricePerHour,
         pricing_rule_label: firstRule?.label ?? null,
         subtotal: intervalSubtotal,
@@ -1254,10 +1273,11 @@ function CheckoutPage() {
               {(() => {
                 const allLabels = new Set<string>();
                 for (const s of finalSlotsToCreate) {
-                  const startHour = parseInt(s.start.slice(0, 2), 10);
-                  const endHour = parseInt(s.end.slice(0, 2), 10);
-                  for (let h = startHour; h < endHour; h++) {
-                    const detail = getPriceForSlotDetailed(parseISODate(s.date), h, pricing);
+                  const startMin = timeToMinutes(s.start);
+                  const endMin = timeToMinutes(s.end);
+                  const date = parseISODate(s.date);
+                  for (let m = startMin; m < endMin; m += SLOT_GRANULARITY_MINUTES) {
+                    const detail = getPriceForSlotDetailed(date, minutesToTime(m), pricing);
                     if (detail.label) allLabels.add(detail.label);
                   }
                 }
