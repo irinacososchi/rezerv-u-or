@@ -902,7 +902,7 @@ function RoomDetailsPage() {
                     </div>
                     {daySelections.map((ds, idx) => {
                       const isActive = idx === activeDayIndex;
-                      const hoursCount = ds.hours.length;
+                      const hoursCount = ds.slots.length;
                       return (
                         <div
                           key={idx}
