@@ -2091,8 +2091,12 @@ function ManualBookingForm({
       setManualError("Completează telefonul.");
       return;
     }
-    if (!validRange) {
+    if (durationMinutes <= 0) {
       setManualError("Ora de sfârșit trebuie să fie după ora de început.");
+      return;
+    }
+    if (durationMinutes % 30 !== 0) {
+      setManualError("Durata trebuie să fie un multiplu de 30 de minute.");
       return;
     }
     if (isRecurrent && !recurrenceEndDate) {
