@@ -94,6 +94,7 @@ type Entry = {
   price_per_hour?: number | null;
   discount_amount?: number | null;
   duration_hours?: number | null;
+  duration_minutes?: number | null;
   renter_notes?: string | null;
   recurrence_id?: string | null;
   recurrence_index?: number | null;
@@ -1038,7 +1039,7 @@ function BookingDetails({
       const { data } = await supabase
         .from("bookings")
         .select(
-          "id, start_time, end_time, duration_hours, subtotal, total_amount, price_per_hour, discount_amount, renter_notes, payment_status, status, recurrence_id, recurrence_index",
+          "id, start_time, end_time, duration_hours, duration_minutes, subtotal, total_amount, price_per_hour, discount_amount, renter_notes, payment_status, status, recurrence_id, recurrence_index",
         )
         .eq("id", entry.id)
         .single();
@@ -1093,6 +1094,7 @@ function BookingDetails({
         start_time: `${newStartHour}:00`,
         end_time: `${newEndHour}:00`,
         duration_hours: newDuration,
+        duration_minutes: newDuration * 60,
         subtotal: newSubtotal,
         total_amount: newSubtotal - disc,
       })
@@ -2155,6 +2157,7 @@ function ManualBookingForm({
         start_time: startTime,
         end_time: endTime,
         duration_hours: duration,
+        duration_minutes: duration * 60,
         price_per_hour: pricePerHour,
         subtotal: total,
         discount_amount: 0,

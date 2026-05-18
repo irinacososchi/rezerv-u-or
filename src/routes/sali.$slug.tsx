@@ -29,6 +29,13 @@ import {
   endOfMonth,
   isSameDay,
 } from "@/lib/date-utils";
+import {
+  SLOT_GRANULARITY_MINUTES,
+  slotFromTime,
+  timeToMinutes,
+  minutesToTime,
+  intervalsOverlap,
+} from "@/lib/time-slots";
 
 export const Route = createFileRoute("/sali/$slug")({
   loader: ({ params }) => ({ slug: params.slug }),
@@ -98,11 +105,11 @@ type SlotPricing = {
 
 function getPriceForSlotDetailed(
   date: Date,
-  hour: number,
+  slotStart: string,
   pricingRules: PricingRule[],
 ): SlotPricing {
   const dayOfWeek = getDayOfWeek(date);
-  const slotTime = `${hour.toString().padStart(2, "0")}:00:00`;
+  const slotTime = `${slotStart}:00`;
 
   const matching = pricingRules
     .filter((rule) => {
@@ -131,31 +138,12 @@ type Booking = {
 };
 
 // ---------- Helpers ----------
-function hourFromTime(t: string): number {
-  return parseInt(t.slice(0, 2), 10);
-}
-
 function getPriceForSlot(
   date: Date,
-  hour: number,
+  slotStart: string,
   pricingRules: PricingRule[],
 ): number {
-  const dayOfWeek = getDayOfWeek(date);
-  const slotTime = `${hour.toString().padStart(2, "0")}:00:00`;
-
-  const matching = pricingRules
-    .filter((rule) => {
-      if (!rule.is_active) return false;
-      const dayMatch = (rule.days_of_week ?? []).includes(dayOfWeek);
-      const timeMatch =
-        !rule.start_time ||
-        !rule.end_time ||
-        (slotTime >= rule.start_time && slotTime < rule.end_time);
-      return dayMatch && timeMatch;
-    })
-    .sort((a, b) => b.priority - a.priority);
-
-  return Number(matching[0]?.price_per_hour ?? 0);
+  return getPriceForSlotDetailed(date, slotStart, pricingRules).price;
 }
 
 function generateWeeklyDates(selectedDate: Date, endDateStr: string): Date[] {
@@ -191,7 +179,7 @@ function RoomDetailsPage() {
     const d = new Date();
     return new Date(d.getFullYear(), d.getMonth(), 1);
   });
-  type DaySelection = { date: Date; hours: number[] };
+  type DaySelection = { date: Date; slots: string[] };
   const [daySelections, setDaySelections] = useState<DaySelection[]>([]);
   const [activeDayIndex, setActiveDayIndex] = useState<number | null>(null);
   const [isPickingNewDay, setIsPickingNewDay] = useState(true);
@@ -346,41 +334,43 @@ function RoomDetailsPage() {
     activeDayIndex !== null ? daySelections[activeDayIndex] ?? null : null;
 
   // Slots for active day
-  const slots = useMemo(() => {
-    if (!activeDay) return [] as { hour: number; busy: boolean; tooSoon: boolean; price: number }[];
+  type Slot = { start: string; end: string; busy: boolean; tooSoon: boolean; price: number };
+  const slots = useMemo<Slot[]>(() => {
+    if (!activeDay) return [];
     const dow = getDayOfWeek(activeDay.date);
     const sched = scheduleByDay.get(dow);
     if (!sched) return [];
-    const open = hourFromTime(sched.open_time);
-    const close = hourFromTime(sched.close_time);
+    const openMin = timeToMinutes(sched.open_time);
+    const closeMin = timeToMinutes(sched.close_time);
     const iso = formatDateISO(activeDay.date);
     const dayBookings = bookings.filter((b) => b.booking_date === iso);
 
     const now = new Date();
     const isToday = isSameDay(activeDay.date, now);
-    let earliestStartHour = -Infinity;
+    let earliestStartMin = -Infinity;
     if (isToday) {
       const cutoffMs = now.getTime() + SAME_DAY_BUFFER_HOURS * 60 * 60 * 1000;
       const cutoff = new Date(cutoffMs);
-      earliestStartHour =
-        cutoff.getHours() + (cutoff.getMinutes() > 0 || cutoff.getSeconds() > 0 ? 1 : 0);
+      // Round up to next full slot boundary
+      const cutoffMinRaw = cutoff.getHours() * 60 + cutoff.getMinutes();
+      earliestStartMin =
+        Math.ceil(cutoffMinRaw / SLOT_GRANULARITY_MINUTES) * SLOT_GRANULARITY_MINUTES;
     }
 
-    const result: { hour: number; busy: boolean; tooSoon: boolean; price: number }[] = [];
-    for (let h = open; h < close; h++) {
-      const slotStart = h;
-      const slotEnd = h + 1;
-      const busy = dayBookings.some((b) => {
-        const bs = hourFromTime(b.start_time);
-        const be = hourFromTime(b.end_time);
-        return slotStart < be && slotEnd > bs;
-      });
-      const tooSoon = h < earliestStartHour;
+    const result: Slot[] = [];
+    for (let m = openMin; m + SLOT_GRANULARITY_MINUTES <= closeMin; m += SLOT_GRANULARITY_MINUTES) {
+      const start = minutesToTime(m);
+      const end = minutesToTime(m + SLOT_GRANULARITY_MINUTES);
+      const busy = dayBookings.some((b) =>
+        intervalsOverlap(start, end, slotFromTime(b.start_time), slotFromTime(b.end_time)),
+      );
+      const tooSoon = m < earliestStartMin;
       result.push({
-        hour: h,
+        start,
+        end,
         busy,
         tooSoon,
-        price: getPriceForSlot(activeDay.date, h, pricing),
+        price: getPriceForSlot(activeDay.date, start, pricing),
       });
     }
     return result;
@@ -463,17 +453,18 @@ function RoomDetailsPage() {
   }
 
 
-  function toggleHour(h: number) {
+  function toggleSlot(slotStart: string) {
     if (activeDayIndex === null) return;
     setDaySelections((prev) =>
       prev.map((ds, idx) => {
         if (idx !== activeDayIndex) return ds;
-        const has = ds.hours.includes(h);
+        const has = ds.slots.includes(slotStart);
+        const sortFn = (a: string, b: string) => timeToMinutes(a) - timeToMinutes(b);
         return {
           ...ds,
-          hours: has
-            ? ds.hours.filter((x) => x !== h).sort((a, b) => a - b)
-            : [...ds.hours, h].sort((a, b) => a - b),
+          slots: has
+            ? ds.slots.filter((x) => x !== slotStart).sort(sortFn)
+            : [...ds.slots, slotStart].sort(sortFn),
         };
       }),
     );
@@ -481,26 +472,38 @@ function RoomDetailsPage() {
 
   // Booking summary across all selected days
   const summary = useMemo(() => {
-    const allValidDays = daySelections.filter((ds) => ds.hours.length > 0);
+    const allValidDays = daySelections.filter((ds) => ds.slots.length > 0);
     if (allValidDays.length === 0) return null;
 
     const daysWithIntervals = allValidDays.map((ds) => {
-      const sorted = [...ds.hours].sort((a, b) => a - b);
-      const intervals: { start: number; end: number; hours: number[] }[] = [];
-      let current = { start: sorted[0], end: sorted[0] + 1, hours: [sorted[0]] };
+      const sorted = [...ds.slots].sort(
+        (a, b) => timeToMinutes(a) - timeToMinutes(b),
+      );
+      type Interval = { start: string; end: string; hours: string[] };
+      const intervals: Interval[] = [];
+      const firstEnd = minutesToTime(
+        timeToMinutes(sorted[0]) + SLOT_GRANULARITY_MINUTES,
+      );
+      let current: Interval = { start: sorted[0], end: firstEnd, hours: [sorted[0]] };
       for (let i = 1; i < sorted.length; i++) {
-        if (sorted[i] === sorted[i - 1] + 1) {
-          current.end = sorted[i] + 1;
+        // Two slots are contiguous if slot[i].start === previous slot's end
+        if (sorted[i] === current.end) {
+          current.end = minutesToTime(
+            timeToMinutes(sorted[i]) + SLOT_GRANULARITY_MINUTES,
+          );
           current.hours.push(sorted[i]);
         } else {
           intervals.push(current);
-          current = { start: sorted[i], end: sorted[i] + 1, hours: [sorted[i]] };
+          const e = minutesToTime(
+            timeToMinutes(sorted[i]) + SLOT_GRANULARITY_MINUTES,
+          );
+          current = { start: sorted[i], end: e, hours: [sorted[i]] };
         }
       }
       intervals.push(current);
 
       const dayTotal = sorted.reduce(
-        (sum, h) => sum + getPriceForSlot(ds.date, h, pricing),
+        (sum, s) => sum + getPriceForSlot(ds.date, s, pricing),
         0,
       );
 
@@ -825,7 +828,7 @@ function RoomDetailsPage() {
                           setIsPickingNewDay(false);
                           return;
                         }
-                        setDaySelections((prev) => [...prev, { date: d, hours: [] }]);
+                        setDaySelections((prev) => [...prev, { date: d, slots: [] }]);
                         setActiveDayIndex(daySelections.length);
                         setIsPickingNewDay(false);
                       }}
@@ -851,9 +854,9 @@ function RoomDetailsPage() {
                     ) : (
                       <div className="mt-2 grid grid-cols-2 gap-2">
                         {slots.map((s) => {
-                          const selected = activeDay.hours.includes(s.hour);
+                          const selected = activeDay.slots.includes(s.start);
                           const unavailable = s.busy || s.tooSoon;
-                          const slotPricing = getPriceForSlotDetailed(activeDay.date, s.hour, pricing);
+                          const slotPricing = getPriceForSlotDetailed(activeDay.date, s.start, pricing);
                           const title = s.tooSoon
                             ? "Indisponibil — rezervarea trebuie făcută cu minim 2h înainte"
                             : s.busy
@@ -863,9 +866,9 @@ function RoomDetailsPage() {
                                 : undefined;
                           return (
                             <button
-                              key={s.hour}
+                              key={s.start}
                               disabled={unavailable}
-                              onClick={() => toggleHour(s.hour)}
+                              onClick={() => toggleSlot(s.start)}
                               title={title}
                               className={`flex flex-col items-center justify-center rounded-md border px-2 py-1.5 text-xs font-medium transition ${
                                 unavailable
@@ -876,7 +879,7 @@ function RoomDetailsPage() {
                               }`}
                             >
                               <span>
-                                {`${s.hour.toString().padStart(2, "0")}:00–${(s.hour + 1).toString().padStart(2, "0")}:00`}
+                                {`${s.start}–${s.end}`}
                               </span>
                               {slotPricing.label && (
                                 <span className={`text-[10px] mt-0.5 ${selected ? "opacity-90" : "opacity-70"}`}>
@@ -899,7 +902,7 @@ function RoomDetailsPage() {
                     </div>
                     {daySelections.map((ds, idx) => {
                       const isActive = idx === activeDayIndex;
-                      const hoursCount = ds.hours.length;
+                      const hoursCount = ds.slots.length;
                       return (
                         <div
                           key={idx}
@@ -977,7 +980,7 @@ function RoomDetailsPage() {
                                 {d.intervals.map((iv, j) => (
                                   <li key={j} className="text-xs flex justify-between">
                                     <span>
-                                      {iv.start.toString().padStart(2, "0")}:00–{iv.end.toString().padStart(2, "0")}:00
+                                      {iv.start}–{iv.end}
                                     </span>
                                     <span className="text-muted-foreground">
                                       {iv.hours.length} {iv.hours.length === 1 ? "oră" : "ore"}
@@ -1008,7 +1011,7 @@ function RoomDetailsPage() {
                               {summary.days[0].intervals.map((iv, i) => (
                                 <li key={i} className="flex justify-between text-sm">
                                   <span className="font-medium">
-                                    {iv.start.toString().padStart(2, "0")}:00–{iv.end.toString().padStart(2, "0")}:00
+                                    {iv.start}–{iv.end}
                                   </span>
                                   <span className="text-muted-foreground">
                                     {iv.hours.length} {iv.hours.length === 1 ? "oră" : "ore"}
@@ -1022,8 +1025,8 @@ function RoomDetailsPage() {
                             <div className="mt-1 flex justify-between">
                               <span className="text-muted-foreground">Interval</span>
                               <span className="font-medium">
-                                {summary.days[0].intervals[0].start.toString().padStart(2, "0")}:00–
-                                {summary.days[0].intervals[0].end.toString().padStart(2, "0")}:00
+                                {summary.days[0].intervals[0].start}–
+                                {summary.days[0].intervals[0].end}
                               </span>
                             </div>
                             <div className="mt-1 flex justify-between">
@@ -1151,10 +1154,7 @@ function RoomDetailsPage() {
                       .flatMap((d) => {
                         const dateStr = formatDateISO(d.date);
                         return d.intervals.map(
-                          (iv) =>
-                            `${dateStr}:${iv.start.toString().padStart(2, "0")}:00-${iv.end
-                              .toString()
-                              .padStart(2, "0")}:00`,
+                          (iv) => `${dateStr}:${iv.start}-${iv.end}`,
                         );
                       })
                       .join(",");
@@ -1168,12 +1168,7 @@ function RoomDetailsPage() {
                         date: !summary.isMultiDay ? formatDateISO(summary.days[0].date) : "",
                         intervals: !summary.isMultiDay
                           ? summary.days[0].intervals
-                              .map(
-                                (iv) =>
-                                  `${iv.start.toString().padStart(2, "0")}:00-${iv.end
-                                    .toString()
-                                    .padStart(2, "0")}:00`,
-                              )
+                              .map((iv) => `${iv.start}-${iv.end}`)
                               .join(",")
                           : "",
                         duration: summary.totalHours,

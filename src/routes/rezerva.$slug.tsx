@@ -16,6 +16,7 @@ import {
   getDayOfWeek,
   DAY_NAMES_RO,
 } from "@/lib/date-utils";
+import { intervalsOverlap, slotFromTime } from "@/lib/time-slots";
 
 // ---------- Search params ----------
 type CheckoutSearch = {
@@ -689,13 +690,14 @@ function CheckoutPage() {
     const busy = new Set<string>();
 
     for (const slot of slotsToCheck) {
-      const slotStart = parseInt(slot.start.slice(0, 2), 10);
-      const slotEnd = parseInt(slot.end.slice(0, 2), 10);
       const conflict = existingBookings.some((b) => {
         if (b.booking_date !== slot.date) return false;
-        const bStart = parseInt(b.start_time.slice(0, 2), 10);
-        const bEnd = parseInt(b.end_time.slice(0, 2), 10);
-        return slotStart < bEnd && slotEnd > bStart;
+        return intervalsOverlap(
+          slot.start,
+          slot.end,
+          slotFromTime(b.start_time),
+          slotFromTime(b.end_time),
+        );
       });
       if (conflict) busy.add(slotKey(slot));
     }
@@ -999,6 +1001,7 @@ function CheckoutPage() {
         start_time: `${slot.start}:00`,
         end_time: `${slot.end}:00`,
         duration_hours: intervalHours,
+        duration_minutes: intervalHours * 60,
         price_per_hour: intervalPricePerHour,
         pricing_rule_label: firstRule?.label ?? null,
         subtotal: intervalSubtotal,

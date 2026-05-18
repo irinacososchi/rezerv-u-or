@@ -33,7 +33,8 @@ type BookingFull = {
   booking_date: string;
   start_time: string;
   end_time: string;
-  duration_hours: number;
+  duration_hours: number | null;
+  duration_minutes?: number | null;
   price_per_hour: number;
   pricing_rule_label: string | null;
   subtotal: number;
@@ -266,9 +267,11 @@ function ConfirmarePage() {
                 <DetailRow label="Interval" value={`${startLabel}–${endLabel}`} />
                 <DetailRow
                   label="Durată"
-                  value={`${booking.duration_hours} ${
-                    booking.duration_hours === 1 ? "oră" : "ore"
-                  }`}
+                  value={(() => {
+                    const minutes = booking.duration_minutes ?? Math.round((booking.duration_hours ?? 0) * 60);
+                    const hours = minutes / 60;
+                    return `${hours} ${hours === 1 ? "oră" : "ore"}`;
+                  })()}
                 />
                 <DetailRow
                   label="Preț/oră"
