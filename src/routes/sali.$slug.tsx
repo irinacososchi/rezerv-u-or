@@ -159,6 +159,17 @@ function generateWeeklyDates(selectedDate: Date, endDateStr: string): Date[] {
   return dates;
 }
 
+/** Romanian duration label for a slot-derived minute count. */
+function formatDurationRO(minutes: number): string {
+  if (minutes <= 0) return "0 minute";
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (hours === 0) return `${mins} minute`;
+  const hourWord = hours === 1 ? "oră" : "ore";
+  if (mins === 0) return `${hours} ${hourWord}`;
+  return `${hours} ${hourWord} și ${mins} minute`;
+}
+
 // ---------- Page ----------
 function RoomDetailsPage() {
   const { slug } = Route.useParams() as { slug: string };
