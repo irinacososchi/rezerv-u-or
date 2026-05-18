@@ -1289,14 +1289,11 @@ function BookingDetails({
                 onChange={(e) => setNewStartHour(e.target.value)}
                 className="w-full border rounded-md h-9 px-2 text-sm bg-background"
               >
-                {hourOptions.slice(0, -1).map((h) => {
-                  const v = `${String(h).padStart(2, "0")}:00`;
-                  return (
-                    <option key={h} value={v}>
-                      {v}
-                    </option>
-                  );
-                })}
+                {TIME_OPTIONS.slice(0, -1).map((v) => (
+                  <option key={v} value={v}>
+                    {v}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="space-y-1">
@@ -1306,14 +1303,11 @@ function BookingDetails({
                 onChange={(e) => setNewEndHour(e.target.value)}
                 className="w-full border rounded-md h-9 px-2 text-sm bg-background"
               >
-                {hourOptions.slice(1).map((h) => {
-                  const v = `${String(h).padStart(2, "0")}:00`;
-                  return (
-                    <option key={h} value={v}>
-                      {v}
-                    </option>
-                  );
-                })}
+                {TIME_OPTIONS.slice(1).map((v) => (
+                  <option key={v} value={v}>
+                    {v}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
