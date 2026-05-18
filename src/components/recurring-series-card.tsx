@@ -16,6 +16,7 @@ export type SeriesBooking = {
   start_time: string;
   end_time: string;
   duration_hours: number;
+  duration_minutes?: number | null;
   total_amount: number;
   status: string;
   payment_status: string;
