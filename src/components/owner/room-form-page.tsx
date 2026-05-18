@@ -296,6 +296,28 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
     };
   }, [isEdit, roomId]);
 
+  // On create, prepopulate contact fields from owner profile
+  useEffect(() => {
+    if (isEdit) return;
+    let cancelled = false;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || cancelled) return;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("email, phone")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (cancelled || !profile) return;
+      setForm((f) => ({
+        ...f,
+        contact_email: f.contact_email || (profile.email as string) || user.email || "",
+        contact_phone: f.contact_phone || (profile.phone as string) || "",
+      }));
+    })();
+    return () => { cancelled = true; };
+  }, [isEdit]);
+
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
   }
