@@ -244,9 +244,6 @@ function splitSlotByPricing(s: ParsedSlot, rules: PricingRule[]): PricingSubInte
   return subIntervals;
 }
 
-function formatHour(h: number): string {
-  return `${h.toString().padStart(2, "0")}:00`;
-}
 
 function BookingSlotsPreview({
   allSlots,
