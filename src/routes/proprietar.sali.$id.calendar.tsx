@@ -29,6 +29,11 @@ import {
   startOfMonth,
   endOfMonth,
 } from "@/lib/date-utils";
+import {
+  SLOT_GRANULARITY_MINUTES,
+  timeToMinutes,
+  minutesToTime,
+} from "@/lib/time-slots";
 
 type PricingRule = {
   id: string;
