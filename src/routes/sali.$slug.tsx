@@ -159,6 +159,17 @@ function generateWeeklyDates(selectedDate: Date, endDateStr: string): Date[] {
   return dates;
 }
 
+/** Romanian duration label for a slot-derived minute count. */
+function formatDurationRO(minutes: number): string {
+  if (minutes <= 0) return "0 minute";
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (hours === 0) return `${mins} minute`;
+  const hourWord = hours === 1 ? "oră" : "ore";
+  if (mins === 0) return `${hours} ${hourWord}`;
+  return `${hours} ${hourWord} și ${mins} minute`;
+}
+
 // ---------- Page ----------
 function RoomDetailsPage() {
   const { slug } = Route.useParams() as { slug: string };
@@ -852,7 +863,7 @@ function RoomDetailsPage() {
                         Nicio oră disponibilă.
                       </p>
                     ) : (
-                      <div className="mt-2 grid grid-cols-2 gap-2">
+                      <div className="mt-2 grid grid-cols-3 md:grid-cols-4 gap-2">
                         {slots.map((s) => {
                           const selected = activeDay.slots.includes(s.start);
                           const unavailable = s.busy || s.tooSoon;
@@ -924,7 +935,7 @@ function RoomDetailsPage() {
                             <div className="text-xs text-muted-foreground">
                               {hoursCount === 0
                                 ? "Niciun interval selectat"
-                                : `${hoursCount} ${hoursCount === 1 ? "oră" : "ore"}`}
+                                : formatDurationRO(hoursCount * SLOT_GRANULARITY_MINUTES)}
                             </div>
                           </button>
                           <button
@@ -967,7 +978,7 @@ function RoomDetailsPage() {
                     {summary.isMultiDay ? (
                       <>
                         <div className="text-muted-foreground mb-2">
-                          {summary.days.length} zile · {summary.totalIntervals} intervale · {summary.totalHours} ore
+                          {summary.days.length} zile · {summary.totalIntervals} intervale · {formatDurationRO(summary.totalHours * SLOT_GRANULARITY_MINUTES)}
                         </div>
                         <ul className="space-y-2 max-h-60 overflow-y-auto">
                           {summary.days.map((d, i) => (
@@ -983,7 +994,7 @@ function RoomDetailsPage() {
                                       {iv.start}–{iv.end}
                                     </span>
                                     <span className="text-muted-foreground">
-                                      {iv.hours.length} {iv.hours.length === 1 ? "oră" : "ore"}
+                                      {formatDurationRO(iv.hours.length * SLOT_GRANULARITY_MINUTES)}
                                     </span>
                                   </li>
                                 ))}
@@ -1014,7 +1025,7 @@ function RoomDetailsPage() {
                                     {iv.start}–{iv.end}
                                   </span>
                                   <span className="text-muted-foreground">
-                                    {iv.hours.length} {iv.hours.length === 1 ? "oră" : "ore"}
+                                    {formatDurationRO(iv.hours.length * SLOT_GRANULARITY_MINUTES)}
                                   </span>
                                 </li>
                               ))}
@@ -1032,7 +1043,7 @@ function RoomDetailsPage() {
                             <div className="mt-1 flex justify-between">
                               <span className="text-muted-foreground">Durată</span>
                               <span className="font-medium">
-                                {summary.totalHours} {summary.totalHours === 1 ? "oră" : "ore"}
+                                {formatDurationRO(summary.totalHours * SLOT_GRANULARITY_MINUTES)}
                               </span>
                             </div>
                           </>
@@ -1171,7 +1182,7 @@ function RoomDetailsPage() {
                               .map((iv) => `${iv.start}-${iv.end}`)
                               .join(",")
                           : "",
-                        duration: summary.totalHours,
+                        duration: (summary.totalHours * SLOT_GRANULARITY_MINUTES) / 60,
                         total: summary.total,
                         recurrent: recurrentActive ? "true" : "false",
                         recurrenceEnd: recurrentActive ? recurrenceEndDate : "",

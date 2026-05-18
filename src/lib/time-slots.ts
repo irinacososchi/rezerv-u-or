@@ -11,7 +11,7 @@
  */
 
 /** Slot granularity in minutes. Phase 2 will change this to 30. */
-export const SLOT_GRANULARITY_MINUTES = 60;
+export const SLOT_GRANULARITY_MINUTES = 30;
 
 /**
  * Normalize a "HH:MM:SS" or "HH:MM" time string to the canonical "HH:MM" slot key.

@@ -29,6 +29,11 @@ import {
   startOfMonth,
   endOfMonth,
 } from "@/lib/date-utils";
+import {
+  SLOT_GRANULARITY_MINUTES,
+  timeToMinutes,
+  minutesToTime,
+} from "@/lib/time-slots";
 
 type PricingRule = {
   id: string;
@@ -66,8 +71,17 @@ export const Route = createFileRoute("/proprietar/sali/$id/calendar")({
   component: RoomCalendarPage,
 });
 
-const HOUR_START = 8;
-const HOUR_END = 22; // last slot starts at 21:00
+const HOUR_START = 7;
+const HOUR_END = 23; // last slot starts at HOUR_END - 0.5h
+const SLOT_ROWS = Array.from(
+  { length: (HOUR_END - HOUR_START) * (60 / SLOT_GRANULARITY_MINUTES) },
+  (_, i) => minutesToTime(HOUR_START * 60 + i * SLOT_GRANULARITY_MINUTES),
+);
+// Inclusive bounds for start/end time pickers (07:00 .. 23:00)
+const TIME_OPTIONS = Array.from(
+  { length: (HOUR_END - HOUR_START) * (60 / SLOT_GRANULARITY_MINUTES) + 1 },
+  (_, i) => minutesToTime(HOUR_START * 60 + i * SLOT_GRANULARITY_MINUTES),
+);
 
 const MONTH_LABELS = [
   "Ianuarie", "Februarie", "Martie", "Aprilie", "Mai", "Iunie",
@@ -241,7 +255,7 @@ function RoomCalendarPage() {
   type CellClickMode = "choose" | "block" | "booking";
   const [cellModal, setCellModal] = useState<{
     date: string;
-    hour: number;
+    slotStart: string; // "HH:MM"
     mode: CellClickMode;
   } | null>(null);
 
@@ -332,14 +346,14 @@ function RoomCalendarPage() {
     if (!loading) loadEntries();
   }, [loading, loadEntries]);
 
-  // Map (dateISO|hour) -> entry
+  // Map (dateISO|HH:MM) -> entry, one entry per 30-min slot it covers
   const cellMap = useMemo(() => {
     const map = new Map<string, Entry>();
     for (const e of entries) {
-      const sh = Math.floor(parseHM(e.start_time));
-      const eh = Math.ceil(parseHM(e.end_time));
-      for (let h = sh; h < eh; h++) {
-        map.set(`${e.booking_date}|${h}`, e);
+      const startMin = timeToMinutes(e.start_time);
+      const endMin = timeToMinutes(e.end_time);
+      for (let m = startMin; m < endMin; m += SLOT_GRANULARITY_MINUTES) {
+        map.set(`${e.booking_date}|${minutesToTime(m)}`, e);
       }
     }
     return map;
@@ -358,21 +372,20 @@ function RoomCalendarPage() {
     return m;
   }, [entries]);
 
-  function onCellClick(dateISO: string, hour: number) {
-    const e = cellMap.get(`${dateISO}|${hour}`);
+  function onCellClick(dateISO: string, slotStart: string) {
+    const e = cellMap.get(`${dateISO}|${slotStart}`);
     if (!e) {
-      // Reset manual form and open chooser
-      const sH = `${String(hour).padStart(2, "0")}:00`;
-      const eH = `${String(Math.min(hour + 1, HOUR_END)).padStart(2, "0")}:00`;
-      setManualStart(sH);
-      setManualEnd(eH);
+      const startMin = timeToMinutes(slotStart);
+      const endMin = Math.min(startMin + SLOT_GRANULARITY_MINUTES, HOUR_END * 60);
+      setManualStart(slotStart);
+      setManualEnd(minutesToTime(endMin));
       setManualName("");
       setManualPhone("");
       setManualEmail("");
       setManualNote("");
       setManualPaymentStatus("neplatit");
       setManualError(null);
-      setCellModal({ date: dateISO, hour, mode: "choose" });
+      setCellModal({ date: dateISO, slotStart, mode: "choose" });
       return;
     }
     if (e.entry_type === "blocat") setSelected({ kind: "block", entry: e });
@@ -640,28 +653,29 @@ function RoomCalendarPage() {
                   {DAY_NAMES_RO[getDayOfWeek(selectedDay)]},{" "}
                   {selectedDay.getDate()} {MONTH_NAMES_RO[selectedDay.getMonth()]}
                 </div>
-                {Array.from(
-                  { length: HOUR_END - HOUR_START },
-                  (_, i) => HOUR_START + i,
-                ).map((hour) => {
+                <div className="max-h-[calc(100vh-220px)] overflow-y-auto">
+                {SLOT_ROWS.map((slotStart) => {
                   const dateISO = formatDateISO(selectedDay);
-                  const e = cellMap.get(`${dateISO}|${hour}`);
-                  const sh = e ? Math.floor(parseHM(e.start_time)) : null;
-                  const showLabel = e && sh === hour;
+                  const e = cellMap.get(`${dateISO}|${slotStart}`);
+                  const showLabel = e && e.start_time.slice(0, 5) === slotStart;
+                  const isHalfHour = slotStart.endsWith(":30");
                   return (
                     <button
                       type="button"
-                      key={hour}
-                      onClick={() => onCellClick(dateISO, hour)}
+                      key={slotStart}
+                      onClick={() => onCellClick(dateISO, slotStart)}
                       className={
-                        "flex w-full border-b last:border-b-0 min-h-[56px] text-left transition-colors " +
+                        "flex w-full border-b last:border-b-0 min-h-[28px] text-left transition-colors " +
                         cellClass(e)
                       }
                     >
-                      <div className="w-16 shrink-0 flex items-start justify-end pr-3 pt-2 text-xs text-muted-foreground border-r bg-muted/10">
-                        {hourLabel(hour)}
+                      <div className={
+                        "w-16 shrink-0 flex items-start justify-end pr-3 pt-1 text-xs border-r bg-muted/10 " +
+                        (isHalfHour ? "text-muted-foreground/50" : "text-muted-foreground")
+                      }>
+                        {isHalfHour ? "" : slotStart}
                       </div>
-                      <div className="flex-1 px-3 py-2 text-sm">
+                      <div className="flex-1 px-3 py-1 text-sm">
                         {showLabel && (
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0">
@@ -708,6 +722,7 @@ function RoomCalendarPage() {
                     </button>
                   );
                 })}
+                </div>
               </div>
             ) : view === "week" ? (
               <div className="border rounded-lg bg-card overflow-x-auto">
@@ -736,30 +751,32 @@ function RoomCalendarPage() {
                     })}
                   </div>
 
-                  {Array.from(
-                    { length: HOUR_END - HOUR_START },
-                    (_, i) => HOUR_START + i,
-                  ).map((hour) => (
+                  <div className="max-h-[calc(100vh-220px)] overflow-y-auto">
+                  {SLOT_ROWS.map((slotStart) => {
+                    const isHalfHour = slotStart.endsWith(":30");
+                    return (
                     <div
-                      key={hour}
+                      key={slotStart}
                       className="grid border-b last:border-b-0"
                       style={{ gridTemplateColumns: "70px repeat(7, 1fr)" }}
                     >
-                      <div className="p-2 text-xs text-muted-foreground border-r">
-                        {hourLabel(hour)}
+                      <div className={
+                        "p-1 text-xs border-r " +
+                        (isHalfHour ? "text-muted-foreground/50" : "text-muted-foreground")
+                      }>
+                        {isHalfHour ? "" : slotStart}
                       </div>
                       {days.map((d) => {
                         const dateISO = formatDateISO(d);
-                        const e = cellMap.get(`${dateISO}|${hour}`);
-                        const sh = e ? Math.floor(parseHM(e.start_time)) : null;
-                        const showLabel = e && sh === hour;
+                        const e = cellMap.get(`${dateISO}|${slotStart}`);
+                        const showLabel = e && e.start_time.slice(0, 5) === slotStart;
                         return (
                           <button
                             type="button"
-                            key={dateISO + hour}
-                            onClick={() => onCellClick(dateISO, hour)}
+                            key={dateISO + slotStart}
+                            onClick={() => onCellClick(dateISO, slotStart)}
                             className={
-                              "h-12 border-l text-left text-xs px-1.5 py-1 transition-colors " +
+                              "h-7 border-l text-left text-xs px-1.5 py-0.5 transition-colors " +
                               cellClass(e)
                             }
                           >
@@ -794,7 +811,9 @@ function RoomCalendarPage() {
                         );
                       })}
                     </div>
-                  ))}
+                    );
+                  })}
+                  </div>
                 </div>
               </div>
             ) : (
@@ -912,7 +931,7 @@ function RoomCalendarPage() {
                 <DialogTitle>Ce vrei să faci?</DialogTitle>
                 <DialogDescription>
                   {formatDateRO(parseISODate(cellModal.date))} ·{" "}
-                  {cellModal.hour.toString().padStart(2, "0")}:00
+                  {cellModal.slotStart}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-3 mt-2">
@@ -959,7 +978,7 @@ function RoomCalendarPage() {
             <BlockSlotForm
               roomId={id}
               date={cellModal.date}
-              startHour={cellModal.hour}
+              startSlot={cellModal.slotStart}
               onClose={() => setCellModal(null)}
               onChanged={loadEntries}
             />
@@ -1739,20 +1758,23 @@ function BlockDetails({
 function BlockSlotForm({
   roomId,
   date,
-  startHour,
+  startSlot,
   onClose,
   onChanged,
 }: {
   roomId: string;
   date: string;
-  startHour: number;
+  startSlot: string; // "HH:MM"
   onClose: () => void;
   onChanged: () => void;
 }) {
-  const initialStart = Math.min(Math.max(startHour, HOUR_START), HOUR_END - 1);
-  const [start, setStart] = useState(`${String(initialStart).padStart(2, "0")}:00`);
+  const initialStartMin = Math.min(
+    Math.max(timeToMinutes(startSlot), HOUR_START * 60),
+    HOUR_END * 60 - SLOT_GRANULARITY_MINUTES,
+  );
+  const [start, setStart] = useState(minutesToTime(initialStartMin));
   const [end, setEnd] = useState(
-    `${String(Math.min(initialStart + 1, HOUR_END)).padStart(2, "0")}:00`,
+    minutesToTime(Math.min(initialStartMin + SLOT_GRANULARITY_MINUTES, HOUR_END * 60)),
   );
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
@@ -1760,14 +1782,8 @@ function BlockSlotForm({
   const [isRecurrent, setIsRecurrent] = useState(false);
   const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
 
-  const startHours = Array.from(
-    { length: HOUR_END - HOUR_START },
-    (_, i) => HOUR_START + i,
-  );
-  const endHours = Array.from(
-    { length: HOUR_END - HOUR_START + 1 },
-    (_, i) => HOUR_START + 1 + i,
-  ).filter((h) => h <= HOUR_END);
+  const startOptions = TIME_OPTIONS.slice(0, -1); // exclude HOUR_END as start
+  const endOptions = TIME_OPTIONS.slice(1); // exclude HOUR_START as end
 
   const recurrenceDates =
     isRecurrent && recurrenceEndDate
@@ -1776,7 +1792,7 @@ function BlockSlotForm({
 
   async function submit() {
     setBlockError(null);
-    if (parseInt(end, 10) <= parseInt(start, 10)) {
+    if (timeToMinutes(end) <= timeToMinutes(start)) {
       setBlockError("Ora de sfârșit trebuie să fie după ora de început.");
       return;
     }
@@ -1903,14 +1919,9 @@ function BlockSlotForm({
             onChange={(e) => setStart(e.target.value)}
             className="w-full border rounded-md h-9 px-2 text-sm bg-background"
           >
-            {startHours.map((h) => {
-              const v = `${String(h).padStart(2, "0")}:00`;
-              return (
-                <option key={h} value={v}>
-                  {v}
-                </option>
-              );
-            })}
+            {startOptions.map((v) => (
+              <option key={v} value={v}>{v}</option>
+            ))}
           </select>
         </div>
         <div className="space-y-1">
@@ -1921,14 +1932,9 @@ function BlockSlotForm({
             onChange={(e) => setEnd(e.target.value)}
             className="w-full border rounded-md h-9 px-2 text-sm bg-background"
           >
-            {endHours.map((h) => {
-              const v = `${String(h).padStart(2, "0")}:00`;
-              return (
-                <option key={h} value={v}>
-                  {v}
-                </option>
-              );
-            })}
+            {endOptions.map((v) => (
+              <option key={v} value={v}>{v}</option>
+            ))}
           </select>
         </div>
         <div className="col-span-2 space-y-1">
