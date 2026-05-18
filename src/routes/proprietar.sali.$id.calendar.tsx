@@ -1094,6 +1094,7 @@ function BookingDetails({
         start_time: `${newStartHour}:00`,
         end_time: `${newEndHour}:00`,
         duration_hours: newDuration,
+        duration_minutes: newDuration * 60,
         subtotal: newSubtotal,
         total_amount: newSubtotal - disc,
       })
