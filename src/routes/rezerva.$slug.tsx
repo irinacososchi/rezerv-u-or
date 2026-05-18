@@ -1001,6 +1001,7 @@ function CheckoutPage() {
         start_time: `${slot.start}:00`,
         end_time: `${slot.end}:00`,
         duration_hours: intervalHours,
+        duration_minutes: intervalHours * 60,
         price_per_hour: intervalPricePerHour,
         pricing_rule_label: firstRule?.label ?? null,
         subtotal: intervalSubtotal,
