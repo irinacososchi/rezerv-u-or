@@ -255,7 +255,7 @@ function RoomCalendarPage() {
   type CellClickMode = "choose" | "block" | "booking";
   const [cellModal, setCellModal] = useState<{
     date: string;
-    hour: number;
+    slotStart: string; // "HH:MM"
     mode: CellClickMode;
   } | null>(null);
 
