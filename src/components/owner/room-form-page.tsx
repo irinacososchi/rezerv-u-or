@@ -236,6 +236,8 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
             : "24",
         rules_and_notes: (r.rules_and_notes as string) ?? "",
         is_active: r.is_active !== false,
+        contact_email: (r.contact_email as string) ?? "",
+        contact_phone: (r.contact_phone as string) ?? "",
       });
 
       const sched = (r.weekly_schedule ?? []) as Array<{
