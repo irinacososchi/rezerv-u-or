@@ -16,6 +16,7 @@ import {
   getDayOfWeek,
   DAY_NAMES_RO,
 } from "@/lib/date-utils";
+import { intervalsOverlap, slotFromTime } from "@/lib/time-slots";
 
 // ---------- Search params ----------
 type CheckoutSearch = {
