@@ -71,8 +71,17 @@ export const Route = createFileRoute("/proprietar/sali/$id/calendar")({
   component: RoomCalendarPage,
 });
 
-const HOUR_START = 8;
-const HOUR_END = 22; // last slot starts at 21:00
+const HOUR_START = 7;
+const HOUR_END = 23; // last slot starts at HOUR_END - 0.5h
+const SLOT_ROWS = Array.from(
+  { length: (HOUR_END - HOUR_START) * (60 / SLOT_GRANULARITY_MINUTES) },
+  (_, i) => minutesToTime(HOUR_START * 60 + i * SLOT_GRANULARITY_MINUTES),
+);
+// Inclusive bounds for start/end time pickers (07:00 .. 23:00)
+const TIME_OPTIONS = Array.from(
+  { length: (HOUR_END - HOUR_START) * (60 / SLOT_GRANULARITY_MINUTES) + 1 },
+  (_, i) => minutesToTime(HOUR_START * 60 + i * SLOT_GRANULARITY_MINUTES),
+);
 
 const MONTH_LABELS = [
   "Ianuarie", "Februarie", "Martie", "Aprilie", "Mai", "Iunie",
