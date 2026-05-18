@@ -1011,7 +1011,7 @@ function RoomDetailsPage() {
                               {summary.days[0].intervals.map((iv, i) => (
                                 <li key={i} className="flex justify-between text-sm">
                                   <span className="font-medium">
-                                    {iv.start.toString().padStart(2, "0")}:00–{iv.end.toString().padStart(2, "0")}:00
+                                    {iv.start}–{iv.end}
                                   </span>
                                   <span className="text-muted-foreground">
                                     {iv.hours.length} {iv.hours.length === 1 ? "oră" : "ore"}
