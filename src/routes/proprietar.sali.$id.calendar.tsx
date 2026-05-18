@@ -2068,21 +2068,16 @@ function ManualBookingForm({
   const [isRecurrent, setIsRecurrent] = useState(false);
   const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
 
-  const startHours = Array.from(
-    { length: HOUR_END - HOUR_START },
-    (_, i) => HOUR_START + i,
-  );
-  const endHours = Array.from(
-    { length: HOUR_END - HOUR_START },
-    (_, i) => HOUR_START + 1 + i,
-  );
+  const startOptions = TIME_OPTIONS.slice(0, -1);
+  const endOptions = TIME_OPTIONS.slice(1);
 
-  const sH = parseInt(manualStart, 10);
-  const eH = parseInt(manualEnd, 10);
-  const validRange = eH > sH;
-  const duration = validRange ? eH - sH : 0;
-  const pricePerHour = calculatePriceForDate(date, manualStart.slice(0, 2), pricingRules);
-  const total = duration * pricePerHour;
+  const startMin = timeToMinutes(manualStart);
+  const endMin = timeToMinutes(manualEnd);
+  const durationMinutes = endMin - startMin;
+  const validRange = durationMinutes > 0 && durationMinutes % 30 === 0;
+  const durationHours = validRange ? durationMinutes / 60 : 0;
+  const pricePerHour = calculatePriceForDate(date, manualStart, pricingRules);
+  const total = validRange ? durationHours * pricePerHour : 0;
 
   const recurrenceDates =
     isRecurrent && recurrenceEndDate ? generateWeeklyDates(date, recurrenceEndDate) : [];
