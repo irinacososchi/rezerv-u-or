@@ -1043,7 +1043,7 @@ function RoomDetailsPage() {
                             <div className="mt-1 flex justify-between">
                               <span className="text-muted-foreground">Durată</span>
                               <span className="font-medium">
-                                {summary.totalHours} {summary.totalHours === 1 ? "oră" : "ore"}
+                                {formatDurationRO(summary.totalHours * SLOT_GRANULARITY_MINUTES)}
                               </span>
                             </div>
                           </>
