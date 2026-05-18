@@ -334,41 +334,43 @@ function RoomDetailsPage() {
     activeDayIndex !== null ? daySelections[activeDayIndex] ?? null : null;
 
   // Slots for active day
-  const slots = useMemo(() => {
-    if (!activeDay) return [] as { hour: number; busy: boolean; tooSoon: boolean; price: number }[];
+  type Slot = { start: string; end: string; busy: boolean; tooSoon: boolean; price: number };
+  const slots = useMemo<Slot[]>(() => {
+    if (!activeDay) return [];
     const dow = getDayOfWeek(activeDay.date);
     const sched = scheduleByDay.get(dow);
     if (!sched) return [];
-    const open = hourFromTime(sched.open_time);
-    const close = hourFromTime(sched.close_time);
+    const openMin = timeToMinutes(sched.open_time);
+    const closeMin = timeToMinutes(sched.close_time);
     const iso = formatDateISO(activeDay.date);
     const dayBookings = bookings.filter((b) => b.booking_date === iso);
 
     const now = new Date();
     const isToday = isSameDay(activeDay.date, now);
-    let earliestStartHour = -Infinity;
+    let earliestStartMin = -Infinity;
     if (isToday) {
       const cutoffMs = now.getTime() + SAME_DAY_BUFFER_HOURS * 60 * 60 * 1000;
       const cutoff = new Date(cutoffMs);
-      earliestStartHour =
-        cutoff.getHours() + (cutoff.getMinutes() > 0 || cutoff.getSeconds() > 0 ? 1 : 0);
+      // Round up to next full slot boundary
+      const cutoffMinRaw = cutoff.getHours() * 60 + cutoff.getMinutes();
+      earliestStartMin =
+        Math.ceil(cutoffMinRaw / SLOT_GRANULARITY_MINUTES) * SLOT_GRANULARITY_MINUTES;
     }
 
-    const result: { hour: number; busy: boolean; tooSoon: boolean; price: number }[] = [];
-    for (let h = open; h < close; h++) {
-      const slotStart = h;
-      const slotEnd = h + 1;
-      const busy = dayBookings.some((b) => {
-        const bs = hourFromTime(b.start_time);
-        const be = hourFromTime(b.end_time);
-        return slotStart < be && slotEnd > bs;
-      });
-      const tooSoon = h < earliestStartHour;
+    const result: Slot[] = [];
+    for (let m = openMin; m + SLOT_GRANULARITY_MINUTES <= closeMin; m += SLOT_GRANULARITY_MINUTES) {
+      const start = minutesToTime(m);
+      const end = minutesToTime(m + SLOT_GRANULARITY_MINUTES);
+      const busy = dayBookings.some((b) =>
+        intervalsOverlap(start, end, slotFromTime(b.start_time), slotFromTime(b.end_time)),
+      );
+      const tooSoon = m < earliestStartMin;
       result.push({
-        hour: h,
+        start,
+        end,
         busy,
         tooSoon,
-        price: getPriceForSlot(activeDay.date, h, pricing),
+        price: getPriceForSlot(activeDay.date, start, pricing),
       });
     }
     return result;
