@@ -690,13 +690,14 @@ function CheckoutPage() {
     const busy = new Set<string>();
 
     for (const slot of slotsToCheck) {
-      const slotStart = parseInt(slot.start.slice(0, 2), 10);
-      const slotEnd = parseInt(slot.end.slice(0, 2), 10);
       const conflict = existingBookings.some((b) => {
         if (b.booking_date !== slot.date) return false;
-        const bStart = parseInt(b.start_time.slice(0, 2), 10);
-        const bEnd = parseInt(b.end_time.slice(0, 2), 10);
-        return slotStart < bEnd && slotEnd > bStart;
+        return intervalsOverlap(
+          slot.start,
+          slot.end,
+          slotFromTime(b.start_time),
+          slotFromTime(b.end_time),
+        );
       });
       if (conflict) busy.add(slotKey(slot));
     }
