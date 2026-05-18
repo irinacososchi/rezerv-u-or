@@ -854,9 +854,9 @@ function RoomDetailsPage() {
                     ) : (
                       <div className="mt-2 grid grid-cols-2 gap-2">
                         {slots.map((s) => {
-                          const selected = activeDay.hours.includes(s.hour);
+                          const selected = activeDay.slots.includes(s.start);
                           const unavailable = s.busy || s.tooSoon;
-                          const slotPricing = getPriceForSlotDetailed(activeDay.date, s.hour, pricing);
+                          const slotPricing = getPriceForSlotDetailed(activeDay.date, s.start, pricing);
                           const title = s.tooSoon
                             ? "Indisponibil — rezervarea trebuie făcută cu minim 2h înainte"
                             : s.busy
@@ -866,9 +866,9 @@ function RoomDetailsPage() {
                                 : undefined;
                           return (
                             <button
-                              key={s.hour}
+                              key={s.start}
                               disabled={unavailable}
-                              onClick={() => toggleHour(s.hour)}
+                              onClick={() => toggleSlot(s.start)}
                               title={title}
                               className={`flex flex-col items-center justify-center rounded-md border px-2 py-1.5 text-xs font-medium transition ${
                                 unavailable
@@ -879,7 +879,7 @@ function RoomDetailsPage() {
                               }`}
                             >
                               <span>
-                                {`${s.hour.toString().padStart(2, "0")}:00–${(s.hour + 1).toString().padStart(2, "0")}:00`}
+                                {`${s.start}–${s.end}`}
                               </span>
                               {slotPricing.label && (
                                 <span className={`text-[10px] mt-0.5 ${selected ? "opacity-90" : "opacity-70"}`}>
