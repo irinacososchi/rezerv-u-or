@@ -667,14 +667,15 @@ function RoomCalendarPage() {
                       onClick={() => onCellClick(dateISO, slotStart)}
                       className={
                         "flex w-full border-b last:border-b-0 min-h-[28px] text-left transition-colors " +
+                        (isHalfHour ? "" : "border-dashed ") +
                         cellClass(e)
                       }
                     >
                       <div className={
-                        "w-16 shrink-0 flex items-start justify-end pr-3 pt-1 text-xs border-r bg-muted/10 " +
-                        (isHalfHour ? "text-muted-foreground/50" : "text-muted-foreground")
+                        "w-16 shrink-0 flex items-start justify-end pr-3 pt-1 border-r bg-muted/10 " +
+                        (isHalfHour ? "text-[10px] text-muted-foreground/60" : "text-xs text-muted-foreground")
                       }>
-                        {isHalfHour ? "" : slotStart}
+                        {isHalfHour ? ":30" : slotStart}
                       </div>
                       <div className="flex-1 px-3 py-1 text-sm">
                         {showLabel && (
