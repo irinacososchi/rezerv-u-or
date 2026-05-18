@@ -700,7 +700,11 @@ function RezervariPage() {
                         <div>
                           <dt className="text-xs text-muted-foreground">Durată</dt>
                           <dd>
-                            {b.duration_hours} {b.duration_hours === 1 ? "oră" : "ore"}
+                            {(() => {
+                              const m = b.duration_minutes ?? Math.round((b.duration_hours ?? 0) * 60);
+                              const h = m / 60;
+                              return `${h} ${h === 1 ? "oră" : "ore"}`;
+                            })()}
                           </dd>
                         </div>
                         <div>
