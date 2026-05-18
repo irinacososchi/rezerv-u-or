@@ -1919,14 +1919,9 @@ function BlockSlotForm({
             onChange={(e) => setStart(e.target.value)}
             className="w-full border rounded-md h-9 px-2 text-sm bg-background"
           >
-            {startHours.map((h) => {
-              const v = `${String(h).padStart(2, "0")}:00`;
-              return (
-                <option key={h} value={v}>
-                  {v}
-                </option>
-              );
-            })}
+            {startOptions.map((v) => (
+              <option key={v} value={v}>{v}</option>
+            ))}
           </select>
         </div>
         <div className="space-y-1">
@@ -1937,14 +1932,9 @@ function BlockSlotForm({
             onChange={(e) => setEnd(e.target.value)}
             className="w-full border rounded-md h-9 px-2 text-sm bg-background"
           >
-            {endHours.map((h) => {
-              const v = `${String(h).padStart(2, "0")}:00`;
-              return (
-                <option key={h} value={v}>
-                  {v}
-                </option>
-              );
-            })}
+            {endOptions.map((v) => (
+              <option key={v} value={v}>{v}</option>
+            ))}
           </select>
         </div>
         <div className="col-span-2 space-y-1">
