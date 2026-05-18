@@ -130,11 +130,11 @@ function isValidPhone(s: string): boolean {
 
 function pickActivePricing(
   date: Date,
-  startHour: number,
+  slotStart: string,
   rules: PricingRule[],
 ): PricingRule | null {
   const dayOfWeek = getDayOfWeek(date);
-  const slotTime = `${startHour.toString().padStart(2, "0")}:00:00`;
+  const slotTime = `${slotStart}:00`;
   const matching = rules
     .filter((r) => {
       if (!r.is_active) return false;
@@ -149,29 +149,31 @@ function pickActivePricing(
   return matching[0] ?? null;
 }
 
-function getPriceForSlot(date: Date, hour: number, rules: PricingRule[]): number {
-  const r = pickActivePricing(date, hour, rules);
-  return r ? Number(r.price_per_hour) : 0;
+function getPriceForSlot(date: Date, slotStart: string, rules: PricingRule[]): number {
+  const r = pickActivePricing(date, slotStart, rules);
+  // price_per_hour is hourly; scale to slot granularity.
+  return r ? (Number(r.price_per_hour) * SLOT_GRANULARITY_MINUTES) / 60 : 0;
 }
 
 function getPriceForSlotDetailed(
   date: Date,
-  hour: number,
+  slotStart: string,
   rules: PricingRule[],
 ): { price: number; label: string | null } {
-  const r = pickActivePricing(date, hour, rules);
+  const r = pickActivePricing(date, slotStart, rules);
   return {
-    price: r ? Number(r.price_per_hour) : 0,
+    price: r ? (Number(r.price_per_hour) * SLOT_GRANULARITY_MINUTES) / 60 : 0,
     label: r?.label ?? null,
   };
 }
 
 function calcSlotTotal(s: ParsedSlot, rules: PricingRule[]): number {
-  const startHour = parseInt(s.start.slice(0, 2), 10);
-  const endHour = parseInt(s.end.slice(0, 2), 10);
+  const startMin = timeToMinutes(s.start);
+  const endMin = timeToMinutes(s.end);
+  const date = parseISODate(s.date);
   let total = 0;
-  for (let h = startHour; h < endHour; h++) {
-    total += getPriceForSlot(parseISODate(s.date), h, rules);
+  for (let m = startMin; m < endMin; m += SLOT_GRANULARITY_MINUTES) {
+    total += getPriceForSlot(date, minutesToTime(m), rules);
   }
   return total;
 }
@@ -180,12 +182,13 @@ function calcSlotPricing(
   s: ParsedSlot,
   rules: PricingRule[],
 ): { totalPrice: number; labels: string[] } {
-  const startHour = parseInt(s.start.slice(0, 2), 10);
-  const endHour = parseInt(s.end.slice(0, 2), 10);
+  const startMin = timeToMinutes(s.start);
+  const endMin = timeToMinutes(s.end);
+  const date = parseISODate(s.date);
   const labelsSet = new Set<string>();
   let total = 0;
-  for (let h = startHour; h < endHour; h++) {
-    const detail = getPriceForSlotDetailed(parseISODate(s.date), h, rules);
+  for (let m = startMin; m < endMin; m += SLOT_GRANULARITY_MINUTES) {
+    const detail = getPriceForSlotDetailed(date, minutesToTime(m), rules);
     total += detail.price;
     if (detail.label) labelsSet.add(detail.label);
   }
@@ -193,40 +196,50 @@ function calcSlotPricing(
 }
 
 type PricingSubInterval = {
-  startHour: number;
-  endHour: number;
+  start: string;
+  end: string;
   price: number;
   label: string | null;
 };
 
 function splitSlotByPricing(s: ParsedSlot, rules: PricingRule[]): PricingSubInterval[] {
-  const startHour = parseInt(s.start.slice(0, 2), 10);
-  const endHour = parseInt(s.end.slice(0, 2), 10);
+  const startMin = timeToMinutes(s.start);
+  const endMin = timeToMinutes(s.end);
   const date = parseISODate(s.date);
 
   const subIntervals: PricingSubInterval[] = [];
   let currentLabel: string | null = null;
-  let currentStart = startHour;
+  let currentStartMin = startMin;
   let currentSum = 0;
 
-  for (let h = startHour; h < endHour; h++) {
-    const detail = getPriceForSlotDetailed(date, h, rules);
-    if (h === startHour) {
+  for (let m = startMin; m < endMin; m += SLOT_GRANULARITY_MINUTES) {
+    const detail = getPriceForSlotDetailed(date, minutesToTime(m), rules);
+    if (m === startMin) {
       currentLabel = detail.label;
-      currentStart = h;
+      currentStartMin = m;
       currentSum = detail.price;
     } else if (detail.label !== currentLabel) {
-      subIntervals.push({ startHour: currentStart, endHour: h, price: currentSum, label: currentLabel });
+      subIntervals.push({
+        start: minutesToTime(currentStartMin),
+        end: minutesToTime(m),
+        price: currentSum,
+        label: currentLabel,
+      });
       currentLabel = detail.label;
-      currentStart = h;
+      currentStartMin = m;
       currentSum = detail.price;
     } else {
       currentSum += detail.price;
     }
   }
 
-  if (endHour > startHour) {
-    subIntervals.push({ startHour: currentStart, endHour, price: currentSum, label: currentLabel });
+  if (endMin > startMin) {
+    subIntervals.push({
+      start: minutesToTime(currentStartMin),
+      end: minutesToTime(endMin),
+      price: currentSum,
+      label: currentLabel,
+    });
   }
   return subIntervals;
 }
