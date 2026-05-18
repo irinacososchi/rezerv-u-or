@@ -369,6 +369,16 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
       toast.error("Adresa și orașul sunt obligatorii.");
       return;
     }
+    const contactEmail = form.contact_email.trim();
+    if (!contactEmail || !EMAIL_RE.test(contactEmail)) {
+      toast.error("Emailul de contact este obligatoriu și trebuie să fie valid.");
+      return;
+    }
+    const contactPhone = form.contact_phone.trim();
+    if (contactPhone && !RO_PHONE_RE.test(contactPhone)) {
+      toast.error("Telefonul de contact trebuie să fie un număr românesc valid (ex: 07xxxxxxxx).");
+      return;
+    }
     if (!form.slug.trim() || form.slug.trim().length < 3) {
       toast.error("URL-ul trebuie să aibă minim 3 caractere.");
       return;
