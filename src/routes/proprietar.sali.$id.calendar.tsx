@@ -346,14 +346,14 @@ function RoomCalendarPage() {
     if (!loading) loadEntries();
   }, [loading, loadEntries]);
 
-  // Map (dateISO|hour) -> entry
+  // Map (dateISO|HH:MM) -> entry, one entry per 30-min slot it covers
   const cellMap = useMemo(() => {
     const map = new Map<string, Entry>();
     for (const e of entries) {
-      const sh = Math.floor(parseHM(e.start_time));
-      const eh = Math.ceil(parseHM(e.end_time));
-      for (let h = sh; h < eh; h++) {
-        map.set(`${e.booking_date}|${h}`, e);
+      const startMin = timeToMinutes(e.start_time);
+      const endMin = timeToMinutes(e.end_time);
+      for (let m = startMin; m < endMin; m += SLOT_GRANULARITY_MINUTES) {
+        map.set(`${e.booking_date}|${minutesToTime(m)}`, e);
       }
     }
     return map;
