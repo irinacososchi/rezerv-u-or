@@ -105,11 +105,11 @@ type SlotPricing = {
 
 function getPriceForSlotDetailed(
   date: Date,
-  hour: number,
+  slotStart: string,
   pricingRules: PricingRule[],
 ): SlotPricing {
   const dayOfWeek = getDayOfWeek(date);
-  const slotTime = `${hour.toString().padStart(2, "0")}:00:00`;
+  const slotTime = `${slotStart}:00`;
 
   const matching = pricingRules
     .filter((rule) => {
@@ -138,31 +138,12 @@ type Booking = {
 };
 
 // ---------- Helpers ----------
-function hourFromTime(t: string): number {
-  return parseInt(t.slice(0, 2), 10);
-}
-
 function getPriceForSlot(
   date: Date,
-  hour: number,
+  slotStart: string,
   pricingRules: PricingRule[],
 ): number {
-  const dayOfWeek = getDayOfWeek(date);
-  const slotTime = `${hour.toString().padStart(2, "0")}:00:00`;
-
-  const matching = pricingRules
-    .filter((rule) => {
-      if (!rule.is_active) return false;
-      const dayMatch = (rule.days_of_week ?? []).includes(dayOfWeek);
-      const timeMatch =
-        !rule.start_time ||
-        !rule.end_time ||
-        (slotTime >= rule.start_time && slotTime < rule.end_time);
-      return dayMatch && timeMatch;
-    })
-    .sort((a, b) => b.priority - a.priority);
-
-  return Number(matching[0]?.price_per_hour ?? 0);
+  return getPriceForSlotDetailed(date, slotStart, pricingRules).price;
 }
 
 function generateWeeklyDates(selectedDate: Date, endDateStr: string): Date[] {
