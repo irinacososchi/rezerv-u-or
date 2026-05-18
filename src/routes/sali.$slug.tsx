@@ -734,7 +734,7 @@ function RoomDetailsPage() {
               )}
 
               {/* Weekly schedule */}
-              <div className="mt-8" id="program-saptamanal">
+              <div className="mt-8">
                 <h2 className="text-lg font-semibold">Program săptămânal</h2>
                 <div className="mt-3 overflow-hidden rounded-xl border border-border">
                   <table className="w-full text-sm">
@@ -760,6 +760,32 @@ function RoomDetailsPage() {
                   </table>
                 </div>
               </div>
+
+              {(room.contact_email || room.contact_phone) && (
+                <div className="mt-8 rounded-xl border border-border bg-card p-4">
+                  <h2 className="text-sm font-semibold mb-2">Contact proprietar</h2>
+                  <div className="space-y-1.5 text-sm">
+                    {room.contact_email && (
+                      <a
+                        href={`mailto:${room.contact_email}`}
+                        className="flex items-center gap-2 text-foreground hover:text-primary transition-colors"
+                      >
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <span>{room.contact_email}</span>
+                      </a>
+                    )}
+                    {room.contact_phone && (
+                      <a
+                        href={`tel:${room.contact_phone}`}
+                        className="flex items-center gap-2 text-foreground hover:text-primary transition-colors"
+                      >
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <span>{room.contact_phone}</span>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* RIGHT — booking card */}
