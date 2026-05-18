@@ -990,17 +990,21 @@ function CheckoutPage() {
     for (let idx = 0; idx < allDateIntervals.length; idx++) {
       const slot = allDateIntervals[idx];
       const slotDateObj = parseISODate(slot.date);
-      const startHourN = parseInt(slot.start.slice(0, 2), 10);
-      const endHourN = parseInt(slot.end.slice(0, 2), 10);
-      const intervalHours = endHourN - startHourN;
+      const startMin = timeToMinutes(slot.start);
+      const endMin = timeToMinutes(slot.end);
+      const intervalMinutes = endMin - startMin;
+      const intervalHours = intervalMinutes / 60;
 
-      // Compute subtotal for this interval by summing per-hour prices
+      // Compute subtotal for this interval by summing per-slot prices.
       let intervalSubtotal = 0;
       let firstRule = null as PricingRule | null;
-      for (let h = startHourN; h < endHourN; h++) {
-        const r = pickActivePricing(slotDateObj, h, pricing);
+      for (let m = startMin; m < endMin; m += SLOT_GRANULARITY_MINUTES) {
+        const slotStartStr = minutesToTime(m);
+        const r = pickActivePricing(slotDateObj, slotStartStr, pricing);
         if (!firstRule) firstRule = r;
-        intervalSubtotal += r ? Number(r.price_per_hour) : 0;
+        intervalSubtotal += r
+          ? (Number(r.price_per_hour) * SLOT_GRANULARITY_MINUTES) / 60
+          : 0;
       }
       const intervalDiscount = applyVoucher ? discountAmount : 0;
       const intervalTotal = Math.max(0, intervalSubtotal - intervalDiscount);
@@ -1021,7 +1025,7 @@ function CheckoutPage() {
         start_time: `${slot.start}:00`,
         end_time: `${slot.end}:00`,
         duration_hours: intervalHours,
-        duration_minutes: intervalHours * 60,
+        duration_minutes: intervalMinutes,
         price_per_hour: intervalPricePerHour,
         pricing_rule_label: firstRule?.label ?? null,
         subtotal: intervalSubtotal,
