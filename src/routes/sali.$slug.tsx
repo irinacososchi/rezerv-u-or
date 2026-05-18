@@ -29,6 +29,13 @@ import {
   endOfMonth,
   isSameDay,
 } from "@/lib/date-utils";
+import {
+  SLOT_GRANULARITY_MINUTES,
+  slotFromTime,
+  timeToMinutes,
+  minutesToTime,
+  intervalsOverlap,
+} from "@/lib/time-slots";
 
 export const Route = createFileRoute("/sali/$slug")({
   loader: ({ params }) => ({ slug: params.slug }),
