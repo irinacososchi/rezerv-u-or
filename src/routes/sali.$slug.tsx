@@ -828,7 +828,7 @@ function RoomDetailsPage() {
                           setIsPickingNewDay(false);
                           return;
                         }
-                        setDaySelections((prev) => [...prev, { date: d, hours: [] }]);
+                        setDaySelections((prev) => [...prev, { date: d, slots: [] }]);
                         setActiveDayIndex(daySelections.length);
                         setIsPickingNewDay(false);
                       }}
