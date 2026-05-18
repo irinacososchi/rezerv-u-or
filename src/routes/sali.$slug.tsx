@@ -1182,7 +1182,7 @@ function RoomDetailsPage() {
                               .map((iv) => `${iv.start}-${iv.end}`)
                               .join(",")
                           : "",
-                        duration: summary.totalHours,
+                        duration: (summary.totalHours * SLOT_GRANULARITY_MINUTES) / 60,
                         total: summary.total,
                         recurrent: recurrentActive ? "true" : "false",
                         recurrenceEnd: recurrentActive ? recurrenceEndDate : "",
