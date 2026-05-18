@@ -978,7 +978,7 @@ function RoomDetailsPage() {
                     {summary.isMultiDay ? (
                       <>
                         <div className="text-muted-foreground mb-2">
-                          {summary.days.length} zile · {summary.totalIntervals} intervale · {summary.totalHours} ore
+                          {summary.days.length} zile · {summary.totalIntervals} intervale · {formatDurationRO(summary.totalHours * SLOT_GRANULARITY_MINUTES)}
                         </div>
                         <ul className="space-y-2 max-h-60 overflow-y-auto">
                           {summary.days.map((d, i) => (
