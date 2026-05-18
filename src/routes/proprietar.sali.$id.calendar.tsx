@@ -978,7 +978,7 @@ function RoomCalendarPage() {
             <BlockSlotForm
               roomId={id}
               date={cellModal.date}
-              startHour={cellModal.hour}
+              startSlot={cellModal.slotStart}
               onClose={() => setCellModal(null)}
               onChanged={loadEntries}
             />
