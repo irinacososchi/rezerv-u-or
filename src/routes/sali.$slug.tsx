@@ -453,17 +453,18 @@ function RoomDetailsPage() {
   }
 
 
-  function toggleHour(h: number) {
+  function toggleSlot(slotStart: string) {
     if (activeDayIndex === null) return;
     setDaySelections((prev) =>
       prev.map((ds, idx) => {
         if (idx !== activeDayIndex) return ds;
-        const has = ds.hours.includes(h);
+        const has = ds.slots.includes(slotStart);
+        const sortFn = (a: string, b: string) => timeToMinutes(a) - timeToMinutes(b);
         return {
           ...ds,
-          hours: has
-            ? ds.hours.filter((x) => x !== h).sort((a, b) => a - b)
-            : [...ds.hours, h].sort((a, b) => a - b),
+          slots: has
+            ? ds.slots.filter((x) => x !== slotStart).sort(sortFn)
+            : [...ds.slots, slotStart].sort(sortFn),
         };
       }),
     );
@@ -471,26 +472,38 @@ function RoomDetailsPage() {
 
   // Booking summary across all selected days
   const summary = useMemo(() => {
-    const allValidDays = daySelections.filter((ds) => ds.hours.length > 0);
+    const allValidDays = daySelections.filter((ds) => ds.slots.length > 0);
     if (allValidDays.length === 0) return null;
 
     const daysWithIntervals = allValidDays.map((ds) => {
-      const sorted = [...ds.hours].sort((a, b) => a - b);
-      const intervals: { start: number; end: number; hours: number[] }[] = [];
-      let current = { start: sorted[0], end: sorted[0] + 1, hours: [sorted[0]] };
+      const sorted = [...ds.slots].sort(
+        (a, b) => timeToMinutes(a) - timeToMinutes(b),
+      );
+      type Interval = { start: string; end: string; hours: string[] };
+      const intervals: Interval[] = [];
+      const firstEnd = minutesToTime(
+        timeToMinutes(sorted[0]) + SLOT_GRANULARITY_MINUTES,
+      );
+      let current: Interval = { start: sorted[0], end: firstEnd, hours: [sorted[0]] };
       for (let i = 1; i < sorted.length; i++) {
-        if (sorted[i] === sorted[i - 1] + 1) {
-          current.end = sorted[i] + 1;
+        // Two slots are contiguous if slot[i].start === previous slot's end
+        if (sorted[i] === current.end) {
+          current.end = minutesToTime(
+            timeToMinutes(sorted[i]) + SLOT_GRANULARITY_MINUTES,
+          );
           current.hours.push(sorted[i]);
         } else {
           intervals.push(current);
-          current = { start: sorted[i], end: sorted[i] + 1, hours: [sorted[i]] };
+          const e = minutesToTime(
+            timeToMinutes(sorted[i]) + SLOT_GRANULARITY_MINUTES,
+          );
+          current = { start: sorted[i], end: e, hours: [sorted[i]] };
         }
       }
       intervals.push(current);
 
       const dayTotal = sorted.reduce(
-        (sum, h) => sum + getPriceForSlot(ds.date, h, pricing),
+        (sum, s) => sum + getPriceForSlot(ds.date, s, pricing),
         0,
       );
 
