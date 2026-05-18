@@ -1154,10 +1154,7 @@ function RoomDetailsPage() {
                       .flatMap((d) => {
                         const dateStr = formatDateISO(d.date);
                         return d.intervals.map(
-                          (iv) =>
-                            `${dateStr}:${iv.start.toString().padStart(2, "0")}:00-${iv.end
-                              .toString()
-                              .padStart(2, "0")}:00`,
+                          (iv) => `${dateStr}:${iv.start}-${iv.end}`,
                         );
                       })
                       .join(",");
@@ -1171,12 +1168,7 @@ function RoomDetailsPage() {
                         date: !summary.isMultiDay ? formatDateISO(summary.days[0].date) : "",
                         intervals: !summary.isMultiDay
                           ? summary.days[0].intervals
-                              .map(
-                                (iv) =>
-                                  `${iv.start.toString().padStart(2, "0")}:00-${iv.end
-                                    .toString()
-                                    .padStart(2, "0")}:00`,
-                              )
+                              .map((iv) => `${iv.start}-${iv.end}`)
                               .join(",")
                           : "",
                         duration: summary.totalHours,
