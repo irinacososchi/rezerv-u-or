@@ -33,7 +33,8 @@ type BookingFull = {
   booking_date: string;
   start_time: string;
   end_time: string;
-  duration_hours: number;
+  duration_hours: number | null;
+  duration_minutes?: number | null;
   price_per_hour: number;
   pricing_rule_label: string | null;
   subtotal: number;
