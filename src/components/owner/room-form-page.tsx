@@ -72,6 +72,8 @@ type FormState = {
   free_cancellation_hours: string;
   rules_and_notes: string;
   is_active: boolean;
+  contact_email: string;
+  contact_phone: string;
 };
 
 const EMPTY_FORM: FormState = {
@@ -96,7 +98,12 @@ const EMPTY_FORM: FormState = {
   free_cancellation_hours: "24",
   rules_and_notes: "",
   is_active: true,
+  contact_email: "",
+  contact_phone: "",
 };
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const RO_PHONE_RE = /^(07\d{8}|\+407\d{8})$/;
 
 function slugify(s: string): string {
   return s
