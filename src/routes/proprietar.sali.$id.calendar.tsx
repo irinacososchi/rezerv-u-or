@@ -1094,27 +1094,26 @@ function BookingDetails({
     };
   }, [entry]);
 
-  const hourOptions = Array.from(
-    { length: HOUR_END - HOUR_START + 1 },
-    (_, i) => HOUR_START + i,
-  );
-
   async function saveTime() {
-    const sh = parseInt(newStartHour, 10);
-    const eh = parseInt(newEndHour, 10);
-    if (eh <= sh) return toast.error("Ora de sfârșit trebuie să fie după start.");
-    const newDuration = eh - sh;
+    const durationMinutes = timeToMinutes(newEndHour) - timeToMinutes(newStartHour);
+    if (durationMinutes <= 0) {
+      return toast.error("Ora de sfârșit trebuie să fie după start.");
+    }
+    if (durationMinutes % 30 !== 0) {
+      return toast.error("Durata trebuie să fie un multiplu de 30 de minute.");
+    }
+    const newDurationHours = durationMinutes / 60;
     const pph = details.price_per_hour ?? 0;
     const disc = details.discount_amount ?? 0;
-    const newSubtotal = pph * newDuration;
+    const newSubtotal = pph * newDurationHours;
     setBusy(true);
     const { error } = await supabase
       .from("bookings")
       .update({
         start_time: `${newStartHour}:00`,
         end_time: `${newEndHour}:00`,
-        duration_hours: newDuration,
-        duration_minutes: newDuration * 60,
+        duration_hours: newDurationHours,
+        duration_minutes: durationMinutes,
         subtotal: newSubtotal,
         total_amount: newSubtotal - disc,
       })
