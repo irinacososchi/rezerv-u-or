@@ -72,6 +72,8 @@ type FormState = {
   free_cancellation_hours: string;
   rules_and_notes: string;
   is_active: boolean;
+  contact_email: string;
+  contact_phone: string;
 };
 
 const EMPTY_FORM: FormState = {
@@ -96,7 +98,12 @@ const EMPTY_FORM: FormState = {
   free_cancellation_hours: "24",
   rules_and_notes: "",
   is_active: true,
+  contact_email: "",
+  contact_phone: "",
 };
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const RO_PHONE_RE = /^(07\d{8}|\+407\d{8})$/;
 
 function slugify(s: string): string {
   return s
@@ -229,6 +236,8 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
             : "24",
         rules_and_notes: (r.rules_and_notes as string) ?? "",
         is_active: r.is_active !== false,
+        contact_email: (r.contact_email as string) ?? "",
+        contact_phone: (r.contact_phone as string) ?? "",
       });
 
       const sched = (r.weekly_schedule ?? []) as Array<{
@@ -287,6 +296,28 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
     };
   }, [isEdit, roomId]);
 
+  // On create, prepopulate contact fields from owner profile
+  useEffect(() => {
+    if (isEdit) return;
+    let cancelled = false;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || cancelled) return;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("email, phone")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (cancelled || !profile) return;
+      setForm((f) => ({
+        ...f,
+        contact_email: f.contact_email || (profile.email as string) || user.email || "",
+        contact_phone: f.contact_phone || (profile.phone as string) || "",
+      }));
+    })();
+    return () => { cancelled = true; };
+  }, [isEdit]);
+
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
   }
@@ -336,6 +367,16 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
     }
     if (!form.address.trim() || !form.city.trim()) {
       toast.error("Adresa și orașul sunt obligatorii.");
+      return;
+    }
+    const contactEmail = form.contact_email.trim();
+    if (!contactEmail || !EMAIL_RE.test(contactEmail)) {
+      toast.error("Emailul de contact este obligatoriu și trebuie să fie valid.");
+      return;
+    }
+    const contactPhone = form.contact_phone.trim();
+    if (contactPhone && !RO_PHONE_RE.test(contactPhone)) {
+      toast.error("Telefonul de contact trebuie să fie un număr românesc valid (ex: 07xxxxxxxx).");
       return;
     }
     if (!form.slug.trim() || form.slug.trim().length < 3) {
@@ -399,6 +440,8 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
       cancellation_hours: Number(form.free_cancellation_hours) || 24,
       rules_and_notes: form.rules_and_notes || null,
       is_active: form.is_active,
+      contact_email: contactEmail,
+      contact_phone: contactPhone || null,
     };
     const { data: savedRoom, error: roomErr } = isEdit
       ? await supabase
@@ -661,6 +704,32 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
                       <SelectItem value="USD">USD</SelectItem>
                     </SelectContent>
                   </Select>
+                </Field>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4 pt-2 border-t border-border mt-2">
+                <Field label="Email contact *">
+                  <Input
+                    type="email"
+                    value={form.contact_email}
+                    onChange={(e) => update("contact_email", e.target.value)}
+                    placeholder="contact@exemplu.ro"
+                    maxLength={255}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Acest email va fi afișat public pe pagina sălii.
+                  </p>
+                </Field>
+                <Field label="Telefon contact">
+                  <Input
+                    type="tel"
+                    value={form.contact_phone}
+                    onChange={(e) => update("contact_phone", e.target.value)}
+                    placeholder="07xxxxxxxx"
+                    maxLength={20}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Opțional. Va fi afișat public dacă e completat.
+                  </p>
                 </Field>
               </div>
             </CardContent>

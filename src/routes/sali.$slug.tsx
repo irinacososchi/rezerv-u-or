@@ -2,6 +2,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   MapPin,
+  Mail,
+  Phone,
   Ruler,
   AlertTriangle,
   ChevronLeft,
@@ -60,6 +62,8 @@ type Room = {
   currency: string | null;
   is_active: boolean | null;
   cover_url?: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
 };
 
 type Photo = {
@@ -672,6 +676,32 @@ function RoomDetailsPage() {
                 <MapPin className="h-4 w-4" />
                 {[room.neighbourhood, room.city].filter(Boolean).join(", ")}
               </p>
+
+              {(room.contact_email || room.contact_phone) && (
+                <div className="mt-4 rounded-xl border border-border bg-card p-4">
+                  <h2 className="text-sm font-semibold mb-2">Contact proprietar</h2>
+                  <div className="space-y-1.5 text-sm">
+                    {room.contact_email && (
+                      <a
+                        href={`mailto:${room.contact_email}`}
+                        className="flex items-center gap-2 text-foreground hover:text-primary transition-colors"
+                      >
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <span>{room.contact_email}</span>
+                      </a>
+                    )}
+                    {room.contact_phone && (
+                      <a
+                        href={`tel:${room.contact_phone}`}
+                        className="flex items-center gap-2 text-foreground hover:text-primary transition-colors"
+                      >
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <span>{room.contact_phone}</span>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {room.virtual_tour_url && (
                 <a
