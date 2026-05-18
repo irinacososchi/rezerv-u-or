@@ -677,7 +677,7 @@ function RoomDetailsPage() {
                 {[room.neighbourhood, room.city].filter(Boolean).join(", ")}
               </p>
 
-              {/* contact moved below weekly schedule */}
+              
               {room.virtual_tour_url && (
                 <a
                   href={room.virtual_tour_url}
