@@ -931,7 +931,7 @@ function RoomCalendarPage() {
                 <DialogTitle>Ce vrei să faci?</DialogTitle>
                 <DialogDescription>
                   {formatDateRO(parseISODate(cellModal.date))} ·{" "}
-                  {cellModal.hour.toString().padStart(2, "0")}:00
+                  {cellModal.slotStart}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-3 mt-2">
