@@ -2271,7 +2271,7 @@ function ManualBookingForm({
           <div className="rounded-md bg-muted/40 border border-border p-3 text-sm space-y-1">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Durată</span>
-              <span className="font-medium">{duration} ore</span>
+              <span className="font-medium">{formatDurationRO(durationMinutes)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Preț/oră</span>
