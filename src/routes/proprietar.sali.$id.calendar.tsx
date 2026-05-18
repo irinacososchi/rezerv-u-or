@@ -751,30 +751,32 @@ function RoomCalendarPage() {
                     })}
                   </div>
 
-                  {Array.from(
-                    { length: HOUR_END - HOUR_START },
-                    (_, i) => HOUR_START + i,
-                  ).map((hour) => (
+                  <div className="max-h-[calc(100vh-220px)] overflow-y-auto">
+                  {SLOT_ROWS.map((slotStart) => {
+                    const isHalfHour = slotStart.endsWith(":30");
+                    return (
                     <div
-                      key={hour}
+                      key={slotStart}
                       className="grid border-b last:border-b-0"
                       style={{ gridTemplateColumns: "70px repeat(7, 1fr)" }}
                     >
-                      <div className="p-2 text-xs text-muted-foreground border-r">
-                        {hourLabel(hour)}
+                      <div className={
+                        "p-1 text-xs border-r " +
+                        (isHalfHour ? "text-muted-foreground/50" : "text-muted-foreground")
+                      }>
+                        {isHalfHour ? "" : slotStart}
                       </div>
                       {days.map((d) => {
                         const dateISO = formatDateISO(d);
-                        const e = cellMap.get(`${dateISO}|${hour}`);
-                        const sh = e ? Math.floor(parseHM(e.start_time)) : null;
-                        const showLabel = e && sh === hour;
+                        const e = cellMap.get(`${dateISO}|${slotStart}`);
+                        const showLabel = e && e.start_time.slice(0, 5) === slotStart;
                         return (
                           <button
                             type="button"
-                            key={dateISO + hour}
-                            onClick={() => onCellClick(dateISO, hour)}
+                            key={dateISO + slotStart}
+                            onClick={() => onCellClick(dateISO, slotStart)}
                             className={
-                              "h-12 border-l text-left text-xs px-1.5 py-1 transition-colors " +
+                              "h-7 border-l text-left text-xs px-1.5 py-0.5 transition-colors " +
                               cellClass(e)
                             }
                           >
@@ -809,7 +811,9 @@ function RoomCalendarPage() {
                         );
                       })}
                     </div>
-                  ))}
+                    );
+                  })}
+                  </div>
                 </div>
               </div>
             ) : (
