@@ -285,10 +285,11 @@ function BookingSlotsPreview({
     (() => {
       const s = allSlots[0];
       const labelsSet = new Set<string | null>();
-      const startHour = parseInt(s.start.slice(0, 2), 10);
-      const endHour = parseInt(s.end.slice(0, 2), 10);
-      for (let h = startHour; h < endHour; h++) {
-        const detail = getPriceForSlotDetailed(parseISODate(s.date), h, pricing);
+      const startMin = timeToMinutes(s.start);
+      const endMin = timeToMinutes(s.end);
+      const date = parseISODate(s.date);
+      for (let m = startMin; m < endMin; m += SLOT_GRANULARITY_MINUTES) {
+        const detail = getPriceForSlotDetailed(date, minutesToTime(m), pricing);
         labelsSet.add(detail.label);
       }
       return labelsSet.size > 1;
