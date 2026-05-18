@@ -1025,7 +1025,7 @@ function RoomDetailsPage() {
                                     {iv.start}–{iv.end}
                                   </span>
                                   <span className="text-muted-foreground">
-                                    {iv.hours.length} {iv.hours.length === 1 ? "oră" : "ore"}
+                                    {formatDurationRO(iv.hours.length * SLOT_GRANULARITY_MINUTES)}
                                   </span>
                                 </li>
                               ))}
