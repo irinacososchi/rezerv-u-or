@@ -1039,7 +1039,7 @@ function BookingDetails({
       const { data } = await supabase
         .from("bookings")
         .select(
-          "id, start_time, end_time, duration_hours, subtotal, total_amount, price_per_hour, discount_amount, renter_notes, payment_status, status, recurrence_id, recurrence_index",
+          "id, start_time, end_time, duration_hours, duration_minutes, subtotal, total_amount, price_per_hour, discount_amount, renter_notes, payment_status, status, recurrence_id, recurrence_index",
         )
         .eq("id", entry.id)
         .single();
