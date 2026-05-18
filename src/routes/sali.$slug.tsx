@@ -1025,8 +1025,8 @@ function RoomDetailsPage() {
                             <div className="mt-1 flex justify-between">
                               <span className="text-muted-foreground">Interval</span>
                               <span className="font-medium">
-                                {summary.days[0].intervals[0].start.toString().padStart(2, "0")}:00–
-                                {summary.days[0].intervals[0].end.toString().padStart(2, "0")}:00
+                                {summary.days[0].intervals[0].start}–
+                                {summary.days[0].intervals[0].end}
                               </span>
                             </div>
                             <div className="mt-1 flex justify-between">
