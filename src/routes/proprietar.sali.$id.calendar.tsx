@@ -144,13 +144,14 @@ function formatRange(weekStart: Date): string {
   return `${weekStart.getDate()} ${m1} ${weekStart.getFullYear()} – ${weekEnd.getDate()} ${m2} ${weekEnd.getFullYear()}`;
 }
 
-function hourLabel(h: number) {
-  return `${String(h).padStart(2, "0")}:00`;
-}
-
-function parseHM(t: string): number {
-  const [h, m] = t.split(":").map((n) => parseInt(n, 10));
-  return h + (m || 0) / 60;
+function formatDurationRO(minutes: number): string {
+  if (minutes <= 0) return "0 minute";
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (hours === 0) return `${mins} minute`;
+  const hourWord = hours === 1 ? "oră" : "ore";
+  if (mins === 0) return `${hours} ${hourWord}`;
+  return `${hours} ${hourWord} și ${mins} minute`;
 }
 
 function generateWeeklyDates(startDateStr: string, endDateStr: string): string[] {
@@ -666,14 +667,15 @@ function RoomCalendarPage() {
                       onClick={() => onCellClick(dateISO, slotStart)}
                       className={
                         "flex w-full border-b last:border-b-0 min-h-[28px] text-left transition-colors " +
+                        (isHalfHour ? "" : "border-dashed ") +
                         cellClass(e)
                       }
                     >
                       <div className={
-                        "w-16 shrink-0 flex items-start justify-end pr-3 pt-1 text-xs border-r bg-muted/10 " +
-                        (isHalfHour ? "text-muted-foreground/50" : "text-muted-foreground")
+                        "w-16 shrink-0 flex items-start justify-end pr-3 pt-1 border-r bg-muted/10 " +
+                        (isHalfHour ? "text-[10px] text-muted-foreground/60" : "text-xs text-muted-foreground")
                       }>
-                        {isHalfHour ? "" : slotStart}
+                        {isHalfHour ? ":30" : slotStart}
                       </div>
                       <div className="flex-1 px-3 py-1 text-sm">
                         {showLabel && (
@@ -757,14 +759,17 @@ function RoomCalendarPage() {
                     return (
                     <div
                       key={slotStart}
-                      className="grid border-b last:border-b-0"
+                      className={
+                        "grid border-b last:border-b-0 " +
+                        (isHalfHour ? "" : "border-dashed")
+                      }
                       style={{ gridTemplateColumns: "70px repeat(7, 1fr)" }}
                     >
                       <div className={
-                        "p-1 text-xs border-r " +
-                        (isHalfHour ? "text-muted-foreground/50" : "text-muted-foreground")
+                        "p-1 border-r " +
+                        (isHalfHour ? "text-[10px] text-muted-foreground/60" : "text-xs text-muted-foreground")
                       }>
-                        {isHalfHour ? "" : slotStart}
+                        {isHalfHour ? ":30" : slotStart}
                       </div>
                       {days.map((d) => {
                         const dateISO = formatDateISO(d);
@@ -1093,27 +1098,26 @@ function BookingDetails({
     };
   }, [entry]);
 
-  const hourOptions = Array.from(
-    { length: HOUR_END - HOUR_START + 1 },
-    (_, i) => HOUR_START + i,
-  );
-
   async function saveTime() {
-    const sh = parseInt(newStartHour, 10);
-    const eh = parseInt(newEndHour, 10);
-    if (eh <= sh) return toast.error("Ora de sfârșit trebuie să fie după start.");
-    const newDuration = eh - sh;
+    const durationMinutes = timeToMinutes(newEndHour) - timeToMinutes(newStartHour);
+    if (durationMinutes <= 0) {
+      return toast.error("Ora de sfârșit trebuie să fie după start.");
+    }
+    if (durationMinutes % 30 !== 0) {
+      return toast.error("Durata trebuie să fie un multiplu de 30 de minute.");
+    }
+    const newDurationHours = durationMinutes / 60;
     const pph = details.price_per_hour ?? 0;
     const disc = details.discount_amount ?? 0;
-    const newSubtotal = pph * newDuration;
+    const newSubtotal = pph * newDurationHours;
     setBusy(true);
     const { error } = await supabase
       .from("bookings")
       .update({
         start_time: `${newStartHour}:00`,
         end_time: `${newEndHour}:00`,
-        duration_hours: newDuration,
-        duration_minutes: newDuration * 60,
+        duration_hours: newDurationHours,
+        duration_minutes: durationMinutes,
         subtotal: newSubtotal,
         total_amount: newSubtotal - disc,
       })
@@ -1289,14 +1293,11 @@ function BookingDetails({
                 onChange={(e) => setNewStartHour(e.target.value)}
                 className="w-full border rounded-md h-9 px-2 text-sm bg-background"
               >
-                {hourOptions.slice(0, -1).map((h) => {
-                  const v = `${String(h).padStart(2, "0")}:00`;
-                  return (
-                    <option key={h} value={v}>
-                      {v}
-                    </option>
-                  );
-                })}
+                {TIME_OPTIONS.slice(0, -1).map((v) => (
+                  <option key={v} value={v}>
+                    {v}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="space-y-1">
@@ -1306,14 +1307,11 @@ function BookingDetails({
                 onChange={(e) => setNewEndHour(e.target.value)}
                 className="w-full border rounded-md h-9 px-2 text-sm bg-background"
               >
-                {hourOptions.slice(1).map((h) => {
-                  const v = `${String(h).padStart(2, "0")}:00`;
-                  return (
-                    <option key={h} value={v}>
-                      {v}
-                    </option>
-                  );
-                })}
+                {TIME_OPTIONS.slice(1).map((v) => (
+                  <option key={v} value={v}>
+                    {v}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -2074,21 +2072,16 @@ function ManualBookingForm({
   const [isRecurrent, setIsRecurrent] = useState(false);
   const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
 
-  const startHours = Array.from(
-    { length: HOUR_END - HOUR_START },
-    (_, i) => HOUR_START + i,
-  );
-  const endHours = Array.from(
-    { length: HOUR_END - HOUR_START },
-    (_, i) => HOUR_START + 1 + i,
-  );
+  const startOptions = TIME_OPTIONS.slice(0, -1);
+  const endOptions = TIME_OPTIONS.slice(1);
 
-  const sH = parseInt(manualStart, 10);
-  const eH = parseInt(manualEnd, 10);
-  const validRange = eH > sH;
-  const duration = validRange ? eH - sH : 0;
-  const pricePerHour = calculatePriceForDate(date, manualStart.slice(0, 2), pricingRules);
-  const total = duration * pricePerHour;
+  const startMin = timeToMinutes(manualStart);
+  const endMin = timeToMinutes(manualEnd);
+  const durationMinutes = endMin - startMin;
+  const validRange = durationMinutes > 0 && durationMinutes % 30 === 0;
+  const durationHours = validRange ? durationMinutes / 60 : 0;
+  const pricePerHour = calculatePriceForDate(date, manualStart, pricingRules);
+  const total = validRange ? durationHours * pricePerHour : 0;
 
   const recurrenceDates =
     isRecurrent && recurrenceEndDate ? generateWeeklyDates(date, recurrenceEndDate) : [];
@@ -2102,8 +2095,12 @@ function ManualBookingForm({
       setManualError("Completează telefonul.");
       return;
     }
-    if (!validRange) {
+    if (durationMinutes <= 0) {
       setManualError("Ora de sfârșit trebuie să fie după ora de început.");
+      return;
+    }
+    if (durationMinutes % 30 !== 0) {
+      setManualError("Durata trebuie să fie un multiplu de 30 de minute.");
       return;
     }
     if (isRecurrent && !recurrenceEndDate) {
@@ -2162,8 +2159,8 @@ function ManualBookingForm({
         booking_date: d,
         start_time: startTime,
         end_time: endTime,
-        duration_hours: duration,
-        duration_minutes: duration * 60,
+        duration_hours: durationHours,
+        duration_minutes: durationMinutes,
         price_per_hour: pricePerHour,
         subtotal: total,
         discount_amount: 0,
@@ -2223,14 +2220,11 @@ function ManualBookingForm({
               onChange={(e) => setManualStart(e.target.value)}
               className="w-full rounded-md border border-border h-9 px-2 text-sm bg-background"
             >
-              {startHours.map((h) => {
-                const v = `${String(h).padStart(2, "0")}:00`;
-                return (
-                  <option key={h} value={v}>
-                    {v}
-                  </option>
-                );
-              })}
+              {startOptions.map((v) => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
             </select>
           </div>
           <div className="space-y-1">
@@ -2240,14 +2234,11 @@ function ManualBookingForm({
               onChange={(e) => setManualEnd(e.target.value)}
               className="w-full rounded-md border border-border h-9 px-2 text-sm bg-background"
             >
-              {endHours.map((h) => {
-                const v = `${String(h).padStart(2, "0")}:00`;
-                return (
-                  <option key={h} value={v}>
-                    {v}
-                  </option>
-                );
-              })}
+              {endOptions.map((v) => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -2284,7 +2275,7 @@ function ManualBookingForm({
           <div className="rounded-md bg-muted/40 border border-border p-3 text-sm space-y-1">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Durată</span>
-              <span className="font-medium">{duration} ore</span>
+              <span className="font-medium">{formatDurationRO(durationMinutes)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Preț/oră</span>
