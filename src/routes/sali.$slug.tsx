@@ -734,7 +734,7 @@ function RoomDetailsPage() {
               )}
 
               {/* Weekly schedule */}
-              <div className="mt-8">
+              <div className="mt-8" id="program-saptamanal">
                 <h2 className="text-lg font-semibold">Program săptămânal</h2>
                 <div className="mt-3 overflow-hidden rounded-xl border border-border">
                   <table className="w-full text-sm">
