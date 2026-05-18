@@ -980,7 +980,7 @@ function RoomDetailsPage() {
                                 {d.intervals.map((iv, j) => (
                                   <li key={j} className="text-xs flex justify-between">
                                     <span>
-                                      {iv.start.toString().padStart(2, "0")}:00–{iv.end.toString().padStart(2, "0")}:00
+                                      {iv.start}–{iv.end}
                                     </span>
                                     <span className="text-muted-foreground">
                                       {iv.hours.length} {iv.hours.length === 1 ? "oră" : "ore"}
