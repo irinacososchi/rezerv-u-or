@@ -42,7 +42,8 @@ type Booking = {
   booking_date: string;
   start_time: string;
   end_time: string;
-  duration_hours: number;
+  duration_hours: number | null;
+  duration_minutes?: number | null;
   total_amount: number;
   status: string;
   payment_status: string;
