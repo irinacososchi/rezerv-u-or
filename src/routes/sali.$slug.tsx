@@ -935,7 +935,7 @@ function RoomDetailsPage() {
                             <div className="text-xs text-muted-foreground">
                               {hoursCount === 0
                                 ? "Niciun interval selectat"
-                                : `${hoursCount} ${hoursCount === 1 ? "oră" : "ore"}`}
+                                : formatDurationRO(hoursCount * SLOT_GRANULARITY_MINUTES)}
                             </div>
                           </button>
                           <button
