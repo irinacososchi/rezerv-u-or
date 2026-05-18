@@ -440,6 +440,8 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
       cancellation_hours: Number(form.free_cancellation_hours) || 24,
       rules_and_notes: form.rules_and_notes || null,
       is_active: form.is_active,
+      contact_email: contactEmail,
+      contact_phone: contactPhone || null,
     };
     const { data: savedRoom, error: roomErr } = isEdit
       ? await supabase
