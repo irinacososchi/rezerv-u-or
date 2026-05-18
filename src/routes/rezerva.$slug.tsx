@@ -372,7 +372,7 @@ function BookingSlotsPreview({
                                   className="flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm"
                                 >
                                   <span className="font-medium">
-                                    {formatHour(sub.startHour)}–{formatHour(sub.endHour)}
+                                    {sub.start}–{sub.end}
                                   </span>
                                   <div className="flex flex-col items-end">
                                     <span className="font-medium">
