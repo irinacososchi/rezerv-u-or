@@ -2216,14 +2216,11 @@ function ManualBookingForm({
               onChange={(e) => setManualStart(e.target.value)}
               className="w-full rounded-md border border-border h-9 px-2 text-sm bg-background"
             >
-              {startHours.map((h) => {
-                const v = `${String(h).padStart(2, "0")}:00`;
-                return (
-                  <option key={h} value={v}>
-                    {v}
-                  </option>
-                );
-              })}
+              {startOptions.map((v) => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
             </select>
           </div>
           <div className="space-y-1">
@@ -2233,14 +2230,11 @@ function ManualBookingForm({
               onChange={(e) => setManualEnd(e.target.value)}
               className="w-full rounded-md border border-border h-9 px-2 text-sm bg-background"
             >
-              {endHours.map((h) => {
-                const v = `${String(h).padStart(2, "0")}:00`;
-                return (
-                  <option key={h} value={v}>
-                    {v}
-                  </option>
-                );
-              })}
+              {endOptions.map((v) => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
             </select>
           </div>
         </div>
