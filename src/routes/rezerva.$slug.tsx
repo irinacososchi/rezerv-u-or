@@ -627,11 +627,11 @@ function CheckoutPage() {
   // ---------- Derived ----------
   const currency = room?.currency ?? "RON";
   const dateObj = paramsValid ? parseISODate(firstDate) : null;
-  const startHour = paramsValid ? parseInt(effectiveStart.slice(0, 2), 10) : 0;
+  const slotStart = paramsValid ? slotFromTime(effectiveStart) : "";
   const activeRule = useMemo(() => {
     if (!dateObj || !pricing.length) return null;
-    return pickActivePricing(dateObj, startHour, pricing);
-  }, [dateObj, startHour, pricing]);
+    return pickActivePricing(dateObj, slotStart, pricing);
+  }, [dateObj, slotStart, pricing]);
 
   const isRecurrentSearch = search.recurrent === "true";
 
