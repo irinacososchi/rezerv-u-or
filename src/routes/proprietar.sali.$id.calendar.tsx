@@ -94,6 +94,7 @@ type Entry = {
   price_per_hour?: number | null;
   discount_amount?: number | null;
   duration_hours?: number | null;
+  duration_minutes?: number | null;
   renter_notes?: string | null;
   recurrence_id?: string | null;
   recurrence_index?: number | null;
