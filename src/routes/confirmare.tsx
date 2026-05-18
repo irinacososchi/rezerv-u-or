@@ -267,9 +267,11 @@ function ConfirmarePage() {
                 <DetailRow label="Interval" value={`${startLabel}–${endLabel}`} />
                 <DetailRow
                   label="Durată"
-                  value={`${booking.duration_hours} ${
-                    booking.duration_hours === 1 ? "oră" : "ore"
-                  }`}
+                  value={(() => {
+                    const minutes = booking.duration_minutes ?? Math.round((booking.duration_hours ?? 0) * 60);
+                    const hours = minutes / 60;
+                    return `${hours} ${hours === 1 ? "oră" : "ore"}`;
+                  })()}
                 />
                 <DetailRow
                   label="Preț/oră"
