@@ -653,28 +653,29 @@ function RoomCalendarPage() {
                   {DAY_NAMES_RO[getDayOfWeek(selectedDay)]},{" "}
                   {selectedDay.getDate()} {MONTH_NAMES_RO[selectedDay.getMonth()]}
                 </div>
-                {Array.from(
-                  { length: HOUR_END - HOUR_START },
-                  (_, i) => HOUR_START + i,
-                ).map((hour) => {
+                <div className="max-h-[calc(100vh-220px)] overflow-y-auto">
+                {SLOT_ROWS.map((slotStart) => {
                   const dateISO = formatDateISO(selectedDay);
-                  const e = cellMap.get(`${dateISO}|${hour}`);
-                  const sh = e ? Math.floor(parseHM(e.start_time)) : null;
-                  const showLabel = e && sh === hour;
+                  const e = cellMap.get(`${dateISO}|${slotStart}`);
+                  const showLabel = e && e.start_time.slice(0, 5) === slotStart;
+                  const isHalfHour = slotStart.endsWith(":30");
                   return (
                     <button
                       type="button"
-                      key={hour}
-                      onClick={() => onCellClick(dateISO, hour)}
+                      key={slotStart}
+                      onClick={() => onCellClick(dateISO, slotStart)}
                       className={
-                        "flex w-full border-b last:border-b-0 min-h-[56px] text-left transition-colors " +
+                        "flex w-full border-b last:border-b-0 min-h-[28px] text-left transition-colors " +
                         cellClass(e)
                       }
                     >
-                      <div className="w-16 shrink-0 flex items-start justify-end pr-3 pt-2 text-xs text-muted-foreground border-r bg-muted/10">
-                        {hourLabel(hour)}
+                      <div className={
+                        "w-16 shrink-0 flex items-start justify-end pr-3 pt-1 text-xs border-r bg-muted/10 " +
+                        (isHalfHour ? "text-muted-foreground/50" : "text-muted-foreground")
+                      }>
+                        {isHalfHour ? "" : slotStart}
                       </div>
-                      <div className="flex-1 px-3 py-2 text-sm">
+                      <div className="flex-1 px-3 py-1 text-sm">
                         {showLabel && (
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0">
@@ -721,6 +722,7 @@ function RoomCalendarPage() {
                     </button>
                   );
                 })}
+                </div>
               </div>
             ) : view === "week" ? (
               <div className="border rounded-lg bg-card overflow-x-auto">
