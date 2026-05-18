@@ -144,13 +144,14 @@ function formatRange(weekStart: Date): string {
   return `${weekStart.getDate()} ${m1} ${weekStart.getFullYear()} – ${weekEnd.getDate()} ${m2} ${weekEnd.getFullYear()}`;
 }
 
-function hourLabel(h: number) {
-  return `${String(h).padStart(2, "0")}:00`;
-}
-
-function parseHM(t: string): number {
-  const [h, m] = t.split(":").map((n) => parseInt(n, 10));
-  return h + (m || 0) / 60;
+function formatDurationRO(minutes: number): string {
+  if (minutes <= 0) return "0 minute";
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (hours === 0) return `${mins} minute`;
+  const hourWord = hours === 1 ? "oră" : "ore";
+  if (mins === 0) return `${hours} ${hourWord}`;
+  return `${hours} ${hourWord} și ${mins} minute`;
 }
 
 function generateWeeklyDates(startDateStr: string, endDateStr: string): string[] {
