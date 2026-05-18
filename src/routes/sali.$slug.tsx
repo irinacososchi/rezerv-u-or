@@ -863,7 +863,7 @@ function RoomDetailsPage() {
                         Nicio oră disponibilă.
                       </p>
                     ) : (
-                      <div className="mt-2 grid grid-cols-2 gap-2">
+                      <div className="mt-2 grid grid-cols-3 md:grid-cols-4 gap-2">
                         {slots.map((s) => {
                           const selected = activeDay.slots.includes(s.start);
                           const unavailable = s.busy || s.tooSoon;
