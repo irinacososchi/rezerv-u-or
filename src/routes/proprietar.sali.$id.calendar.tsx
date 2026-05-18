@@ -759,14 +759,17 @@ function RoomCalendarPage() {
                     return (
                     <div
                       key={slotStart}
-                      className="grid border-b last:border-b-0"
+                      className={
+                        "grid border-b last:border-b-0 " +
+                        (isHalfHour ? "" : "border-dashed")
+                      }
                       style={{ gridTemplateColumns: "70px repeat(7, 1fr)" }}
                     >
                       <div className={
-                        "p-1 text-xs border-r " +
-                        (isHalfHour ? "text-muted-foreground/50" : "text-muted-foreground")
+                        "p-1 border-r " +
+                        (isHalfHour ? "text-[10px] text-muted-foreground/60" : "text-xs text-muted-foreground")
                       }>
-                        {isHalfHour ? "" : slotStart}
+                        {isHalfHour ? ":30" : slotStart}
                       </div>
                       {days.map((d) => {
                         const dateISO = formatDateISO(d);
