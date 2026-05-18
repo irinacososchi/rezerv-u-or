@@ -706,6 +706,32 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
                   </Select>
                 </Field>
               </div>
+              <div className="grid md:grid-cols-2 gap-4 pt-2 border-t border-border mt-2">
+                <Field label="Email contact *">
+                  <Input
+                    type="email"
+                    value={form.contact_email}
+                    onChange={(e) => update("contact_email", e.target.value)}
+                    placeholder="contact@exemplu.ro"
+                    maxLength={255}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Acest email va fi afișat public pe pagina sălii.
+                  </p>
+                </Field>
+                <Field label="Telefon contact">
+                  <Input
+                    type="tel"
+                    value={form.contact_phone}
+                    onChange={(e) => update("contact_phone", e.target.value)}
+                    placeholder="07xxxxxxxx"
+                    maxLength={20}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Opțional. Va fi afișat public dacă e completat.
+                  </p>
+                </Field>
+              </div>
             </CardContent>
           </Card>
 
