@@ -372,21 +372,20 @@ function RoomCalendarPage() {
     return m;
   }, [entries]);
 
-  function onCellClick(dateISO: string, hour: number) {
-    const e = cellMap.get(`${dateISO}|${hour}`);
+  function onCellClick(dateISO: string, slotStart: string) {
+    const e = cellMap.get(`${dateISO}|${slotStart}`);
     if (!e) {
-      // Reset manual form and open chooser
-      const sH = `${String(hour).padStart(2, "0")}:00`;
-      const eH = `${String(Math.min(hour + 1, HOUR_END)).padStart(2, "0")}:00`;
-      setManualStart(sH);
-      setManualEnd(eH);
+      const startMin = timeToMinutes(slotStart);
+      const endMin = Math.min(startMin + SLOT_GRANULARITY_MINUTES, HOUR_END * 60);
+      setManualStart(slotStart);
+      setManualEnd(minutesToTime(endMin));
       setManualName("");
       setManualPhone("");
       setManualEmail("");
       setManualNote("");
       setManualPaymentStatus("neplatit");
       setManualError(null);
-      setCellModal({ date: dateISO, hour, mode: "choose" });
+      setCellModal({ date: dateISO, slotStart, mode: "choose" });
       return;
     }
     if (e.entry_type === "blocat") setSelected({ kind: "block", entry: e });
