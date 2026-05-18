@@ -1758,20 +1758,23 @@ function BlockDetails({
 function BlockSlotForm({
   roomId,
   date,
-  startHour,
+  startSlot,
   onClose,
   onChanged,
 }: {
   roomId: string;
   date: string;
-  startHour: number;
+  startSlot: string; // "HH:MM"
   onClose: () => void;
   onChanged: () => void;
 }) {
-  const initialStart = Math.min(Math.max(startHour, HOUR_START), HOUR_END - 1);
-  const [start, setStart] = useState(`${String(initialStart).padStart(2, "0")}:00`);
+  const initialStartMin = Math.min(
+    Math.max(timeToMinutes(startSlot), HOUR_START * 60),
+    HOUR_END * 60 - SLOT_GRANULARITY_MINUTES,
+  );
+  const [start, setStart] = useState(minutesToTime(initialStartMin));
   const [end, setEnd] = useState(
-    `${String(Math.min(initialStart + 1, HOUR_END)).padStart(2, "0")}:00`,
+    minutesToTime(Math.min(initialStartMin + SLOT_GRANULARITY_MINUTES, HOUR_END * 60)),
   );
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
@@ -1779,14 +1782,8 @@ function BlockSlotForm({
   const [isRecurrent, setIsRecurrent] = useState(false);
   const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
 
-  const startHours = Array.from(
-    { length: HOUR_END - HOUR_START },
-    (_, i) => HOUR_START + i,
-  );
-  const endHours = Array.from(
-    { length: HOUR_END - HOUR_START + 1 },
-    (_, i) => HOUR_START + 1 + i,
-  ).filter((h) => h <= HOUR_END);
+  const startOptions = TIME_OPTIONS.slice(0, -1); // exclude HOUR_END as start
+  const endOptions = TIME_OPTIONS.slice(1); // exclude HOUR_START as end
 
   const recurrenceDates =
     isRecurrent && recurrenceEndDate
@@ -1795,7 +1792,7 @@ function BlockSlotForm({
 
   async function submit() {
     setBlockError(null);
-    if (parseInt(end, 10) <= parseInt(start, 10)) {
+    if (timeToMinutes(end) <= timeToMinutes(start)) {
       setBlockError("Ora de sfârșit trebuie să fie după ora de început.");
       return;
     }
