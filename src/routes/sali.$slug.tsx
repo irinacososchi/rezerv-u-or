@@ -190,7 +190,12 @@ function RoomDetailsPage() {
     const d = new Date();
     return new Date(d.getFullYear(), d.getMonth(), 1);
   });
-  type DaySelection = { date: Date; slots: string[] };
+  type DaySelection = {
+    date: Date;
+    slots: string[];
+    pendingStart?: string | null;
+    truncationMessage?: string | null;
+  };
   const [daySelections, setDaySelections] = useState<DaySelection[]>([]);
   const [activeDayIndex, setActiveDayIndex] = useState<number | null>(null);
   const [isPickingNewDay, setIsPickingNewDay] = useState(true);
