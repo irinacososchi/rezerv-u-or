@@ -469,18 +469,93 @@ function RoomDetailsPage() {
   }
 
 
-  function toggleSlot(slotStart: string) {
+  /**
+   * Range-selection slot handler. First tap = pendingStart. Second tap (later)
+   * = end; expands the inclusive range into individual 30-min slot starts and
+   * merges them into ds.slots (the same array shape the old per-slot toggle
+   * produced, so all downstream code keeps working unchanged). Tapping an
+   * already-selected slot removes its entire contiguous interval.
+   */
+  function handleSlotTap(slotStart: string) {
     if (activeDayIndex === null) return;
+    const tapped = slots.find((s) => s.start === slotStart);
+    if (!tapped || tapped.busy || tapped.tooSoon) return;
+    const sortFn = (a: string, b: string) => timeToMinutes(a) - timeToMinutes(b);
+
     setDaySelections((prev) =>
       prev.map((ds, idx) => {
         if (idx !== activeDayIndex) return ds;
-        const has = ds.slots.includes(slotStart);
-        const sortFn = (a: string, b: string) => timeToMinutes(a) - timeToMinutes(b);
+
+        // Case 5: tap a slot already in a selected interval → remove that interval.
+        if (ds.slots.includes(slotStart)) {
+          const sorted = [...ds.slots].sort(sortFn);
+          const i = sorted.indexOf(slotStart);
+          let lo = i;
+          let hi = i;
+          while (
+            lo > 0 &&
+            timeToMinutes(sorted[lo]) - timeToMinutes(sorted[lo - 1]) ===
+              SLOT_GRANULARITY_MINUTES
+          )
+            lo--;
+          while (
+            hi < sorted.length - 1 &&
+            timeToMinutes(sorted[hi + 1]) - timeToMinutes(sorted[hi]) ===
+              SLOT_GRANULARITY_MINUTES
+          )
+            hi++;
+          const toRemove = new Set(sorted.slice(lo, hi + 1));
+          return {
+            ...ds,
+            slots: ds.slots.filter((s) => !toRemove.has(s)),
+            pendingStart: null,
+            truncationMessage: null,
+          };
+        }
+
+        const pending = ds.pendingStart ?? null;
+
+        // Case 1: no pending → mark this slot as pending start.
+        if (!pending) {
+          return { ...ds, pendingStart: slotStart, truncationMessage: null };
+        }
+
+        const pendingMin = timeToMinutes(pending);
+        const tappedMin = timeToMinutes(slotStart);
+
+        // Case 3: tapped earlier than pending → reset pending to new slot.
+        if (tappedMin < pendingMin) {
+          return { ...ds, pendingStart: slotStart, truncationMessage: null };
+        }
+
+        // Cases 2 & 4: tapped same-or-later. Build inclusive range; stop at
+        // first busy/tooSoon slot encountered (hybrid stop behavior).
+        const startIdx = slots.findIndex((s) => s.start === pending);
+        const endIdx = slots.findIndex((s) => s.start === slotStart);
+        if (startIdx === -1 || endIdx === -1) {
+          return { ...ds, pendingStart: null, truncationMessage: null };
+        }
+        const collected: string[] = [];
+        let truncatedAt: string | null = null;
+        for (let i = startIdx; i <= endIdx; i++) {
+          const sl = slots[i];
+          if (sl.busy || sl.tooSoon) {
+            truncatedAt = collected.length > 0 ? slots[i - 1].end : null;
+            break;
+          }
+          collected.push(sl.start);
+        }
+        if (collected.length === 0) {
+          return { ...ds, pendingStart: null, truncationMessage: null };
+        }
+        const merged = Array.from(new Set([...ds.slots, ...collected])).sort(sortFn);
         return {
           ...ds,
-          slots: has
-            ? ds.slots.filter((x) => x !== slotStart).sort(sortFn)
-            : [...ds.slots, slotStart].sort(sortFn),
+          slots: merged,
+          pendingStart: null,
+          truncationMessage: truncatedAt
+            ? `Selecția s-a oprit la ${truncatedAt} — următorul interval este ocupat. Poți adăuga alt interval după acesta.`
+            : null,
         };
       }),
     );
