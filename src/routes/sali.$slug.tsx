@@ -892,11 +892,7 @@ function RoomDetailsPage() {
                               <span>
                                 {`${s.start}–${s.end}`}
                               </span>
-                              {slotPricing.label && (
-                                <span className={`text-[10px] mt-0.5 ${selected ? "opacity-90" : "opacity-70"}`}>
-                                  {slotPricing.label}
-                                </span>
-                              )}
+
                             </button>
                           );
                         })}
