@@ -943,40 +943,55 @@ function RoomDetailsPage() {
                         Nicio oră disponibilă.
                       </p>
                     ) : (
-                      <div className="mt-2 grid grid-cols-3 md:grid-cols-4 gap-2">
-                        {slots.map((s) => {
-                          const selected = activeDay.slots.includes(s.start);
-                          const unavailable = s.busy || s.tooSoon;
-                          const slotPricing = getPriceForSlotDetailed(activeDay.date, s.start, pricing);
-                          const title = s.tooSoon
-                            ? "Indisponibil — rezervarea trebuie făcută cu minim 2h înainte"
-                            : s.busy
-                              ? "Interval ocupat"
-                              : slotPricing.label
-                                ? `${slotPricing.price} ${currency} · ${slotPricing.label}`
-                                : undefined;
-                          return (
-                            <button
-                              key={s.start}
-                              disabled={unavailable}
-                              onClick={() => toggleSlot(s.start)}
-                              title={title}
-                              className={`flex flex-col items-center justify-center rounded-md border px-2 py-1.5 text-xs font-medium transition ${
-                                unavailable
-                                  ? "cursor-not-allowed border-border bg-muted text-muted-foreground/60"
-                                  : selected
-                                    ? "border-primary bg-primary text-primary-foreground"
-                                    : "border-border bg-background hover:border-primary hover:text-primary"
-                              }`}
-                            >
-                              <span>
-                                {`${s.start}–${s.end}`}
-                              </span>
+                      <>
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          {activeDay.pendingStart
+                            ? `Apasă ora de final (start selectat: ${activeDay.pendingStart}).`
+                            : "Apasă ora de început, apoi ora de final."}
+                        </p>
+                        <div className="mt-2 grid grid-cols-3 md:grid-cols-4 gap-2">
+                          {slots.map((s) => {
+                            const selected = activeDay.slots.includes(s.start);
+                            const isPendingStart = activeDay.pendingStart === s.start;
+                            const unavailable = s.busy || s.tooSoon;
+                            const slotPricing = getPriceForSlotDetailed(activeDay.date, s.start, pricing);
+                            const title = s.tooSoon
+                              ? "Indisponibil — rezervarea trebuie făcută cu minim 2h înainte"
+                              : s.busy
+                                ? "Interval ocupat"
+                                : slotPricing.label
+                                  ? `${slotPricing.price} ${currency} · ${slotPricing.label}`
+                                  : undefined;
+                            return (
+                              <button
+                                key={s.start}
+                                disabled={unavailable}
+                                onClick={() => handleSlotTap(s.start)}
+                                title={title}
+                                className={`flex flex-col items-center justify-center rounded-md border px-2 py-1.5 text-xs font-medium transition ${
+                                  unavailable
+                                    ? "cursor-not-allowed border-border bg-muted text-muted-foreground/60"
+                                    : isPendingStart
+                                      ? "border-primary bg-primary/10 text-primary ring-2 ring-primary"
+                                      : selected
+                                        ? "border-primary bg-primary text-primary-foreground"
+                                        : "border-border bg-background hover:border-primary hover:text-primary"
+                                }`}
+                              >
+                                <span>
+                                  {`${s.start}–${s.end}`}
+                                </span>
 
-                            </button>
-                          );
-                        })}
-                      </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {activeDay.truncationMessage && (
+                          <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
+                            {activeDay.truncationMessage}
+                          </p>
+                        )}
+                      </>
                     )}
                   </div>
                 )}
