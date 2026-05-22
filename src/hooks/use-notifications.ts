@@ -32,7 +32,7 @@ export function useNotifications() {
     }
     userIdRef.current = user.id;
     const { data, error } = await supabase
-      .from("notifications")
+      .from("app_notifications")
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
