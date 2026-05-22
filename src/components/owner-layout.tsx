@@ -13,6 +13,7 @@ import {
   PanelLeftOpen,
 } from "lucide-react";
 import logoUrl from "@/assets/rzrv-logo.png";
+import { NotificationBell } from "@/components/notification-bell";
 
 const navItems = [
   { to: "/proprietar/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -175,18 +176,26 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main content */}
       <div className={`flex-1 ${contentMargin} flex flex-col min-h-screen transition-[margin] duration-200`}>
+        {/* Desktop top bar */}
+        <div className="hidden md:flex h-12 items-center justify-end px-6 border-b bg-card/60 sticky top-0 z-10">
+          <NotificationBell />
+        </div>
+
         {/* Mobile header */}
         <header className="md:hidden flex items-center justify-between px-4 py-3 border-b bg-card sticky top-0 z-10">
           <Link to="/">
             <img src={logoUrl} alt="RZRV" className="h-12 w-auto object-contain shrink-0" />
           </Link>
-          <button
-            onClick={handleLogout}
-            aria-label="Deconectare"
-            className="p-2 rounded-md hover:bg-muted"
-          >
-            <LogOut className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            <NotificationBell />
+            <button
+              onClick={handleLogout}
+              aria-label="Deconectare"
+              className="p-2 rounded-md hover:bg-muted"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
         </header>
 
         {/* Page content */}

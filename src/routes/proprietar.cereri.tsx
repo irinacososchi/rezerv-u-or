@@ -12,6 +12,7 @@ export const Route = createFileRoute("/proprietar/cereri")({
   validateSearch: (s: Record<string, unknown>) => ({
     q: typeof s.q === "string" ? s.q : "",
     group: typeof s.group === "string" ? s.group : "",
+    bookingId: typeof s.bookingId === "string" ? s.bookingId : "",
   }),
   head: () => ({
     meta: [
@@ -160,8 +161,9 @@ function ActionButtons({
 }
 
 function CereriPage() {
-  const { q: initialQ, group: groupParam } = Route.useSearch();
+  const { q: initialQ, group: groupParam, bookingId: deepLinkBookingId } = Route.useSearch();
   const navigate = useNavigate();
+  const [highlightId, setHighlightId] = useState<string | null>(null);
   const [bookings, setBookings] = useState<BookingFull[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState("");
@@ -194,6 +196,24 @@ function CereriPage() {
     }
     load();
   }, []);
+
+  // Deep-link handler: when ?bookingId=… present, scroll & highlight after load
+  useEffect(() => {
+    if (!deepLinkBookingId || loading) return;
+    const found = bookings.find((b) => b.id === deepLinkBookingId);
+    if (!found) return;
+    const el = document.getElementById(`booking-row-${found.id}`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    setHighlightId(found.id);
+    const t = window.setTimeout(() => setHighlightId(null), 2500);
+    navigate({
+      to: "/proprietar/cereri",
+      search: { q: searchQuery, group: groupParam, bookingId: "" },
+      replace: true,
+    });
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deepLinkBookingId, loading, bookings]);
 
   async function fetchBookings(ownerId: string) {
     setLoading(true);
@@ -318,7 +338,7 @@ function CereriPage() {
             Filtrat la o serie recurentă specifică
           </span>
           <button
-            onClick={() => navigate({ to: "/proprietar/cereri", search: { q: "", group: "" } })}
+            onClick={() => navigate({ to: "/proprietar/cereri", search: { q: "", group: "", bookingId: "" } })}
             className="text-xs text-primary hover:underline"
           >
             Curăță filtru
@@ -462,7 +482,8 @@ function CereriPage() {
                     return (
                     <tr
                       key={b.id}
-                      className="border-b border-border last:border-b-0 hover:bg-muted/20 transition"
+                      id={`booking-row-${b.id}`}
+                      className={`border-b border-border last:border-b-0 hover:bg-muted/20 transition ${highlightId === b.id ? "ring-2 ring-primary ring-inset bg-primary/5" : ""}`}
                     >
                       <td className="px-4 py-3">
                         <span className="font-mono text-xs text-muted-foreground">#{b.reference}</span>
@@ -532,7 +553,7 @@ function CereriPage() {
                 }
                 const b = item.booking as unknown as BookingFull;
                 return (
-                <div key={b.id} className="rounded-xl border border-border bg-background p-4">
+                <div key={b.id} id={`booking-row-${b.id}`} className={`rounded-xl border bg-background p-4 ${highlightId === b.id ? "ring-2 ring-primary border-primary" : "border-border"}`}>
                   <div className="flex items-start justify-between gap-2 mb-3">
                     <div>
                       <span className="font-mono text-xs text-muted-foreground">#{b.reference}</span>
