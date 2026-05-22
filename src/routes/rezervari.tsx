@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, CalendarX, Calendar as CalendarIcon, Search } from "lucide-react";
 import { toast } from "sonner";
@@ -24,6 +24,9 @@ import {
 } from "@/lib/recurrence-series";
 
 export const Route = createFileRoute("/rezervari")({
+  validateSearch: (s: Record<string, unknown>) => ({
+    bookingId: typeof s.bookingId === "string" ? s.bookingId : "",
+  }),
   head: () => ({
     meta: [
       { title: "Rezervările mele — RZRV" },
