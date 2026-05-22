@@ -3,6 +3,7 @@ import type { User } from "@supabase/supabase-js";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ChevronDown, LayoutDashboard, LogOut, Calendar, Heart, Settings, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { NotificationBell } from "@/components/notification-bell";
 import { supabase } from "@/integrations/supabase/external-client";
 import logoUrl from "@/assets/rzrv-logo.png";
 
@@ -125,6 +126,8 @@ export function SiteHeader() {
               </Button>
             </>
           )}
+
+          {user && <NotificationBell />}
 
           {user && (
             <div className="relative" ref={dropdownRef}>
