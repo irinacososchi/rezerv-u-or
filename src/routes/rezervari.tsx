@@ -661,7 +661,10 @@ function RezervariPage() {
                   return (
                     <article
                       key={b.id}
-                      className="rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-card)]"
+                      id={`booking-row-${b.id}`}
+                      className={`rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-card)] transition ${
+                        highlightId === b.id ? "ring-2 ring-primary" : ""
+                      }`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
