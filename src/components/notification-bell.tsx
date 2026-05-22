@@ -22,6 +22,8 @@ function deepLinkFor(
   if (!n.booking_id) return null;
   switch (n.type) {
     case "booking_cancelled_by_renter":
+    case "booking_request_new":
+    case "booking_instant_new":
       return {
         path: "/proprietar/cereri",
         search: { bookingId: n.booking_id },
