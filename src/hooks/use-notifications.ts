@@ -69,7 +69,7 @@ export function useNotifications() {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)),
     );
-    await supabase.from("notifications").update({ is_read: true }).eq("id", id);
+    await supabase.from("app_notifications").update({ is_read: true }).eq("id", id);
   }, []);
 
   const markAllAsRead = useCallback(async () => {
@@ -77,7 +77,7 @@ export function useNotifications() {
     if (!uid) return;
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
     await supabase
-      .from("notifications")
+      .from("app_notifications")
       .update({ is_read: true })
       .eq("user_id", uid)
       .eq("is_read", false);
