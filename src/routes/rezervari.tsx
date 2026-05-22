@@ -109,6 +109,26 @@ function RezervariPage() {
     return () => { cancelled = true; };
   }, []);
 
+  // Deep-link handler: when ?bookingId=… present, scroll & highlight after load
+  useEffect(() => {
+    if (!deepLinkBookingId || loading) return;
+    const found = bookings.find((b) => b.id === deepLinkBookingId);
+    if (!found) return;
+    const el = document.getElementById(`booking-row-${found.id}`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    setHighlightId(found.id);
+    const t = window.setTimeout(() => setHighlightId(null), 2500);
+    navigate({
+      to: "/rezervari",
+      search: { bookingId: "" },
+      replace: true,
+    });
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deepLinkBookingId, loading, bookings]);
+
+
+
   async function loadRecurrences(list: Booking[]) {
     const recIds = Array.from(
       new Set(list.map((b) => b.recurrence_id).filter((x): x is string => !!x)),
