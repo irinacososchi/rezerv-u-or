@@ -60,7 +60,10 @@ type Booking = {
 type Tab = "upcoming" | "past" | "all";
 
 function RezervariPage() {
-  
+  const { bookingId: deepLinkBookingId } = Route.useSearch();
+  const navigate = useNavigate();
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+
   const [authChecked, setAuthChecked] = useState(false);
   const [user, setUser] = useState<{ id: string; email: string } | null>(null);
 
