@@ -21,6 +21,7 @@ function deepLinkFor(
 ): { path: string; search: Record<string, string> } | null {
   if (!n.booking_id) return null;
   switch (n.type) {
+    // Owner-facing -> owner requests list
     case "booking_cancelled_by_renter":
     case "booking_request_new":
     case "booking_instant_new":
@@ -28,11 +29,17 @@ function deepLinkFor(
         path: "/proprietar/cereri",
         search: { bookingId: n.booking_id },
       };
-    default:
+    // Renter-facing -> renter bookings list
+    case "booking_confirmed":
+    case "booking_refused":
+    case "booking_cancelled_by_owner":
+    case "booking_rescheduled":
       return {
-        path: "/proprietar/cereri",
+        path: "/rezervari",
         search: { bookingId: n.booking_id },
       };
+    default:
+      return null;
   }
 }
 
