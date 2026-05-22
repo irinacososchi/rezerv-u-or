@@ -161,8 +161,9 @@ function ActionButtons({
 }
 
 function CereriPage() {
-  const { q: initialQ, group: groupParam } = Route.useSearch();
+  const { q: initialQ, group: groupParam, bookingId: deepLinkBookingId } = Route.useSearch();
   const navigate = useNavigate();
+  const [highlightId, setHighlightId] = useState<string | null>(null);
   const [bookings, setBookings] = useState<BookingFull[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState("");
