@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, CalendarX, Calendar as CalendarIcon, Search } from "lucide-react";
 import { toast } from "sonner";
@@ -24,6 +24,9 @@ import {
 } from "@/lib/recurrence-series";
 
 export const Route = createFileRoute("/rezervari")({
+  validateSearch: (s: Record<string, unknown>) => ({
+    bookingId: typeof s.bookingId === "string" ? s.bookingId : "",
+  }),
   head: () => ({
     meta: [
       { title: "Rezervările mele — RZRV" },
@@ -57,7 +60,10 @@ type Booking = {
 type Tab = "upcoming" | "past" | "all";
 
 function RezervariPage() {
-  
+  const { bookingId: deepLinkBookingId } = Route.useSearch();
+  const navigate = useNavigate();
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+
   const [authChecked, setAuthChecked] = useState(false);
   const [user, setUser] = useState<{ id: string; email: string } | null>(null);
 
@@ -102,6 +108,26 @@ function RezervariPage() {
     init();
     return () => { cancelled = true; };
   }, []);
+
+  // Deep-link handler: when ?bookingId=… present, scroll & highlight after load
+  useEffect(() => {
+    if (!deepLinkBookingId || loading) return;
+    const found = bookings.find((b) => b.id === deepLinkBookingId);
+    if (!found) return;
+    const el = document.getElementById(`booking-row-${found.id}`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    setHighlightId(found.id);
+    const t = window.setTimeout(() => setHighlightId(null), 2500);
+    navigate({
+      to: "/rezervari",
+      search: { bookingId: "" },
+      replace: true,
+    });
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deepLinkBookingId, loading, bookings]);
+
+
 
   async function loadRecurrences(list: Booking[]) {
     const recIds = Array.from(
@@ -635,7 +661,10 @@ function RezervariPage() {
                   return (
                     <article
                       key={b.id}
-                      className="rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-card)]"
+                      id={`booking-row-${b.id}`}
+                      className={`rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-card)] transition ${
+                        highlightId === b.id ? "ring-2 ring-primary" : ""
+                      }`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
