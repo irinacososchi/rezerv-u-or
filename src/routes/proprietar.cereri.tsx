@@ -338,7 +338,7 @@ function CereriPage() {
             Filtrat la o serie recurentă specifică
           </span>
           <button
-            onClick={() => navigate({ to: "/proprietar/cereri", search: { q: "", group: "" } })}
+            onClick={() => navigate({ to: "/proprietar/cereri", search: { q: "", group: "", bookingId: "" } })}
             className="text-xs text-primary hover:underline"
           >
             Curăță filtru
