@@ -482,7 +482,8 @@ function CereriPage() {
                     return (
                     <tr
                       key={b.id}
-                      className="border-b border-border last:border-b-0 hover:bg-muted/20 transition"
+                      id={`booking-row-${b.id}`}
+                      className={`border-b border-border last:border-b-0 hover:bg-muted/20 transition ${highlightId === b.id ? "ring-2 ring-primary ring-inset bg-primary/5" : ""}`}
                     >
                       <td className="px-4 py-3">
                         <span className="font-mono text-xs text-muted-foreground">#{b.reference}</span>
@@ -552,7 +553,7 @@ function CereriPage() {
                 }
                 const b = item.booking as unknown as BookingFull;
                 return (
-                <div key={b.id} className="rounded-xl border border-border bg-background p-4">
+                <div key={b.id} id={`booking-row-${b.id}`} className={`rounded-xl border bg-background p-4 ${highlightId === b.id ? "ring-2 ring-primary border-primary" : "border-border"}`}>
                   <div className="flex items-start justify-between gap-2 mb-3">
                     <div>
                       <span className="font-mono text-xs text-muted-foreground">#{b.reference}</span>
