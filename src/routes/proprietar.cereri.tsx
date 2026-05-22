@@ -12,6 +12,7 @@ export const Route = createFileRoute("/proprietar/cereri")({
   validateSearch: (s: Record<string, unknown>) => ({
     q: typeof s.q === "string" ? s.q : "",
     group: typeof s.group === "string" ? s.group : "",
+    bookingId: typeof s.bookingId === "string" ? s.bookingId : "",
   }),
   head: () => ({
     meta: [
