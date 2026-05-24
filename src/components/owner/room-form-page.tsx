@@ -476,7 +476,8 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
       slug: form.slug.trim(),
       description: form.description || null,
       address: form.address.trim(),
-      city: form.city.trim(),
+      city_id: selectedCity.id,
+      city: selectedCity.name,
       neighbourhood: form.neighbourhood || null,
       google_maps_url: form.google_maps_url || null,
       virtual_tour_url: form.virtual_tour_url.trim() || null,
@@ -725,19 +726,60 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
                     maxLength={200}
                   />
                 </Field>
-                <Field label="Oraș *">
-                  <Input
-                    value={form.city}
-                    onChange={(e) => update("city", e.target.value)}
-                    maxLength={100}
-                  />
+                <Field label="Județ *">
+                  <Select
+                    value={form.county_id != null ? String(form.county_id) : ""}
+                    onValueChange={(v) => {
+                      const next = Number(v);
+                      setForm((f) => ({ ...f, county_id: next, city_id: null }));
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Alege județ" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {counties.map((c) => (
+                        <SelectItem key={c.id} value={String(c.id)}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </Field>
-                <Field label="Cartier">
+                <Field label="Oraș *">
+                  <Select
+                    value={form.city_id != null ? String(form.city_id) : ""}
+                    onValueChange={(v) => update("city_id", Number(v))}
+                    disabled={form.county_id == null}
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={
+                          form.county_id == null
+                            ? "Alege întâi județul"
+                            : "Alege oraș"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cities.map((c) => (
+                        <SelectItem key={c.id} value={String(c.id)}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field label="Cartier / Zonă">
                   <Input
                     value={form.neighbourhood}
                     onChange={(e) => update("neighbourhood", e.target.value)}
                     maxLength={100}
+                    placeholder="ex. Floreasca, Dorobanți..."
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Opțional. Detaliu suplimentar despre zonă.
+                  </p>
                 </Field>
                 <Field label="URL Google Maps">
                   <Input
