@@ -7,13 +7,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { fetchRooms } from "@/data/rooms";
+import {
+  fetchCounties,
+  fetchCitiesByCounty,
+  type County,
+  type City,
+} from "@/data/locations";
 import { SearchX } from "lucide-react";
 
-type SaliSearch = { city?: string };
+type SaliSearch = { county?: string; city?: string };
+
+const ALL = "__all__";
 
 export const Route = createFileRoute("/sali/")({
   validateSearch: (search: Record<string, unknown>): SaliSearch => ({
+    county: typeof search.county === "string" ? search.county : undefined,
     city: typeof search.city === "string" ? search.city : undefined,
   }),
   head: () => ({
@@ -21,12 +37,12 @@ export const Route = createFileRoute("/sali/")({
       { title: "Săli de dans disponibile — Rezervări Săli" },
       {
         name: "description",
-        content: "Filtrează săli de dans după oraș, preț și dotări. Rezervă online.",
+        content: "Filtrează săli de dans după județ, oraș, preț și dotări. Rezervă online.",
       },
       { property: "og:title", content: "Săli de dans disponibile" },
       {
         property: "og:description",
-        content: "Filtrează după oraș, preț și dotări. Găsește sala potrivită.",
+        content: "Filtrează după județ, oraș, preț și dotări. Găsește sala potrivită.",
       },
     ],
   }),
@@ -35,7 +51,14 @@ export const Route = createFileRoute("/sali/")({
 
 function SaliPage() {
   const search = Route.useSearch();
-  const [city, setCity] = useState(search.city ?? "");
+  const [countyId, setCountyId] = useState<number | null>(
+    search.county ? Number(search.county) : null,
+  );
+  const [cityId, setCityId] = useState<number | null>(
+    search.city ? Number(search.city) : null,
+  );
+  const [counties, setCounties] = useState<County[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
   const [mirrors, setMirrors] = useState(false);
@@ -47,21 +70,29 @@ function SaliPage() {
     fetchRooms(100, { activeOnly: false })
       .then(setRooms)
       .catch((e) => console.error("fetchRooms", e));
+    fetchCounties().then(setCounties);
   }, []);
+
+  useEffect(() => {
+    if (countyId == null) {
+      setCities([]);
+      return;
+    }
+    let cancelled = false;
+    fetchCitiesByCounty(countyId).then((rows) => {
+      if (!cancelled) setCities(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [countyId]);
 
   const filtered = useMemo(() => {
     const min = priceMin ? Number(priceMin) : undefined;
     const max = priceMax ? Number(priceMax) : undefined;
     return rooms.filter((r) => {
-      if (city) {
-        const q = city.toLowerCase();
-        if (
-          !r.city.toLowerCase().includes(q) &&
-          !r.neighbourhood.toLowerCase().includes(q)
-        ) {
-          return false;
-        }
-      }
+      if (countyId != null && r.countyId !== countyId) return false;
+      if (cityId != null && r.cityId !== cityId) return false;
       if (min !== undefined && r.priceMax < min) return false;
       if (max !== undefined && r.priceMin > max) return false;
       if (mirrors && !r.hasMirrors) return false;
@@ -69,10 +100,11 @@ function SaliPage() {
       if (barre && !r.hasBarre) return false;
       return true;
     });
-  }, [rooms, city, priceMin, priceMax, mirrors, sound, barre]);
+  }, [rooms, countyId, cityId, priceMin, priceMax, mirrors, sound, barre]);
 
   const reset = () => {
-    setCity("");
+    setCountyId(null);
+    setCityId(null);
     setPriceMin("");
     setPriceMax("");
     setMirrors(false);
@@ -89,7 +121,7 @@ function SaliPage() {
           <div className="mb-8">
             <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Săli disponibile</h1>
             <p className="mt-2 text-muted-foreground">
-              Filtrează după oraș, preț și dotări.
+              Filtrează după județ, oraș, preț și dotări.
             </p>
           </div>
 
@@ -105,13 +137,53 @@ function SaliPage() {
 
               <div className="mt-5 space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="city">Oraș</Label>
-                  <Input
-                    id="city"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    placeholder="ex: București"
-                  />
+                  <Label>Județ</Label>
+                  <Select
+                    value={countyId != null ? String(countyId) : ALL}
+                    onValueChange={(v) => {
+                      setCountyId(v === ALL ? null : Number(v));
+                      setCityId(null);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={ALL}>Toate județele</SelectItem>
+                      {counties.map((c) => (
+                        <SelectItem key={c.id} value={String(c.id)}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Oraș</Label>
+                  <Select
+                    value={cityId != null ? String(cityId) : ALL}
+                    onValueChange={(v) =>
+                      setCityId(v === ALL ? null : Number(v))
+                    }
+                    disabled={countyId == null}
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={
+                          countyId == null ? "Alege întâi județul" : undefined
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={ALL}>Toate orașele</SelectItem>
+                      {cities.map((c) => (
+                        <SelectItem key={c.id} value={String(c.id)}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
