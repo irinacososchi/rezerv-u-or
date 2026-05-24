@@ -211,10 +211,8 @@ function RoomDetailsPage() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteId, setFavoriteId] = useState<string | null>(null);
   const [favLoading, setFavLoading] = useState(false);
-  const [locationLabel, setLocationLabel] = useState<{
-    city: string;
-    county: string;
-  } | null>(null);
+
+
 
   // ---------- Fetch ----------
   useEffect(() => {
