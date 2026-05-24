@@ -245,24 +245,8 @@ function RoomDetailsPage() {
       const todayISO = formatDateISO(today);
       const sixtyISO = formatDateISO(addDays(today, 60));
 
-      // Resolve canonical city + county names via rooms.city_id (view doesn't expose it).
-      supabase
-        .from("rooms")
-        .select("cities(name, counties(name))")
-        .eq("id", roomData.id)
-        .maybeSingle()
-        .then(({ data }) => {
-          if (cancelled) return;
-          const c = (data as { cities?: { name?: string; counties?: { name?: string } | null } | null } | null)?.cities;
-          if (c) {
-            setLocationLabel({
-              city: c.name ?? roomData.city ?? "",
-              county: c.counties?.name ?? "",
-            });
-          } else {
-            setLocationLabel({ city: roomData.city ?? "", county: "" });
-          }
-        });
+
+
 
       const [photosRes, schedRes, priceRes, blockRes, bookRes] =
         await Promise.all([
