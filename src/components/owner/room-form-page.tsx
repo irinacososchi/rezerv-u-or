@@ -55,7 +55,8 @@ type FormState = {
   slug: string;
   description: string;
   address: string;
-  city: string;
+  city_id: number | null;
+  county_id: number | null;
   neighbourhood: string;
   google_maps_url: string;
   virtual_tour_url: string;
@@ -81,7 +82,8 @@ const EMPTY_FORM: FormState = {
   slug: "",
   description: "",
   address: "",
-  city: "",
+  city_id: null,
+  county_id: null,
   neighbourhood: "",
   google_maps_url: "",
   virtual_tour_url: "",
