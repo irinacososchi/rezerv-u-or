@@ -11,11 +11,18 @@ type RoomRow = {
   slug: string | null;
   name: string;
   city: string;
+  city_id: number | null;
   neighbourhood: string | null;
   has_mirrors: boolean | null;
   has_sound_system: boolean | null;
   has_ballet_barre: boolean | null;
   is_active: boolean | null;
+  cities: {
+    id: number;
+    name: string;
+    county_id: number;
+    counties: { id: number; name: string } | null;
+  } | null;
   room_photos: { storage_url: string; is_cover: boolean | null; sort_order: number | null }[] | null;
   pricing_rules: { price_per_hour: number; is_active: boolean | null }[] | null;
 };
@@ -50,7 +57,7 @@ export async function fetchRooms(
   let query = supabase
     .from("rooms")
     .select(
-      `id, name, slug, city, neighbourhood, has_mirrors, has_sound_system, has_ballet_barre, is_active, room_photos(storage_url, is_cover, sort_order), pricing_rules(price_per_hour, is_active)`,
+      `id, name, slug, city, city_id, neighbourhood, has_mirrors, has_sound_system, has_ballet_barre, is_active, cities(id, name, county_id, counties(id, name)), room_photos(storage_url, is_cover, sort_order), pricing_rules(price_per_hour, is_active)`,
     )
     .limit(limit);
 
@@ -65,18 +72,23 @@ export async function fetchRooms(
     return [];
   }
 
-  const rows = ((data ?? []) as RoomRow[]).filter((row) =>
+  const rows = ((data ?? []) as unknown as RoomRow[]).filter((row) =>
     (row.pricing_rules ?? []).some((p) => p.is_active !== false),
   );
   // Active rooms first, then inactive
   rows.sort((a, b) => Number(b.is_active ?? false) - Number(a.is_active ?? false));
   return rows.map((row, idx) => {
     const { min, max } = priceRange(row);
+    const cityName = row.cities?.name ?? row.city ?? "";
+    const countyName = row.cities?.counties?.name ?? "";
     return {
       id: row.id,
       slug: row.slug ?? "",
       name: row.name,
-      city: row.city ?? "",
+      city: cityName,
+      countyName,
+      cityId: row.city_id ?? null,
+      countyId: row.cities?.county_id ?? null,
       neighbourhood: row.neighbourhood ?? "",
       priceMin: min,
       priceMax: max,

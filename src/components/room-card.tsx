@@ -8,6 +8,9 @@ export interface Room {
   slug: string;
   neighbourhood: string;
   city: string;
+  countyName: string;
+  cityId: number | null;
+  countyId: number | null;
   priceMin: number;
   priceMax: number;
   image: string;
