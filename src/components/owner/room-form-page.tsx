@@ -156,6 +156,34 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
   const [checkingSlug, setCheckingSlug] = useState(false);
   const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([]);
   const [tourUrlError, setTourUrlError] = useState<string | null>(null);
+  const [counties, setCounties] = useState<County[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
+
+  // Load counties on mount
+  useEffect(() => {
+    let cancelled = false;
+    fetchCounties().then((rows) => {
+      if (!cancelled) setCounties(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Reload cities whenever the selected county changes
+  useEffect(() => {
+    if (form.county_id == null) {
+      setCities([]);
+      return;
+    }
+    let cancelled = false;
+    fetchCitiesByCounty(form.county_id).then((rows) => {
+      if (!cancelled) setCities(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [form.county_id]);
 
   function validateTourUrl(url: string): string | null {
     if (!url || url.trim() === "") return null;
