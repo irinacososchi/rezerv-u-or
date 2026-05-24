@@ -412,8 +412,17 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
       toast.error("Numele sălii este obligatoriu.");
       return;
     }
-    if (!form.address.trim() || !form.city.trim()) {
-      toast.error("Adresa și orașul sunt obligatorii.");
+    if (!form.address.trim()) {
+      toast.error("Adresa este obligatorie.");
+      return;
+    }
+    if (form.county_id == null || form.city_id == null) {
+      toast.error("Alege județul și orașul.");
+      return;
+    }
+    const selectedCity = cities.find((c) => c.id === form.city_id);
+    if (!selectedCity) {
+      toast.error("Orașul selectat nu este valid.");
       return;
     }
     const contactEmail = form.contact_email.trim();
