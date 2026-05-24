@@ -71,6 +71,8 @@ type Room = {
   cover_url?: string | null;
   contact_email: string | null;
   contact_phone: string | null;
+  city_name?: string | null;
+  county_name?: string | null;
 };
 
 type Photo = {
@@ -209,10 +211,8 @@ function RoomDetailsPage() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteId, setFavoriteId] = useState<string | null>(null);
   const [favLoading, setFavLoading] = useState(false);
-  const [locationLabel, setLocationLabel] = useState<{
-    city: string;
-    county: string;
-  } | null>(null);
+
+
 
   // ---------- Fetch ----------
   useEffect(() => {
@@ -245,24 +245,8 @@ function RoomDetailsPage() {
       const todayISO = formatDateISO(today);
       const sixtyISO = formatDateISO(addDays(today, 60));
 
-      // Resolve canonical city + county names via rooms.city_id (view doesn't expose it).
-      supabase
-        .from("rooms")
-        .select("cities(name, counties(name))")
-        .eq("id", roomData.id)
-        .maybeSingle()
-        .then(({ data }) => {
-          if (cancelled) return;
-          const c = (data as { cities?: { name?: string; counties?: { name?: string } | null } | null } | null)?.cities;
-          if (c) {
-            setLocationLabel({
-              city: c.name ?? roomData.city ?? "",
-              county: c.counties?.name ?? "",
-            });
-          } else {
-            setLocationLabel({ city: roomData.city ?? "", county: "" });
-          }
-        });
+
+
 
       const [photosRes, schedRes, priceRes, blockRes, bookRes] =
         await Promise.all([
@@ -793,8 +777,8 @@ function RoomDetailsPage() {
                 <MapPin className="h-4 w-4" />
                 {[
                   room.neighbourhood,
-                  locationLabel?.city ?? room.city,
-                  locationLabel?.county,
+                  room.city_name ?? room.city,
+                  room.county_name,
                 ]
                   .filter(Boolean)
                   .join(", ")}
