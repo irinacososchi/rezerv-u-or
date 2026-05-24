@@ -791,7 +791,13 @@ function RoomDetailsPage() {
 
               <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
                 <MapPin className="h-4 w-4" />
-                {[room.neighbourhood, room.city].filter(Boolean).join(", ")}
+                {[
+                  room.neighbourhood,
+                  locationLabel?.city ?? room.city,
+                  locationLabel?.county,
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
               </p>
 
               
