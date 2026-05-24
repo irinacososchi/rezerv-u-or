@@ -71,6 +71,8 @@ type Room = {
   cover_url?: string | null;
   contact_email: string | null;
   contact_phone: string | null;
+  city_name?: string | null;
+  county_name?: string | null;
 };
 
 type Photo = {
