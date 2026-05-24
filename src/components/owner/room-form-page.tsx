@@ -25,6 +25,13 @@ import {
   uploadPendingPhotos,
   type PendingPhoto,
 } from "@/components/owner/room-photos-uploader";
+import {
+  fetchCounties,
+  fetchCitiesByCounty,
+  fetchCity,
+  type County,
+  type City,
+} from "@/data/locations";
 
 const DAYS = [1, 2, 3, 4, 5, 6, 7] as const;
 
