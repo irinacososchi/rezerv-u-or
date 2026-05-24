@@ -327,6 +327,15 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
       );
 
       setLoading(false);
+
+      // Pre-populate county_id from existing city_id, then load that county's cities.
+      const cid = (r.city_id as number | null) ?? null;
+      if (cid != null) {
+        const city = await fetchCity(cid);
+        if (!cancelled && city) {
+          setForm((f) => ({ ...f, county_id: city.county_id, city_id: city.id }));
+        }
+      }
     }
     load();
     return () => {
