@@ -25,6 +25,13 @@ import {
   uploadPendingPhotos,
   type PendingPhoto,
 } from "@/components/owner/room-photos-uploader";
+import {
+  fetchCounties,
+  fetchCitiesByCounty,
+  fetchCity,
+  type County,
+  type City,
+} from "@/data/locations";
 
 const DAYS = [1, 2, 3, 4, 5, 6, 7] as const;
 
@@ -55,7 +62,8 @@ type FormState = {
   slug: string;
   description: string;
   address: string;
-  city: string;
+  city_id: number | null;
+  county_id: number | null;
   neighbourhood: string;
   google_maps_url: string;
   virtual_tour_url: string;
@@ -81,7 +89,8 @@ const EMPTY_FORM: FormState = {
   slug: "",
   description: "",
   address: "",
-  city: "",
+  city_id: null,
+  county_id: null,
   neighbourhood: "",
   google_maps_url: "",
   virtual_tour_url: "",
@@ -147,6 +156,34 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
   const [checkingSlug, setCheckingSlug] = useState(false);
   const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([]);
   const [tourUrlError, setTourUrlError] = useState<string | null>(null);
+  const [counties, setCounties] = useState<County[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
+
+  // Load counties on mount
+  useEffect(() => {
+    let cancelled = false;
+    fetchCounties().then((rows) => {
+      if (!cancelled) setCounties(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Reload cities whenever the selected county changes
+  useEffect(() => {
+    if (form.county_id == null) {
+      setCities([]);
+      return;
+    }
+    let cancelled = false;
+    fetchCitiesByCounty(form.county_id).then((rows) => {
+      if (!cancelled) setCities(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [form.county_id]);
 
   function validateTourUrl(url: string): string | null {
     if (!url || url.trim() === "") return null;
@@ -211,7 +248,8 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
         slug: (r.slug as string) ?? "",
         description: (r.description as string) ?? "",
         address: (r.address as string) ?? "",
-        city: (r.city as string) ?? "",
+        city_id: (r.city_id as number | null) ?? null,
+        county_id: null,
         neighbourhood: (r.neighbourhood as string) ?? "",
         google_maps_url: (r.google_maps_url as string) ?? "",
         virtual_tour_url: (r.virtual_tour_url as string) ?? "",
@@ -289,6 +327,15 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
       );
 
       setLoading(false);
+
+      // Pre-populate county_id from existing city_id, then load that county's cities.
+      const cid = (r.city_id as number | null) ?? null;
+      if (cid != null) {
+        const city = await fetchCity(cid);
+        if (!cancelled && city) {
+          setForm((f) => ({ ...f, county_id: city.county_id, city_id: city.id }));
+        }
+      }
     }
     load();
     return () => {
@@ -365,8 +412,17 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
       toast.error("Numele sălii este obligatoriu.");
       return;
     }
-    if (!form.address.trim() || !form.city.trim()) {
-      toast.error("Adresa și orașul sunt obligatorii.");
+    if (!form.address.trim()) {
+      toast.error("Adresa este obligatorie.");
+      return;
+    }
+    if (form.county_id == null || form.city_id == null) {
+      toast.error("Alege județul și orașul.");
+      return;
+    }
+    const selectedCity = cities.find((c) => c.id === form.city_id);
+    if (!selectedCity) {
+      toast.error("Orașul selectat nu este valid.");
       return;
     }
     const contactEmail = form.contact_email.trim();
@@ -420,7 +476,8 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
       slug: form.slug.trim(),
       description: form.description || null,
       address: form.address.trim(),
-      city: form.city.trim(),
+      city_id: selectedCity.id,
+      city: selectedCity.name,
       neighbourhood: form.neighbourhood || null,
       google_maps_url: form.google_maps_url || null,
       virtual_tour_url: form.virtual_tour_url.trim() || null,
@@ -669,19 +726,60 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
                     maxLength={200}
                   />
                 </Field>
-                <Field label="Oraș *">
-                  <Input
-                    value={form.city}
-                    onChange={(e) => update("city", e.target.value)}
-                    maxLength={100}
-                  />
+                <Field label="Județ *">
+                  <Select
+                    value={form.county_id != null ? String(form.county_id) : ""}
+                    onValueChange={(v) => {
+                      const next = Number(v);
+                      setForm((f) => ({ ...f, county_id: next, city_id: null }));
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Alege județ" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {counties.map((c) => (
+                        <SelectItem key={c.id} value={String(c.id)}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </Field>
-                <Field label="Cartier">
+                <Field label="Oraș *">
+                  <Select
+                    value={form.city_id != null ? String(form.city_id) : ""}
+                    onValueChange={(v) => update("city_id", Number(v))}
+                    disabled={form.county_id == null}
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={
+                          form.county_id == null
+                            ? "Alege întâi județul"
+                            : "Alege oraș"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cities.map((c) => (
+                        <SelectItem key={c.id} value={String(c.id)}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field label="Cartier / Zonă">
                   <Input
                     value={form.neighbourhood}
                     onChange={(e) => update("neighbourhood", e.target.value)}
                     maxLength={100}
+                    placeholder="ex. Floreasca, Dorobanți..."
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Opțional. Detaliu suplimentar despre zonă.
+                  </p>
                 </Field>
                 <Field label="URL Google Maps">
                   <Input
