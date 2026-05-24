@@ -59,7 +59,7 @@ export function RoomCard({ room }: { room: Room }) {
           <h3 className="text-lg font-semibold tracking-tight">{room.name}</h3>
           <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
             <MapPin className="h-3.5 w-3.5" />
-            {room.neighbourhood}, {room.city}
+            {[room.neighbourhood, room.city, room.countyName].filter(Boolean).join(", ")}
           </p>
           {inactive && (
             <p className="mt-2 text-xs font-medium text-destructive">
