@@ -1068,14 +1068,30 @@ function RoomDetailsPage() {
                               : null;
                             const isStart = startHour === h;
                             const isEnd = endHour === h;
-                            // "Selected by me" highlight: inclusive on both ends of any finalized interval.
-                            // An hour H:00 is highlighted if some finalized 30-min slot s satisfies
-                            // s <= H:00 <= s+30 (so the end-point H:00 of an interval that ends at H:00 lights up).
+                            // Build contiguous finalized intervals from slots: e = last_slot_start + 30.
                             const hMin = h * 60;
-                            const inFinalized = activeDay.slots.some((s) => {
-                              const m = timeToMinutes(s);
-                              return m <= hMin && m + 30 >= hMin;
-                            });
+                            const sortedMins = activeDay.slots
+                              .map((s) => timeToMinutes(s))
+                              .sort((a, b) => a - b);
+                            const intervals: Array<{ s: number; e: number }> = [];
+                            for (const m of sortedMins) {
+                              const last = intervals[intervals.length - 1];
+                              if (last && last.e === m) last.e = m + 30;
+                              else intervals.push({ s: m, e: m + 30 });
+                            }
+                            // Fully green: H:00 lies in some interval of duration >= 60.
+                            const fullySelected = intervals.some(
+                              (iv) => iv.e - iv.s >= 60 && iv.s <= hMin && hMin <= iv.e,
+                            );
+                            // Right-bar: some interval starts at H:00 or H:30 (and button isn't fully green).
+                            const rightBar =
+                              !fullySelected &&
+                              intervals.some((iv) => iv.s === hMin || iv.s === hMin + 30);
+                            // Left-bar: some interval ends at H:00 or (H-1):30 (and button isn't fully green).
+                            const leftBar =
+                              !fullySelected &&
+                              intervals.some((iv) => iv.e === hMin || iv.e === hMin - 30);
+                            const inFinalized = fullySelected || rightBar || leftBar;
 
                             // Enable hour button if: in-finalized (remove), is current start/end (deselect),
                             // could become start (no start yet OR tap before start) → canStart any,
@@ -1123,16 +1139,28 @@ function RoomDetailsPage() {
                                   disabled={!enabled}
                                   onClick={() => handleHourTap(h)}
                                   title={title}
-                                  className={`rounded-md border px-2 py-2 text-sm font-medium transition ${
+                                  className={`relative overflow-hidden rounded-md border px-2 py-2 text-sm font-medium transition ${
                                     !enabled
                                       ? "cursor-not-allowed border-border bg-muted text-muted-foreground/60"
-                                      : inFinalized
+                                      : fullySelected
                                         ? "border-primary bg-primary text-primary-foreground"
                                         : isStart || isEnd
                                           ? "border-primary bg-primary/10 text-primary ring-2 ring-primary"
                                           : "border-border bg-background hover:border-primary hover:text-primary"
                                   }`}
                                 >
+                                  {leftBar && !fullySelected && (
+                                    <span
+                                      aria-hidden
+                                      className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-primary"
+                                    />
+                                  )}
+                                  {rightBar && !fullySelected && (
+                                    <span
+                                      aria-hidden
+                                      className="pointer-events-none absolute inset-y-0 right-0 w-1 bg-primary"
+                                    />
+                                  )}
                                   {label}
                                 </button>
                                 {showChip && (
