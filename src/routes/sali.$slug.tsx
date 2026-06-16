@@ -1068,7 +1068,14 @@ function RoomDetailsPage() {
                               : null;
                             const isStart = startHour === h;
                             const isEnd = endHour === h;
-                            const inFinalized = activeDay.slots.includes(h00) || activeDay.slots.includes(h30);
+                            // "Selected by me" highlight: inclusive on both ends of any finalized interval.
+                            // An hour H:00 is highlighted if some finalized 30-min slot s satisfies
+                            // s <= H:00 <= s+30 (so the end-point H:00 of an interval that ends at H:00 lights up).
+                            const hMin = h * 60;
+                            const inFinalized = activeDay.slots.some((s) => {
+                              const m = timeToMinutes(s);
+                              return m <= hMin && m + 30 >= hMin;
+                            });
 
                             // Enable hour button if: in-finalized (remove), is current start/end (deselect),
                             // could become start (no start yet OR tap before start) → canStart any,
