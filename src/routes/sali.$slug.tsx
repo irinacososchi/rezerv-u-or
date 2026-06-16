@@ -194,8 +194,12 @@ function RoomDetailsPage() {
   });
   type DaySelection = {
     date: Date;
+    /** Canonical merged list of 30-min slot starts ("HH:MM") for the day. */
     slots: string[];
-    pendingStart?: string | null;
+    /** Currently in-progress start point (slot-start string, e.g. "09:30"). */
+    selectedStart?: string | null;
+    /** Currently in-progress end POINT (boundary time, e.g. "12:30" → last slot 12:00). */
+    selectedEnd?: string | null;
     truncationMessage?: string | null;
   };
   const [daySelections, setDaySelections] = useState<DaySelection[]>([]);
