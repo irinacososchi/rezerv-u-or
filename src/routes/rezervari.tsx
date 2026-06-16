@@ -671,9 +671,24 @@ function RezervariPage() {
                           <div className="font-mono text-xs font-bold text-muted-foreground">
                             #{b.reference}
                           </div>
-                          <h3 className="mt-1 font-semibold">{b.room_name}</h3>
-                          {b.room_address && (
-                            <p className="text-xs text-muted-foreground">{b.room_address}</p>
+                          {b.room_slug ? (
+                            <Link
+                              to="/sali/$slug"
+                              params={{ slug: b.room_slug }}
+                              className="block"
+                            >
+                              <h3 className="mt-1 font-semibold hover:underline">{b.room_name}</h3>
+                              {b.room_address && (
+                                <p className="text-xs text-muted-foreground">{b.room_address}</p>
+                              )}
+                            </Link>
+                          ) : (
+                            <>
+                              <h3 className="mt-1 font-semibold">{b.room_name}</h3>
+                              {b.room_address && (
+                                <p className="text-xs text-muted-foreground">{b.room_address}</p>
+                              )}
+                            </>
                           )}
                         </div>
                         <div className="flex flex-col items-end gap-1">
