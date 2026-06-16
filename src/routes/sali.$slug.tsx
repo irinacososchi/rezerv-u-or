@@ -1149,23 +1149,14 @@ function RoomDetailsPage() {
                                           : "border-border bg-background hover:border-primary hover:text-primary"
                                   }`}
                                 >
-                                  {leftBar && !fullySelected && (
-                                    <span
-                                      aria-hidden
-                                      className="pointer-events-none absolute inset-y-0 left-0 w-4"
-                                      style={{
-                                        background:
-                                          "repeating-linear-gradient(-45deg, var(--primary) 0 2px, transparent 2px 6px)",
-                                      }}
-                                    />
-                                  )}
-                                  {rightBar && !fullySelected && (
+                                  {(onlyRight || onlyLeft) && (
                                     <span
                                       aria-hidden
                                       className="pointer-events-none absolute inset-y-0 right-0 w-4"
                                       style={{
-                                        background:
-                                          "repeating-linear-gradient(45deg, var(--primary) 0 2px, transparent 2px 6px)",
+                                        background: `repeating-linear-gradient(45deg, ${
+                                          onlyLeft ? "#ffffff" : "var(--primary)"
+                                        } 0 2px, transparent 2px 6px)`,
                                       }}
                                     />
                                   )}
