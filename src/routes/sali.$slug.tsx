@@ -1139,16 +1139,28 @@ function RoomDetailsPage() {
                                   disabled={!enabled}
                                   onClick={() => handleHourTap(h)}
                                   title={title}
-                                  className={`rounded-md border px-2 py-2 text-sm font-medium transition ${
+                                  className={`relative overflow-hidden rounded-md border px-2 py-2 text-sm font-medium transition ${
                                     !enabled
                                       ? "cursor-not-allowed border-border bg-muted text-muted-foreground/60"
-                                      : inFinalized
+                                      : fullySelected
                                         ? "border-primary bg-primary text-primary-foreground"
                                         : isStart || isEnd
                                           ? "border-primary bg-primary/10 text-primary ring-2 ring-primary"
                                           : "border-border bg-background hover:border-primary hover:text-primary"
                                   }`}
                                 >
+                                  {leftBar && !fullySelected && (
+                                    <span
+                                      aria-hidden
+                                      className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-primary"
+                                    />
+                                  )}
+                                  {rightBar && !fullySelected && (
+                                    <span
+                                      aria-hidden
+                                      className="pointer-events-none absolute inset-y-0 right-0 w-1 bg-primary"
+                                    />
+                                  )}
                                   {label}
                                 </button>
                                 {showChip && (
