@@ -481,89 +481,158 @@ function RoomDetailsPage() {
 
 
   /**
-   * Range-selection slot handler. First tap = pendingStart. Second tap (later)
-   * = end; expands the inclusive range into individual 30-min slot starts and
-   * merges them into ds.slots (the same array shape the old per-slot toggle
-   * produced, so all downstream code keeps working unchanged). Tapping an
-   * already-selected slot removes its entire contiguous interval.
+   * Hour-point selection model. Whole-hour buttons act on "time points"
+   * (selectedStart slot-string, selectedEnd boundary string). `:30` chips
+   * shift the selected point by 30 min. User confirms to materialize the
+   * interval into ds.slots (the same shape downstream code expects).
    */
-  function handleSlotTap(slotStart: string) {
-    if (activeDayIndex === null) return;
-    const tapped = slots.find((s) => s.start === slotStart);
-    if (!tapped || tapped.busy || tapped.tooSoon) return;
-    const sortFn = (a: string, b: string) => timeToMinutes(a) - timeToMinutes(b);
+  const sortFn = (a: string, b: string) => timeToMinutes(a) - timeToMinutes(b);
 
+  function removeIntervalContaining(ds: DaySelection, slotKey: string): DaySelection {
+    const sorted = [...ds.slots].sort(sortFn);
+    const i = sorted.indexOf(slotKey);
+    if (i === -1) return ds;
+    let lo = i;
+    let hi = i;
+    while (
+      lo > 0 &&
+      timeToMinutes(sorted[lo]) - timeToMinutes(sorted[lo - 1]) === SLOT_GRANULARITY_MINUTES
+    )
+      lo--;
+    while (
+      hi < sorted.length - 1 &&
+      timeToMinutes(sorted[hi + 1]) - timeToMinutes(sorted[hi]) === SLOT_GRANULARITY_MINUTES
+    )
+      hi++;
+    const toRemove = new Set(sorted.slice(lo, hi + 1));
+    return {
+      ...ds,
+      slots: ds.slots.filter((s) => !toRemove.has(s)),
+      selectedStart: null,
+      selectedEnd: null,
+      truncationMessage: null,
+    };
+  }
+
+  function slotAvail(start: string): boolean {
+    const sl = slots.find((x) => x.start === start);
+    return !!sl && !sl.busy && !sl.tooSoon;
+  }
+
+  function handleHourTap(hour: number) {
+    if (activeDayIndex === null) return;
+    const hh = String(hour).padStart(2, "0");
+    const h00 = `${hh}:00`;
+    const h30 = `${hh}:30`;
     setDaySelections((prev) =>
       prev.map((ds, idx) => {
         if (idx !== activeDayIndex) return ds;
 
-        // Case 5: tap a slot already in a selected interval → remove that interval.
-        if (ds.slots.includes(slotStart)) {
-          const sorted = [...ds.slots].sort(sortFn);
-          const i = sorted.indexOf(slotStart);
-          let lo = i;
-          let hi = i;
-          while (
-            lo > 0 &&
-            timeToMinutes(sorted[lo]) - timeToMinutes(sorted[lo - 1]) ===
-              SLOT_GRANULARITY_MINUTES
-          )
-            lo--;
-          while (
-            hi < sorted.length - 1 &&
-            timeToMinutes(sorted[hi + 1]) - timeToMinutes(sorted[hi]) ===
-              SLOT_GRANULARITY_MINUTES
-          )
-            hi++;
-          const toRemove = new Set(sorted.slice(lo, hi + 1));
-          return {
-            ...ds,
-            slots: ds.slots.filter((s) => !toRemove.has(s)),
-            pendingStart: null,
-            truncationMessage: null,
-          };
+        // Tap on hour that overlaps a finalized interval → remove it.
+        if (ds.slots.includes(h00)) return removeIntervalContaining(ds, h00);
+        if (ds.slots.includes(h30)) return removeIntervalContaining(ds, h30);
+
+        const startSlot = ds.selectedStart ?? null;
+        const endTime = ds.selectedEnd ?? null;
+        const startHour = startSlot ? parseInt(startSlot.slice(0, 2), 10) : null;
+        const endHour = endTime ? parseInt(endTime.slice(0, 2), 10) : null;
+
+        // No start yet → set start (prefer :00, fallback :30).
+        if (!startSlot) {
+          const newStart = slotAvail(h00) ? h00 : slotAvail(h30) ? h30 : null;
+          if (!newStart) return ds;
+          return { ...ds, selectedStart: newStart, selectedEnd: null, truncationMessage: null };
         }
 
-        const pending = ds.pendingStart ?? null;
-
-        // Case 1: no pending → mark this slot as pending start.
-        if (!pending) {
-          return { ...ds, pendingStart: slotStart, truncationMessage: null };
+        // Tap on the start's hour → deselect start (and end).
+        if (startHour === hour) {
+          return { ...ds, selectedStart: null, selectedEnd: null, truncationMessage: null };
         }
 
-        const pendingMin = timeToMinutes(pending);
-        const tappedMin = timeToMinutes(slotStart);
-
-        // Case 3: tapped earlier than pending → reset pending to new slot.
-        if (tappedMin < pendingMin) {
-          return { ...ds, pendingStart: slotStart, truncationMessage: null };
+        // Tap on the end's hour → deselect end.
+        if (endHour === hour) {
+          return { ...ds, selectedEnd: null, truncationMessage: null };
         }
 
-        // Cases 2 & 4: tapped same-or-later. Build inclusive range; stop at
-        // first busy/tooSoon slot encountered (hybrid stop behavior).
-        const startIdx = slots.findIndex((s) => s.start === pending);
-        const endIdx = slots.findIndex((s) => s.start === slotStart);
-        if (startIdx === -1 || endIdx === -1) {
-          return { ...ds, pendingStart: null, truncationMessage: null };
+        // Tap BEFORE start → reset start.
+        if (hour < (startHour as number)) {
+          const newStart = slotAvail(h00) ? h00 : slotAvail(h30) ? h30 : null;
+          if (!newStart) return ds;
+          return { ...ds, selectedStart: newStart, selectedEnd: null, truncationMessage: null };
         }
+
+        // Tap AFTER start → set end. End point boundary defaults to :00
+        // (last slot included = (h-1):30); fallback :30 (last slot = h:00).
+        const prevHH = String(hour - 1).padStart(2, "0");
+        const canEnd00 = slotAvail(`${prevHH}:30`);
+        const canEnd30 = slotAvail(h00);
+        const newEnd = canEnd00 ? h00 : canEnd30 ? h30 : null;
+        if (!newEnd) return ds;
+        if (timeToMinutes(newEnd) <= timeToMinutes(startSlot)) return ds;
+        return { ...ds, selectedEnd: newEnd, truncationMessage: null };
+      }),
+    );
+  }
+
+  function handleHalfToggle(kind: "start" | "end") {
+    if (activeDayIndex === null) return;
+    setDaySelections((prev) =>
+      prev.map((ds, idx) => {
+        if (idx !== activeDayIndex) return ds;
+        if (kind === "start") {
+          const cur = ds.selectedStart;
+          if (!cur) return ds;
+          const hh = cur.slice(0, 2);
+          const next = cur.endsWith(":00") ? `${hh}:30` : `${hh}:00`;
+          if (!slotAvail(next)) return ds;
+          if (ds.selectedEnd && timeToMinutes(next) >= timeToMinutes(ds.selectedEnd)) return ds;
+          return { ...ds, selectedStart: next };
+        }
+        const cur = ds.selectedEnd;
+        if (!cur) return ds;
+        const hh = cur.slice(0, 2);
+        const next = cur.endsWith(":00") ? `${hh}:30` : `${hh}:00`;
+        // Validate availability of the slot that the end-point covers.
+        const prevHH = String(parseInt(hh, 10) - 1).padStart(2, "0");
+        const reqSlot = next.endsWith(":00") ? `${prevHH}:30` : `${hh}:00`;
+        if (!slotAvail(reqSlot)) return ds;
+        if (ds.selectedStart && timeToMinutes(next) <= timeToMinutes(ds.selectedStart)) return ds;
+        return { ...ds, selectedEnd: next };
+      }),
+    );
+  }
+
+  function handleConfirmInterval() {
+    if (activeDayIndex === null) return;
+    setDaySelections((prev) =>
+      prev.map((ds, idx) => {
+        if (idx !== activeDayIndex) return ds;
+        const s = ds.selectedStart;
+        const e = ds.selectedEnd;
+        if (!s || !e) return ds;
+        const startMin = timeToMinutes(s);
+        const endMin = timeToMinutes(e);
+        if (endMin <= startMin) return ds;
         const collected: string[] = [];
         let truncatedAt: string | null = null;
-        for (let i = startIdx; i <= endIdx; i++) {
-          const sl = slots[i];
-          if (sl.busy || sl.tooSoon) {
-            truncatedAt = collected.length > 0 ? slots[i - 1].end : null;
+        for (let m = startMin; m + SLOT_GRANULARITY_MINUTES <= endMin; m += SLOT_GRANULARITY_MINUTES) {
+          const key = minutesToTime(m);
+          const sl = slots.find((x) => x.start === key);
+          if (!sl || sl.busy || sl.tooSoon) {
+            truncatedAt = collected.length > 0 ? minutesToTime(timeToMinutes(collected[collected.length - 1]) + SLOT_GRANULARITY_MINUTES) : null;
             break;
           }
-          collected.push(sl.start);
+          collected.push(key);
         }
         if (collected.length === 0) {
-          return { ...ds, pendingStart: null, truncationMessage: null };
+          return { ...ds, selectedStart: null, selectedEnd: null, truncationMessage: null };
         }
         const merged = Array.from(new Set([...ds.slots, ...collected])).sort(sortFn);
         return {
           ...ds,
           slots: merged,
-          pendingStart: null,
+          selectedStart: null,
+          selectedEnd: null,
           truncationMessage: truncatedAt
             ? `Selecția s-a oprit la ${truncatedAt} — următorul interval este ocupat. Poți adăuga alt interval după acesta.`
             : null,
@@ -571,6 +640,18 @@ function RoomDetailsPage() {
       }),
     );
   }
+
+  // Hour-point grid for the active day (whole-hour buttons only).
+  const hourPoints = useMemo(() => {
+    if (slots.length === 0) return [] as number[];
+    const firstMin = timeToMinutes(slots[0].start);
+    const lastMin = timeToMinutes(slots[slots.length - 1].end);
+    const startH = Math.floor(firstMin / 60);
+    const endH = Math.ceil(lastMin / 60);
+    const out: number[] = [];
+    for (let h = startH; h <= endH; h++) out.push(h);
+    return out;
+  }, [slots]);
 
   // Booking summary across all selected days
   const summary = useMemo(() => {
