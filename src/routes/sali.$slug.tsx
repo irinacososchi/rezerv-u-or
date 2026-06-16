@@ -1155,7 +1155,7 @@ function RoomDetailsPage() {
                                       className="pointer-events-none absolute inset-y-0 left-0 w-4"
                                       style={{
                                         background:
-                                          "repeating-linear-gradient(-45deg, hsl(var(--primary)) 0 2px, transparent 2px 6px)",
+                                          "repeating-linear-gradient(-45deg, var(--primary) 0 2px, transparent 2px 6px)",
                                       }}
                                     />
                                   )}
@@ -1165,7 +1165,7 @@ function RoomDetailsPage() {
                                       className="pointer-events-none absolute inset-y-0 right-0 w-4"
                                       style={{
                                         background:
-                                          "repeating-linear-gradient(45deg, hsl(var(--primary)) 0 2px, transparent 2px 6px)",
+                                          "repeating-linear-gradient(45deg, var(--primary) 0 2px, transparent 2px 6px)",
                                       }}
                                     />
                                   )}
