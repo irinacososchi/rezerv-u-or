@@ -1142,7 +1142,7 @@ function RoomDetailsPage() {
                                   className={`relative overflow-hidden rounded-md border px-2 py-2 text-sm font-medium transition ${
                                     !enabled
                                       ? "cursor-not-allowed border-border bg-muted text-muted-foreground/60"
-                                      : fullySelected
+                                      : fullySelected || onlyLeft
                                         ? "border-primary bg-primary text-primary-foreground"
                                         : isStart || isEnd
                                           ? "border-primary bg-primary/10 text-primary ring-2 ring-primary"
