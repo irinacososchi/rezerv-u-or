@@ -1079,19 +1079,19 @@ function RoomDetailsPage() {
                               if (last && last.e === m) last.e = m + 30;
                               else intervals.push({ s: m, e: m + 30 });
                             }
-                            // Fully green: H:00 lies in some interval of duration >= 60.
-                            const fullySelected = intervals.some(
-                              (iv) => iv.e - iv.s >= 60 && iv.s <= hMin && hMin <= iv.e,
-                            );
-                            // Right-bar: some interval starts at H:00 or H:30 (and button isn't fully green).
-                            const rightBar =
-                              !fullySelected &&
-                              intervals.some((iv) => iv.s === hMin || iv.s === hMin + 30);
-                            // Left-bar: some interval ends at H:00 or (H-1):30 (and button isn't fully green).
-                            const leftBar =
-                              !fullySelected &&
-                              intervals.some((iv) => iv.e === hMin || iv.e === hMin - 30);
-                            const inFinalized = fullySelected || rightBar || leftBar;
+                            // Half-membership model: each whole-hour button has two halves.
+                            //   left half  = slot H:00 (minutes hMin)
+                            //   right half = slot H:30 (minutes hMin + 30)
+                            // inclusiveEnd: an interval ends exactly at H:00 → highlight as boundary marker
+                            // (preserves the previous inclusive-end visual for whole-hour ends).
+                            const leftHalfIn = sortedMins.includes(hMin);
+                            const rightHalfIn = sortedMins.includes(hMin + 30);
+                            const inclusiveEnd = intervals.some((iv) => iv.e === hMin);
+                            const bothIn = (leftHalfIn && rightHalfIn) || inclusiveEnd;
+                            const onlyLeft = leftHalfIn && !rightHalfIn && !inclusiveEnd;
+                            const onlyRight = !leftHalfIn && rightHalfIn;
+                            const fullySelected = bothIn;
+                            const inFinalized = bothIn || onlyLeft || onlyRight;
 
                             // Enable hour button if: in-finalized (remove), is current start/end (deselect),
                             // could become start (no start yet OR tap before start) → canStart any,
