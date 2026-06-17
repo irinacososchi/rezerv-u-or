@@ -102,7 +102,7 @@ export function SiteHeader() {
             <Link to="/rezervari">Rezervarea mea</Link>
           </Button>
 
-          {(hasRooms || isAdmin) && (
+          {showPanoulMeu && (
             <a
               href="/proprietar/dashboard"
               className="inline-flex items-center gap-1.5 rounded-lg border border-primary bg-primary/5 px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/10 transition"
@@ -176,7 +176,7 @@ export function SiteHeader() {
                       <Heart className="h-4 w-4" />
                       Săli favorite
                     </Link>
-                    {(hasRooms || isAdmin) && (
+                    {showPanoulMeu && (
                       <a
                         href="/proprietar/dashboard"
                         onClick={() => setDropdownOpen(false)}
@@ -196,7 +196,7 @@ export function SiteHeader() {
                       className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted/40 hover:text-primary transition"
                     >
                       <Plus className="h-4 w-4" />
-                      {hasRooms ? "Adaugă încă o sală" : "Listează o sală"}
+                      {isOwner ? "Adaugă încă o sală" : "Listează o sală"}
                     </a>
                   </div>
 
