@@ -5,15 +5,17 @@ import { ChevronDown, LayoutDashboard, LogOut, Calendar, Heart, Settings, Plus }
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/notification-bell";
 import { supabase } from "@/integrations/supabase/external-client";
+import { useUserRole } from "@/hooks/use-user-role";
 import logoUrl from "@/assets/rzrv-logo.png";
 
-type Profile = { full_name: string | null; email: string | null; role: string | null };
+type Profile = { full_name: string | null; email: string | null };
+
 
 export function SiteHeader() {
   const navigate = useNavigate();
+  const { isOwner, isRenter, isAdmin, loading: roleLoading } = useUserRole();
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [hasRooms, setHasRooms] = useState(false);
   const [hasBookings, setHasBookings] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -24,7 +26,6 @@ export function SiteHeader() {
     if (!u) {
       setUser(null);
       setProfile(null);
-      setHasRooms(false);
       setHasBookings(false);
       setLoading(false);
       return;
@@ -33,16 +34,10 @@ export function SiteHeader() {
 
     const { data: profileData } = await supabase
       .from("profiles")
-      .select("full_name, email, role")
+      .select("full_name, email")
       .eq("id", u.id)
       .single();
-    setProfile((profileData as Profile) ?? { full_name: null, email: u.email ?? null, role: "user" });
-
-    const { count: roomsCount } = await supabase
-      .from("rooms")
-      .select("id", { count: "exact", head: true })
-      .eq("owner_id", u.id);
-    setHasRooms((roomsCount ?? 0) > 0);
+    setProfile((profileData as Profile) ?? { full_name: null, email: u.email ?? null });
 
     const { count: bookingsByRenterId } = await supabase
       .from("bookings")
@@ -82,7 +77,8 @@ export function SiteHeader() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const isAdmin = profile?.role === "admin";
+  const showPanoulMeu = !roleLoading && (isOwner || isRenter || isAdmin);
+
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/70">
