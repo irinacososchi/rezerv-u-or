@@ -570,7 +570,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
 
     setSaving(false);
     toast.success(isEdit ? "Sala a fost actualizată." : "Sala a fost creată.");
-    navigate({ to: "/proprietar/sali" });
+    navigate({ to: "/panou/sali" });
   }
 
   const [deleting, setDeleting] = useState(false);
@@ -604,7 +604,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
       return;
     }
     toast.success("Sala a fost dezactivată.");
-    navigate({ to: "/proprietar/sali" });
+    navigate({ to: "/panou/sali" });
   }
 
   if (loading) {
@@ -627,7 +627,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
             <div>
               <button
                 type="button"
-                onClick={() => navigate({ to: "/proprietar/sali" })}
+                onClick={() => navigate({ to: "/panou/sali" })}
                 className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
               >
                 <ArrowLeft className="h-4 w-4" /> Înapoi la săli
@@ -1208,7 +1208,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
             <div className="flex items-center gap-3">
               <Button
                 variant="outline"
-                onClick={() => navigate({ to: "/proprietar/sali" })}
+                onClick={() => navigate({ to: "/panou/sali" })}
                 disabled={saving || deleting}
               >
                 Anulează

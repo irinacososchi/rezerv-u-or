@@ -67,7 +67,7 @@ function calculatePriceForDate(
   return Number(matching[0]?.price_per_hour ?? 0);
 }
 
-export const Route = createFileRoute("/proprietar/sali/$id/calendar")({
+export const Route = createFileRoute("/panou/sali/$id/calendar")({
   component: RoomCalendarPage,
 });
 
@@ -184,7 +184,7 @@ function pastDates(dates: string[], startHHMM: string): string[] {
 }
 
 function RoomCalendarPage() {
-  const { id } = useParams({ from: "/proprietar/sali/$id/calendar" });
+  const { id } = useParams({ from: "/panou/sali/$id/calendar" });
   const navigate = useNavigate();
 
   const [room, setRoom] = useState<Room | null>(null);
@@ -320,11 +320,11 @@ function RoomCalendarPage() {
       if (cancelled) return;
       if (error || !r) {
         toast.error("Sala nu a fost găsită");
-        navigate({ to: "/proprietar/sali" });
+        navigate({ to: "/panou/sali" });
         return;
       }
       if (r.owner_id !== user.id) {
-        navigate({ to: "/proprietar/sali" });
+        navigate({ to: "/panou/sali" });
         return;
       }
       setRoom(r as Room);
@@ -471,7 +471,7 @@ function RoomCalendarPage() {
                     {allRooms.map((r) => (
                       <a
                         key={r.id}
-                        href={`/proprietar/sali/${r.id}/calendar`}
+                        href={`/panou/sali/${r.id}/calendar`}
                         className={`flex items-center gap-2 px-4 py-2.5 text-sm transition ${
                           r.id === id
                             ? "bg-primary/10 text-primary font-medium"

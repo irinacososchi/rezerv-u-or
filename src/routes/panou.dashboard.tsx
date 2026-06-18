@@ -17,7 +17,7 @@ import {
 import { RecurringGroupCard } from "@/components/owner/recurring-group-card";
 import { RecurringBadge } from "@/components/owner/recurring-badge";
 
-export const Route = createFileRoute("/proprietar/dashboard")({
+export const Route = createFileRoute("/panou/dashboard")({
   component: DashboardPage,
 });
 
@@ -215,7 +215,7 @@ function DashboardPage() {
           <h1 className="text-2xl font-semibold">Nu ai adăugat nicio sală încă.</h1>
           <p className="text-muted-foreground">Adaugă prima ta sală pentru a începe să primești rezervări.</p>
           <Button asChild>
-            <a href="/proprietar/sali/nou">Adaugă prima sală</a>
+            <a href="/panou/sali/nou">Adaugă prima sală</a>
           </Button>
         </div>
       </OwnerLayout>
@@ -354,7 +354,7 @@ function DashboardPage() {
                             className="border-t cursor-pointer hover:bg-blue-50/50 bg-blue-50/20 transition-colors"
                             onClick={() =>
                               navigate({
-                                to: "/proprietar/cereri",
+                                to: "/panou/cereri",
                                 search: { q: "", group: item.groupId },
                               })
                             }
@@ -384,7 +384,7 @@ function DashboardPage() {
                           className="border-t cursor-pointer hover:bg-muted/50 transition-colors"
                           onClick={() =>
                             navigate({
-                              to: "/proprietar/cereri",
+                              to: "/panou/cereri",
                               search: { q: b.reference ?? "", group: "" },
                             })
                           }
@@ -426,7 +426,7 @@ function DashboardPage() {
                     return (
                       <Link
                         key={`grp-${item.groupId}`}
-                        to="/proprietar/cereri"
+                        to="/panou/cereri"
                         search={{ q: "", group: item.groupId }}
                         className="block"
                       >
@@ -457,7 +457,7 @@ function DashboardPage() {
                   return (
                     <Link
                       key={b.id}
-                      to="/proprietar/cereri"
+                      to="/panou/cereri"
                       search={{ q: b.reference ?? "", group: "" }}
                       className="block"
                     >

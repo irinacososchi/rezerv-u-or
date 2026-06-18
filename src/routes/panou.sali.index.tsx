@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/proprietar/sali/")({
+export const Route = createFileRoute("/panou/sali/")({
   component: RoomsPage,
 });
 
@@ -111,7 +111,7 @@ function RoomsPage() {
             <p className="text-muted-foreground mt-1">Administrează sălile pe care le închiriezi.</p>
           </div>
           <Button asChild>
-            <a href="/proprietar/sali/nou">
+            <a href="/panou/sali/nou">
               <Plus className="h-4 w-4" />
               Adaugă sală nouă
             </a>
@@ -132,7 +132,7 @@ function RoomsPage() {
               Adaugă prima ta sală pentru a începe să primești rezervări.
             </p>
             <Button asChild>
-              <a href="/proprietar/sali/nou">Adaugă prima sală</a>
+              <a href="/panou/sali/nou">Adaugă prima sală</a>
             </Button>
           </div>
         ) : (
@@ -214,13 +214,13 @@ function RoomsPage() {
                         Copiază link
                       </Button>
                       <Button size="sm" variant="outline" asChild>
-                        <a href={`/proprietar/sali/${room.id}/calendar`}>
+                        <a href={`/panou/sali/${room.id}/calendar`}>
                           <Calendar className="h-4 w-4" />
                           Calendar
                         </a>
                       </Button>
                       <Button size="sm" asChild>
-                        <a href={`/proprietar/sali/${room.id}/edit`}>
+                        <a href={`/panou/sali/${room.id}/edit`}>
                           <Pencil className="h-4 w-4" />
                           Editează
                         </a>

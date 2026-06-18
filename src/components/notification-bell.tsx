@@ -26,7 +26,7 @@ function deepLinkFor(
     case "booking_request_new":
     case "booking_instant_new":
       return {
-        path: "/proprietar/cereri",
+        path: "/panou/cereri",
         search: { bookingId: n.booking_id },
       };
     // Renter-facing -> renter bookings list

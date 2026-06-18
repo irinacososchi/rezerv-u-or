@@ -28,24 +28,24 @@ import { useUserRole } from "@/hooks/use-user-role";
 type NavItem = { to: string; icon: LucideIcon; label: string };
 
 const COMMON_TOP: NavItem[] = [
-  { to: "/proprietar/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/panou/dashboard", icon: LayoutDashboard, label: "Dashboard" },
 ];
 
 const OWNER_ITEMS: NavItem[] = [
-  { to: "/proprietar/sali", icon: Building2, label: "Sălile mele" },
-  { to: "/proprietar/calendar", icon: Calendar, label: "Calendar" },
-  { to: "/proprietar/cereri", icon: HandMetal, label: "Cereri" },
-  { to: "/proprietar/vouchere", icon: Ticket, label: "Vouchere" },
-  { to: "/proprietar/clienti-proprietar", icon: Users, label: "Clienții mei" },
+  { to: "/panou/sali", icon: Building2, label: "Sălile mele" },
+  { to: "/panou/calendar", icon: Calendar, label: "Calendar" },
+  { to: "/panou/cereri", icon: HandMetal, label: "Cereri" },
+  { to: "/panou/vouchere", icon: Ticket, label: "Vouchere" },
+  { to: "/panou/clienti-proprietar", icon: Users, label: "Clienții mei" },
 ];
 
 const RENTER_ITEMS: NavItem[] = [
-  { to: "/proprietar/orarul-meu", icon: CalendarDays, label: "Orarul meu" },
-  { to: "/proprietar/clienti-chirias", icon: Users, label: "Clienții mei" },
+  { to: "/panou/orarul-meu", icon: CalendarDays, label: "Orarul meu" },
+  { to: "/panou/clienti-chirias", icon: Users, label: "Clienții mei" },
 ];
 
 const COMMON_BOTTOM: NavItem[] = [
-  { to: "/proprietar/cont", icon: Settings, label: "Cont" },
+  { to: "/panou/cont", icon: Settings, label: "Cont" },
 ];
 
 const SIDEBAR_STORAGE_KEY = "owner-sidebar-collapsed";
@@ -137,10 +137,10 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
   }
 
   const isActive = (to: string) => {
-    if (to === "/proprietar/calendar") {
+    if (to === "/panou/calendar") {
       return location.pathname.includes("/calendar");
     }
-    if (to === "/proprietar/sali") {
+    if (to === "/panou/sali") {
       return (
         location.pathname === to ||
         (location.pathname.startsWith(to + "/") && !location.pathname.includes("/calendar"))

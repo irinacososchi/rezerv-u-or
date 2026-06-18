@@ -32,7 +32,7 @@ function CalendarRedirectPage() {
 
       if (data?.id) {
         navigate({
-          to: "/proprietar/sali/$id/calendar",
+          to: "/panou/sali/$id/calendar",
           params: { id: data.id },
           replace: true,
         });
@@ -49,7 +49,7 @@ function CalendarRedirectPage() {
           Nu ai încă nicio sală adăugată. Creează prima sală pentru a putea gestiona calendarul.
         </p>
         <Button asChild>
-          <Link to="/proprietar/sali/nou">
+          <Link to="/panou/sali/nou">
             <Plus className="mr-2 h-4 w-4" />
             Adaugă o sală
           </Link>
