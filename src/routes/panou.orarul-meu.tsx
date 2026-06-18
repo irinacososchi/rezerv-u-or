@@ -574,5 +574,3 @@ function OrarulMeu() {
   );
 }
 
-// silence unused parseISODate warning if tree-shaken
-void parseISODate;
