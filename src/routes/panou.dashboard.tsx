@@ -92,6 +92,7 @@ function totalOf(b: BookingFull) {
 
 function DashboardPage() {
   const navigate = useNavigate();
+  const { isOwner, isRenter, isAdmin, loading: roleLoading } = useUserRole();
   const [loading, setLoading] = useState(true);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [activeRooms, setActiveRooms] = useState(0);
@@ -100,6 +101,16 @@ function DashboardPage() {
   const [monthCount, setMonthCount] = useState(0);
   const [recentList, setRecentList] = useState<BookingFull[]>([]);
   const [actionId, setActionId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (roleLoading) return;
+    if (isOwner || isAdmin) return;
+    if (isRenter) {
+      navigate({ to: "/panou/orarul-meu", replace: true });
+    } else {
+      navigate({ to: "/sali", replace: true });
+    }
+  }, [roleLoading, isOwner, isRenter, isAdmin, navigate]);
 
   async function loadDashboard() {
     setLoading(true);
