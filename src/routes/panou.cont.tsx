@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export const Route = createFileRoute("/proprietar/cont")({
+export const Route = createFileRoute("/panou/cont")({
   component: AccountPage,
 });
 

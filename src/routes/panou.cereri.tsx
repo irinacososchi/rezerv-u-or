@@ -8,7 +8,7 @@ import { groupRecurringBookings } from "@/lib/group-recurring-bookings";
 import { RecurringGroupCard } from "@/components/owner/recurring-group-card";
 import { RecurringBadge } from "@/components/owner/recurring-badge";
 
-export const Route = createFileRoute("/proprietar/cereri")({
+export const Route = createFileRoute("/panou/cereri")({
   validateSearch: (s: Record<string, unknown>) => ({
     q: typeof s.q === "string" ? s.q : "",
     group: typeof s.group === "string" ? s.group : "",
@@ -207,7 +207,7 @@ function CereriPage() {
     setHighlightId(found.id);
     const t = window.setTimeout(() => setHighlightId(null), 2500);
     navigate({
-      to: "/proprietar/cereri",
+      to: "/panou/cereri",
       search: { q: searchQuery, group: groupParam, bookingId: "" },
       replace: true,
     });
@@ -338,7 +338,7 @@ function CereriPage() {
             Filtrat la o serie recurentă specifică
           </span>
           <button
-            onClick={() => navigate({ to: "/proprietar/cereri", search: { q: "", group: "", bookingId: "" } })}
+            onClick={() => navigate({ to: "/panou/cereri", search: { q: "", group: "", bookingId: "" } })}
             className="text-xs text-primary hover:underline"
           >
             Curăță filtru

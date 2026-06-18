@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/table";
 import { Tag } from "lucide-react";
 
-export const Route = createFileRoute("/proprietar/vouchere")({
+export const Route = createFileRoute("/panou/vouchere")({
   component: VouchersPage,
 });
 
@@ -439,5 +439,5 @@ function VouchersPage() {
         </Card>
       </div>
     </OwnerLayout>
-  );
+  )
 }

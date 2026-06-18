@@ -104,7 +104,7 @@ export function SiteHeader() {
 
           {showPanoulMeu && (
             <a
-              href="/proprietar/dashboard"
+              href="/panou/dashboard"
               className="inline-flex items-center gap-1.5 rounded-lg border border-primary bg-primary/5 px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/10 transition"
             >
               <LayoutDashboard className="h-4 w-4" />
@@ -178,7 +178,7 @@ export function SiteHeader() {
                     </Link>
                     {showPanoulMeu && (
                       <a
-                        href="/proprietar/dashboard"
+                        href="/panou/dashboard"
                         onClick={() => setDropdownOpen(false)}
                         className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted/40 hover:text-primary transition"
                       >
@@ -191,7 +191,7 @@ export function SiteHeader() {
                   {/* List a room */}
                   <div className="border-t border-border px-2 py-2">
                     <a
-                      href="/proprietar/sali/nou"
+                      href="/panou/sali/nou"
                       onClick={() => setDropdownOpen(false)}
                       className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted/40 hover:text-primary transition"
                     >
