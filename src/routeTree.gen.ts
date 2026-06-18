@@ -27,6 +27,7 @@ import { Route as SaliSlugRouteImport } from './routes/sali.$slug'
 import { Route as RezervaSlugRouteImport } from './routes/rezerva.$slug'
 import { Route as PanouVouchereRouteImport } from './routes/panou.vouchere'
 import { Route as PanouSaliRouteImport } from './routes/panou.sali'
+import { Route as PanouOrarulMeuRouteImport } from './routes/panou.orarul-meu'
 import { Route as PanouDashboardRouteImport } from './routes/panou.dashboard'
 import { Route as PanouContRouteImport } from './routes/panou.cont'
 import { Route as PanouCereriRouteImport } from './routes/panou.cereri'
@@ -129,6 +130,11 @@ const PanouSaliRoute = PanouSaliRouteImport.update({
   path: '/sali',
   getParentRoute: () => PanouRoute,
 } as any)
+const PanouOrarulMeuRoute = PanouOrarulMeuRouteImport.update({
+  id: '/orarul-meu',
+  path: '/orarul-meu',
+  getParentRoute: () => PanouRoute,
+} as any)
 const PanouDashboardRoute = PanouDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -203,6 +209,7 @@ export interface FileRoutesByFullPath {
   '/panou/cereri': typeof PanouCereriRoute
   '/panou/cont': typeof PanouContRoute
   '/panou/dashboard': typeof PanouDashboardRoute
+  '/panou/orarul-meu': typeof PanouOrarulMeuRoute
   '/panou/sali': typeof PanouSaliRouteWithChildren
   '/panou/vouchere': typeof PanouVouchereRoute
   '/rezerva/$slug': typeof RezervaSlugRoute
@@ -231,6 +238,7 @@ export interface FileRoutesByTo {
   '/panou/cereri': typeof PanouCereriRoute
   '/panou/cont': typeof PanouContRoute
   '/panou/dashboard': typeof PanouDashboardRoute
+  '/panou/orarul-meu': typeof PanouOrarulMeuRoute
   '/panou/vouchere': typeof PanouVouchereRoute
   '/rezerva/$slug': typeof RezervaSlugRoute
   '/sali/$slug': typeof SaliSlugRoute
@@ -262,6 +270,7 @@ export interface FileRoutesById {
   '/panou/cereri': typeof PanouCereriRoute
   '/panou/cont': typeof PanouContRoute
   '/panou/dashboard': typeof PanouDashboardRoute
+  '/panou/orarul-meu': typeof PanouOrarulMeuRoute
   '/panou/sali': typeof PanouSaliRouteWithChildren
   '/panou/vouchere': typeof PanouVouchereRoute
   '/rezerva/$slug': typeof RezervaSlugRoute
@@ -295,6 +304,7 @@ export interface FileRouteTypes {
     | '/panou/cereri'
     | '/panou/cont'
     | '/panou/dashboard'
+    | '/panou/orarul-meu'
     | '/panou/sali'
     | '/panou/vouchere'
     | '/rezerva/$slug'
@@ -323,6 +333,7 @@ export interface FileRouteTypes {
     | '/panou/cereri'
     | '/panou/cont'
     | '/panou/dashboard'
+    | '/panou/orarul-meu'
     | '/panou/vouchere'
     | '/rezerva/$slug'
     | '/sali/$slug'
@@ -353,6 +364,7 @@ export interface FileRouteTypes {
     | '/panou/cereri'
     | '/panou/cont'
     | '/panou/dashboard'
+    | '/panou/orarul-meu'
     | '/panou/sali'
     | '/panou/vouchere'
     | '/rezerva/$slug'
@@ -510,6 +522,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PanouSaliRouteImport
       parentRoute: typeof PanouRoute
     }
+    '/panou/orarul-meu': {
+      id: '/panou/orarul-meu'
+      path: '/orarul-meu'
+      fullPath: '/panou/orarul-meu'
+      preLoaderRoute: typeof PanouOrarulMeuRouteImport
+      parentRoute: typeof PanouRoute
+    }
     '/panou/dashboard': {
       id: '/panou/dashboard'
       path: '/dashboard'
@@ -639,6 +658,7 @@ interface PanouRouteChildren {
   PanouCereriRoute: typeof PanouCereriRoute
   PanouContRoute: typeof PanouContRoute
   PanouDashboardRoute: typeof PanouDashboardRoute
+  PanouOrarulMeuRoute: typeof PanouOrarulMeuRoute
   PanouSaliRoute: typeof PanouSaliRouteWithChildren
   PanouVouchereRoute: typeof PanouVouchereRoute
   PanouIndexRoute: typeof PanouIndexRoute
@@ -649,6 +669,7 @@ const PanouRouteChildren: PanouRouteChildren = {
   PanouCereriRoute: PanouCereriRoute,
   PanouContRoute: PanouContRoute,
   PanouDashboardRoute: PanouDashboardRoute,
+  PanouOrarulMeuRoute: PanouOrarulMeuRoute,
   PanouSaliRoute: PanouSaliRouteWithChildren,
   PanouVouchereRoute: PanouVouchereRoute,
   PanouIndexRoute: PanouIndexRoute,
