@@ -6,7 +6,7 @@ import { Calendar as CalendarIcon, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/proprietar/calendar")({
+export const Route = createFileRoute("/panou/calendar")({
   component: CalendarRedirectPage,
 });
 
