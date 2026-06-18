@@ -11,35 +11,84 @@ import {
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
+  Users,
+  CalendarDays,
+  ChevronDown,
+  type LucideIcon,
 } from "lucide-react";
 import logoUrl from "@/assets/rzrv-logo.png";
 import { NotificationBell } from "@/components/notification-bell";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { useUserRole } from "@/hooks/use-user-role";
 
-const navItems = [
+type NavItem = { to: string; icon: LucideIcon; label: string };
+
+const COMMON_TOP: NavItem[] = [
   { to: "/proprietar/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+];
+
+const OWNER_ITEMS: NavItem[] = [
   { to: "/proprietar/sali", icon: Building2, label: "Sălile mele" },
   { to: "/proprietar/calendar", icon: Calendar, label: "Calendar" },
   { to: "/proprietar/cereri", icon: HandMetal, label: "Cereri" },
   { to: "/proprietar/vouchere", icon: Ticket, label: "Vouchere" },
+  { to: "/proprietar/clienti-proprietar", icon: Users, label: "Clienții mei" },
+];
+
+const RENTER_ITEMS: NavItem[] = [
+  { to: "/proprietar/orarul-meu", icon: CalendarDays, label: "Orarul meu" },
+  { to: "/proprietar/clienti-chirias", icon: Users, label: "Clienții mei" },
+];
+
+const COMMON_BOTTOM: NavItem[] = [
   { to: "/proprietar/cont", icon: Settings, label: "Cont" },
-] as const;
+];
 
 const SIDEBAR_STORAGE_KEY = "owner-sidebar-collapsed";
+const GROUP_OWNER_KEY = "sidebar-group-owner-expanded";
+const GROUP_RENTER_KEY = "sidebar-group-renter-expanded";
+
+function readBool(key: string, def: boolean): boolean {
+  if (typeof window === "undefined") return def;
+  const v = window.localStorage.getItem(key);
+  if (v === null) return def;
+  return v === "1";
+}
 
 export function OwnerLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [ownerName, setOwnerName] = useState("");
   const [checking, setChecking] = useState(true);
-  const [collapsed, setCollapsed] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "1";
-  });
+  const { isOwner, isRenter, isAdmin, loading: roleLoading } = useUserRole();
+  const [collapsed, setCollapsed] = useState<boolean>(() =>
+    readBool(SIDEBAR_STORAGE_KEY, false),
+  );
+  const [ownerOpen, setOwnerOpen] = useState<boolean>(() =>
+    readBool(GROUP_OWNER_KEY, true),
+  );
+  const [renterOpen, setRenterOpen] = useState<boolean>(() =>
+    readBool(GROUP_RENTER_KEY, true),
+  );
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     window.localStorage.setItem(SIDEBAR_STORAGE_KEY, collapsed ? "1" : "0");
   }, [collapsed]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(GROUP_OWNER_KEY, ownerOpen ? "1" : "0");
+  }, [ownerOpen]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(GROUP_RENTER_KEY, renterOpen ? "1" : "0");
+  }, [renterOpen]);
 
   useEffect(() => {
     let cancelled = false;
@@ -92,7 +141,6 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
       return location.pathname.includes("/calendar");
     }
     if (to === "/proprietar/sali") {
-      // Don't match /proprietar/sali/$id/calendar as "Sălile mele"
       return (
         location.pathname === to ||
         (location.pathname.startsWith(to + "/") && !location.pathname.includes("/calendar"))
@@ -101,8 +149,92 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
     return location.pathname === to || location.pathname.startsWith(to + "/");
   };
 
+  // Decide structure based on roles
+  const showBoth = isOwner && isRenter;
+  const showOwnerOnly = (isOwner && !isRenter) || (isAdmin && !isOwner && !isRenter);
+  const showRenterOnly = !isOwner && isRenter;
+  const showNothing = !isOwner && !isRenter && !isAdmin;
+
+  // Flat sidebar list per case (used for desktop flat cases & mobile bottom nav)
+  let flatItems: NavItem[];
+  if (showBoth) {
+    flatItems = [...COMMON_TOP, ...OWNER_ITEMS, ...RENTER_ITEMS, ...COMMON_BOTTOM];
+  } else if (showRenterOnly) {
+    flatItems = [...COMMON_TOP, ...RENTER_ITEMS, ...COMMON_BOTTOM];
+  } else if (showOwnerOnly) {
+    flatItems = [...COMMON_TOP, ...OWNER_ITEMS, ...COMMON_BOTTOM];
+  } else if (showNothing || roleLoading) {
+    flatItems = [...COMMON_TOP, ...COMMON_BOTTOM];
+  } else {
+    flatItems = [...COMMON_TOP, ...COMMON_BOTTOM];
+  }
+
+  // Mobile bottom nav selection (max 5)
+  let mobileItems: NavItem[];
+  if (showBoth) {
+    mobileItems = [
+      COMMON_TOP[0],
+      OWNER_ITEMS[0], // Sălile mele
+      OWNER_ITEMS[1], // Calendar
+      OWNER_ITEMS[2], // Cereri
+      RENTER_ITEMS[0], // Orarul meu
+    ];
+  } else if (showRenterOnly) {
+    mobileItems = [COMMON_TOP[0], ...RENTER_ITEMS];
+  } else {
+    // owner only, admin, nothing/loading
+    mobileItems = flatItems.slice(0, 5);
+  }
+
   const sidebarWidth = collapsed ? "md:w-16" : "md:w-64";
   const contentMargin = collapsed ? "md:ml-16" : "md:ml-64";
+
+  const renderItem = (item: NavItem) => {
+    const Icon = item.icon;
+    const active = isActive(item.to);
+    return (
+      <a
+        key={item.to}
+        href={item.to}
+        title={collapsed ? item.label : undefined}
+        className={
+          "flex items-center gap-3 rounded-md text-sm transition-colors " +
+          (collapsed ? "justify-center px-2 py-2 " : "px-3 py-2 ") +
+          (active
+            ? "bg-primary/10 text-primary font-medium"
+            : "text-foreground hover:bg-muted")
+        }
+      >
+        <Icon className="h-4 w-4 shrink-0" />
+        {!collapsed && <span className="truncate">{item.label}</span>}
+      </a>
+    );
+  };
+
+  const renderGroup = (
+    label: string,
+    items: NavItem[],
+    open: boolean,
+    setOpen: (v: boolean) => void,
+  ) => {
+    if (collapsed) {
+      // When sidebar is icon-only, drop group titles and just render items
+      return <div className="space-y-1">{items.map(renderItem)}</div>;
+    }
+    return (
+      <Collapsible open={open} onOpenChange={setOpen}>
+        <CollapsibleTrigger className="w-full flex items-center gap-1 px-2 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground">
+          <ChevronDown
+            className={`h-3 w-3 transition-transform ${open ? "" : "-rotate-90"}`}
+          />
+          {label}
+        </CollapsibleTrigger>
+        <CollapsibleContent className="space-y-1 pt-1">
+          {items.map(renderItem)}
+        </CollapsibleContent>
+      </Collapsible>
+    );
+  };
 
   return (
     <div className="min-h-screen flex bg-background">
@@ -137,27 +269,20 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
           </button>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.to);
-            return (
-              <a
-                key={item.to}
-                href={item.to}
-                title={collapsed ? item.label : undefined}
-                className={
-                  "flex items-center gap-3 rounded-md text-sm transition-colors " +
-                  (collapsed ? "justify-center px-2 py-2 " : "px-3 py-2 ") +
-                  (active
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-foreground hover:bg-muted")
-                }
-              >
-                <Icon className="h-4 w-4 shrink-0" />
-                {!collapsed && <span className="truncate">{item.label}</span>}
-              </a>
-            );
-          })}
+          {showBoth ? (
+            <>
+              {COMMON_TOP.map(renderItem)}
+              <div className="pt-2">
+                {renderGroup("PROPRIETAR", OWNER_ITEMS, ownerOpen, setOwnerOpen)}
+              </div>
+              <div className="pt-2">
+                {renderGroup("CHIRIAȘ", RENTER_ITEMS, renterOpen, setRenterOpen)}
+              </div>
+              <div className="pt-2">{COMMON_BOTTOM.map(renderItem)}</div>
+            </>
+          ) : (
+            flatItems.map(renderItem)
+          )}
         </nav>
         <div className="px-3 py-4 border-t">
           <button
@@ -206,8 +331,11 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
         </main>
 
         {/* Mobile bottom nav */}
-        <nav className="md:hidden fixed bottom-0 inset-x-0 bg-card border-t grid grid-cols-5 z-10">
-          {navItems.slice(0, 5).map((item) => {
+        <nav
+          className="md:hidden fixed bottom-0 inset-x-0 bg-card border-t grid z-10"
+          style={{ gridTemplateColumns: `repeat(${mobileItems.length}, minmax(0, 1fr))` }}
+        >
+          {mobileItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.to);
             return (
