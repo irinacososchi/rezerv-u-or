@@ -27,11 +27,8 @@ import { useUserRole } from "@/hooks/use-user-role";
 
 type NavItem = { to: string; icon: LucideIcon; label: string };
 
-const COMMON_TOP: NavItem[] = [
-  { to: "/panou/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-];
-
 const OWNER_ITEMS: NavItem[] = [
+  { to: "/panou/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/panou/sali", icon: Building2, label: "Sălile mele" },
   { to: "/panou/calendar", icon: Calendar, label: "Calendar" },
   { to: "/panou/cereri", icon: HandMetal, label: "Cereri" },
@@ -158,29 +155,29 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
   // Flat sidebar list per case (used for desktop flat cases & mobile bottom nav)
   let flatItems: NavItem[];
   if (showBoth) {
-    flatItems = [...COMMON_TOP, ...OWNER_ITEMS, ...RENTER_ITEMS, ...COMMON_BOTTOM];
+    flatItems = [...OWNER_ITEMS, ...RENTER_ITEMS, ...COMMON_BOTTOM];
   } else if (showRenterOnly) {
-    flatItems = [...COMMON_TOP, ...RENTER_ITEMS, ...COMMON_BOTTOM];
+    flatItems = [...RENTER_ITEMS, ...COMMON_BOTTOM];
   } else if (showOwnerOnly) {
-    flatItems = [...COMMON_TOP, ...OWNER_ITEMS, ...COMMON_BOTTOM];
+    flatItems = [...OWNER_ITEMS, ...COMMON_BOTTOM];
   } else if (showNothing || roleLoading) {
-    flatItems = [...COMMON_TOP, ...COMMON_BOTTOM];
+    flatItems = [...COMMON_BOTTOM];
   } else {
-    flatItems = [...COMMON_TOP, ...COMMON_BOTTOM];
+    flatItems = [...COMMON_BOTTOM];
   }
 
   // Mobile bottom nav selection (max 5)
   let mobileItems: NavItem[];
   if (showBoth) {
     mobileItems = [
-      COMMON_TOP[0],
-      OWNER_ITEMS[0], // Sălile mele
-      OWNER_ITEMS[1], // Calendar
-      OWNER_ITEMS[2], // Cereri
+      OWNER_ITEMS[0], // Dashboard
+      OWNER_ITEMS[1], // Sălile mele
+      OWNER_ITEMS[2], // Calendar
+      OWNER_ITEMS[3], // Cereri
       RENTER_ITEMS[0], // Orarul meu
     ];
   } else if (showRenterOnly) {
-    mobileItems = [COMMON_TOP[0], ...RENTER_ITEMS];
+    mobileItems = [...RENTER_ITEMS];
   } else {
     // owner only, admin, nothing/loading
     mobileItems = flatItems.slice(0, 5);
@@ -271,7 +268,6 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {showBoth ? (
             <>
-              {COMMON_TOP.map(renderItem)}
               <div className="pt-2">
                 {renderGroup("PROPRIETAR", OWNER_ITEMS, ownerOpen, setOwnerOpen)}
               </div>
