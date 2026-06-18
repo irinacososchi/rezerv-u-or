@@ -28,6 +28,7 @@ import {
   MONTH_NAMES_RO,
   startOfMonth,
   endOfMonth,
+  startOfWeek,
 } from "@/lib/date-utils";
 import {
   SLOT_GRANULARITY_MINUTES,
@@ -124,10 +125,6 @@ function blockNotePreview(notes?: string | null): string | null {
   return words.slice(0, 2).join(" ") + "...";
 }
 
-function startOfWeek(d: Date): Date {
-  const dow = getDayOfWeek(d);
-  return addDays(d, -(dow - 1));
-}
 
 function formatRange(weekStart: Date): string {
   const weekEnd = addDays(weekStart, 6);

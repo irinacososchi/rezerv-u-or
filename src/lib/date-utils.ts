@@ -28,6 +28,15 @@ export function addDays(d: Date, n: number): Date {
   return x;
 }
 
+// ISO week starts on Monday. Returns midnight of that Monday.
+export function startOfWeek(d: Date): Date {
+  const dow = getDayOfWeek(d); // 1=Mon..7=Sun
+  const monday = new Date(d);
+  monday.setDate(d.getDate() - (dow - 1));
+  monday.setHours(0, 0, 0, 0);
+  return monday;
+}
+
 export function startOfMonth(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), 1);
 }
