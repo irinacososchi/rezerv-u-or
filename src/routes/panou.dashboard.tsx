@@ -16,6 +16,7 @@ import {
 } from "@/lib/group-recurring-bookings";
 import { RecurringGroupCard } from "@/components/owner/recurring-group-card";
 import { RecurringBadge } from "@/components/owner/recurring-badge";
+import { useUserRole } from "@/hooks/use-user-role";
 
 export const Route = createFileRoute("/panou/dashboard")({
   component: DashboardPage,
