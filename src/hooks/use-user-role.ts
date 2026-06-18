@@ -24,7 +24,7 @@ const INITIAL: UserRoleState = {
 
 export function useUserRole(): UserRoleState {
   const [state, setState] = useState<UserRoleState>(INITIAL);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null | undefined>(undefined);
 
   // Track auth user id; re-run when identity changes (not on every render).
   useEffect(() => {
@@ -50,11 +50,19 @@ export function useUserRole(): UserRoleState {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    // Auth still being checked — keep loading: true, don't emit EMPTY yet.
+    if (userId === undefined) {
+      setState(INITIAL);
+      return;
+    }
+
+    // Auth checked, no user — emit EMPTY with loading: false.
     if (userId === null) {
       setState(EMPTY);
       return;
     }
 
+    // We have a user id — fetch real roles.
     let cancelled = false;
     setState((prev) => ({ ...prev, loading: true }));
 
