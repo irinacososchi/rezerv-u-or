@@ -1,5 +1,3 @@
-import rzrvLogo from "@/assets/rzrv-logo.png";
-
 export function LinkedBadge() {
   return (
     <span
@@ -7,7 +5,7 @@ export function LinkedBadge() {
       title="Cont RZRV"
       aria-label="Cont RZRV"
     >
-      <img src={rzrvLogo} alt="" className="h-3.5 w-3.5 object-contain" />
+      <img src="/favicon.png" alt="" className="h-3.5 w-3.5 object-contain" />
     </span>
   );
 }
