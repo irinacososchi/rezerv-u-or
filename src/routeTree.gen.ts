@@ -30,6 +30,8 @@ import { Route as PanouSaliRouteImport } from './routes/panou.sali'
 import { Route as PanouOrarulMeuRouteImport } from './routes/panou.orarul-meu'
 import { Route as PanouDashboardRouteImport } from './routes/panou.dashboard'
 import { Route as PanouContRouteImport } from './routes/panou.cont'
+import { Route as PanouClientiProprietarRouteImport } from './routes/panou.clienti-proprietar'
+import { Route as PanouClientiChiriasRouteImport } from './routes/panou.clienti-chirias'
 import { Route as PanouCereriRouteImport } from './routes/panou.cereri'
 import { Route as PanouCalendarRouteImport } from './routes/panou.calendar'
 import { Route as ContRezervariRouteImport } from './routes/cont.rezervari'
@@ -145,6 +147,16 @@ const PanouContRoute = PanouContRouteImport.update({
   path: '/cont',
   getParentRoute: () => PanouRoute,
 } as any)
+const PanouClientiProprietarRoute = PanouClientiProprietarRouteImport.update({
+  id: '/clienti-proprietar',
+  path: '/clienti-proprietar',
+  getParentRoute: () => PanouRoute,
+} as any)
+const PanouClientiChiriasRoute = PanouClientiChiriasRouteImport.update({
+  id: '/clienti-chirias',
+  path: '/clienti-chirias',
+  getParentRoute: () => PanouRoute,
+} as any)
 const PanouCereriRoute = PanouCereriRouteImport.update({
   id: '/cereri',
   path: '/cereri',
@@ -207,6 +219,8 @@ export interface FileRoutesByFullPath {
   '/cont/rezervari': typeof ContRezervariRoute
   '/panou/calendar': typeof PanouCalendarRoute
   '/panou/cereri': typeof PanouCereriRoute
+  '/panou/clienti-chirias': typeof PanouClientiChiriasRoute
+  '/panou/clienti-proprietar': typeof PanouClientiProprietarRoute
   '/panou/cont': typeof PanouContRoute
   '/panou/dashboard': typeof PanouDashboardRoute
   '/panou/orarul-meu': typeof PanouOrarulMeuRoute
@@ -236,6 +250,8 @@ export interface FileRoutesByTo {
   '/cont/rezervari': typeof ContRezervariRoute
   '/panou/calendar': typeof PanouCalendarRoute
   '/panou/cereri': typeof PanouCereriRoute
+  '/panou/clienti-chirias': typeof PanouClientiChiriasRoute
+  '/panou/clienti-proprietar': typeof PanouClientiProprietarRoute
   '/panou/cont': typeof PanouContRoute
   '/panou/dashboard': typeof PanouDashboardRoute
   '/panou/orarul-meu': typeof PanouOrarulMeuRoute
@@ -268,6 +284,8 @@ export interface FileRoutesById {
   '/cont/rezervari': typeof ContRezervariRoute
   '/panou/calendar': typeof PanouCalendarRoute
   '/panou/cereri': typeof PanouCereriRoute
+  '/panou/clienti-chirias': typeof PanouClientiChiriasRoute
+  '/panou/clienti-proprietar': typeof PanouClientiProprietarRoute
   '/panou/cont': typeof PanouContRoute
   '/panou/dashboard': typeof PanouDashboardRoute
   '/panou/orarul-meu': typeof PanouOrarulMeuRoute
@@ -302,6 +320,8 @@ export interface FileRouteTypes {
     | '/cont/rezervari'
     | '/panou/calendar'
     | '/panou/cereri'
+    | '/panou/clienti-chirias'
+    | '/panou/clienti-proprietar'
     | '/panou/cont'
     | '/panou/dashboard'
     | '/panou/orarul-meu'
@@ -331,6 +351,8 @@ export interface FileRouteTypes {
     | '/cont/rezervari'
     | '/panou/calendar'
     | '/panou/cereri'
+    | '/panou/clienti-chirias'
+    | '/panou/clienti-proprietar'
     | '/panou/cont'
     | '/panou/dashboard'
     | '/panou/orarul-meu'
@@ -362,6 +384,8 @@ export interface FileRouteTypes {
     | '/cont/rezervari'
     | '/panou/calendar'
     | '/panou/cereri'
+    | '/panou/clienti-chirias'
+    | '/panou/clienti-proprietar'
     | '/panou/cont'
     | '/panou/dashboard'
     | '/panou/orarul-meu'
@@ -543,6 +567,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PanouContRouteImport
       parentRoute: typeof PanouRoute
     }
+    '/panou/clienti-proprietar': {
+      id: '/panou/clienti-proprietar'
+      path: '/clienti-proprietar'
+      fullPath: '/panou/clienti-proprietar'
+      preLoaderRoute: typeof PanouClientiProprietarRouteImport
+      parentRoute: typeof PanouRoute
+    }
+    '/panou/clienti-chirias': {
+      id: '/panou/clienti-chirias'
+      path: '/clienti-chirias'
+      fullPath: '/panou/clienti-chirias'
+      preLoaderRoute: typeof PanouClientiChiriasRouteImport
+      parentRoute: typeof PanouRoute
+    }
     '/panou/cereri': {
       id: '/panou/cereri'
       path: '/cereri'
@@ -656,6 +694,8 @@ const PanouSaliRouteWithChildren = PanouSaliRoute._addFileChildren(
 interface PanouRouteChildren {
   PanouCalendarRoute: typeof PanouCalendarRoute
   PanouCereriRoute: typeof PanouCereriRoute
+  PanouClientiChiriasRoute: typeof PanouClientiChiriasRoute
+  PanouClientiProprietarRoute: typeof PanouClientiProprietarRoute
   PanouContRoute: typeof PanouContRoute
   PanouDashboardRoute: typeof PanouDashboardRoute
   PanouOrarulMeuRoute: typeof PanouOrarulMeuRoute
@@ -667,6 +707,8 @@ interface PanouRouteChildren {
 const PanouRouteChildren: PanouRouteChildren = {
   PanouCalendarRoute: PanouCalendarRoute,
   PanouCereriRoute: PanouCereriRoute,
+  PanouClientiChiriasRoute: PanouClientiChiriasRoute,
+  PanouClientiProprietarRoute: PanouClientiProprietarRoute,
   PanouContRoute: PanouContRoute,
   PanouDashboardRoute: PanouDashboardRoute,
   PanouOrarulMeuRoute: PanouOrarulMeuRoute,
@@ -706,12 +748,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
