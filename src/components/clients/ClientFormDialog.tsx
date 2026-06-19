@@ -37,7 +37,7 @@ type Props = {
   onSaved: () => void;
 };
 
-const PHONE_RE = /^(\+?40|0)[2-7][0-9]{8}$/;
+const PHONE_RE = /^(\+?40|0)[237][0-9]{8}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function ClientFormDialog({ open, onOpenChange, context, client, onSaved }: Props) {
@@ -49,6 +49,7 @@ export function ClientFormDialog({ open, onOpenChange, context, client, onSaved 
   const [email, setEmail] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -57,8 +58,35 @@ export function ClientFormDialog({ open, onOpenChange, context, client, onSaved 
       setEmail(client?.email ?? "");
       setNotes(client?.notes ?? "");
       setSaving(false);
+      setSyncing(false);
     }
   }, [open, client]);
+
+  async function handleSyncFromProfile() {
+    if (!client?.linked_user_id) return;
+    setSyncing(true);
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("full_name, phone, email")
+        .eq("id", client.linked_user_id)
+        .single();
+
+      if (error || !data) {
+        toast.error("Nu am putut prelua datele din cont.");
+        return;
+      }
+
+      setName(data.full_name ?? "");
+      setPhone(data.phone ?? "");
+      setEmail(data.email ?? "");
+      toast.success("Date preluate. Apasă Salvează pentru a aplica.");
+    } catch {
+      toast.error("Nu am putut prelua datele din cont.");
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   async function handleSubmit() {
     const trimmedName = name.trim();
@@ -66,19 +94,17 @@ export function ClientFormDialog({ open, onOpenChange, context, client, onSaved 
     const trimmedEmail = email.trim();
     const trimmedNotes = notes.trim();
 
-    if (!isLinked) {
-      if (trimmedName.length === 0) {
-        toast.error("Numele este obligatoriu.");
-        return;
-      }
-      if (trimmedPhone && !PHONE_RE.test(trimmedPhone)) {
-        toast.error("Format telefon invalid.");
-        return;
-      }
-      if (trimmedEmail && !EMAIL_RE.test(trimmedEmail)) {
-        toast.error("Format email invalid.");
-        return;
-      }
+    if (trimmedName.length === 0) {
+      toast.error("Numele este obligatoriu.");
+      return;
+    }
+    if (trimmedPhone && !PHONE_RE.test(trimmedPhone)) {
+      toast.error("Format telefon invalid.");
+      return;
+    }
+    if (trimmedEmail && !EMAIL_RE.test(trimmedEmail)) {
+      toast.error("Format email invalid.");
+      return;
     }
 
     setSaving(true);
@@ -109,12 +135,12 @@ export function ClientFormDialog({ open, onOpenChange, context, client, onSaved 
         }
         toast.success("Client adăugat");
       } else {
-        const update: Record<string, unknown> = { notes: trimmedNotes || null };
-        if (!isLinked) {
-          update.name = trimmedName;
-          update.phone = trimmedPhone || null;
-          update.email = trimmedEmail || null;
-        }
+        const update: Record<string, unknown> = {
+          name: trimmedName,
+          phone: trimmedPhone || null,
+          email: trimmedEmail || null,
+          notes: trimmedNotes || null,
+        };
         const { error } = await supabase.from("clients").update(update).eq("id", client!.id);
         if (error) {
           if ((error as { code?: string }).code === "23505") {
@@ -143,19 +169,37 @@ export function ClientFormDialog({ open, onOpenChange, context, client, onSaved 
           </DialogTitle>
           {isLinked && (
             <DialogDescription>
-              Aceste date provin din contul RZRV al persoanei şi nu pot fi modificate.
+              Acest client are cont RZRV. Modificările tale aici sunt private — ele nu vor afecta contul lui de pe platformă.
             </DialogDescription>
           )}
         </DialogHeader>
 
         <div className="grid gap-4 py-2">
+          {isLinked && (
+            <div className="flex items-center justify-between gap-3 rounded-md border border-border bg-muted/40 p-3">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <LinkedBadge />
+                <span>Acest client are cont RZRV.</span>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleSyncFromProfile}
+                disabled={syncing || saving}
+              >
+                {syncing ? "Se preia..." : "Preia datele din cont"}
+              </Button>
+            </div>
+          )}
+
           <div className="grid gap-2">
             <Label htmlFor="client-name">Nume *</Label>
             <Input
               id="client-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              disabled={isLinked || saving}
+              disabled={saving}
               maxLength={120}
             />
           </div>
@@ -165,7 +209,7 @@ export function ClientFormDialog({ open, onOpenChange, context, client, onSaved 
               id="client-phone"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              disabled={isLinked || saving}
+              disabled={saving}
               placeholder="07xxxxxxxx"
               maxLength={20}
             />
@@ -177,7 +221,7 @@ export function ClientFormDialog({ open, onOpenChange, context, client, onSaved 
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              disabled={isLinked || saving}
+              disabled={saving}
               maxLength={255}
             />
           </div>
