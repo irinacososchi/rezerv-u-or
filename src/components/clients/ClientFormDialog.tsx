@@ -34,13 +34,14 @@ type Props = {
   onOpenChange: (open: boolean) => void;
   context: "owner" | "renter";
   client: Client | null;
-  onSaved: () => void;
+  onSaved: (newClientId?: string) => void;
+  initialName?: string;
 };
 
 const PHONE_RE = /^(\+?40|0)[237][0-9]{8}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export function ClientFormDialog({ open, onOpenChange, context, client, onSaved }: Props) {
+export function ClientFormDialog({ open, onOpenChange, context, client, onSaved, initialName }: Props) {
   const isEdit = client !== null;
   const isLinked = isEdit && client.linked_user_id !== null;
 
@@ -53,14 +54,14 @@ export function ClientFormDialog({ open, onOpenChange, context, client, onSaved 
 
   useEffect(() => {
     if (open) {
-      setName(client?.name ?? "");
+      setName(client?.name ?? initialName ?? "");
       setPhone(client?.phone ?? "");
       setEmail(client?.email ?? "");
       setNotes(client?.notes ?? "");
       setSaving(false);
       setSyncing(false);
     }
-  }, [open, client]);
+  }, [open, client, initialName]);
 
   async function handleSyncFromProfile() {
     if (!client?.linked_user_id) return;
@@ -115,7 +116,7 @@ export function ClientFormDialog({ open, onOpenChange, context, client, onSaved 
           toast.error("Sesiune expirată.");
           return;
         }
-        const { error } = await supabase.from("clients").insert({
+        const { data: inserted, error } = await supabase.from("clients").insert({
           owner_id: user.id,
           context,
           linked_user_id: null,
@@ -124,7 +125,7 @@ export function ClientFormDialog({ open, onOpenChange, context, client, onSaved 
           email: trimmedEmail || null,
           notes: trimmedNotes || null,
           active: true,
-        });
+        }).select("id").single();
         if (error) {
           if ((error as { code?: string }).code === "23505") {
             toast.error("Există deja un client cu acest număr de telefon în această listă.");
@@ -134,6 +135,9 @@ export function ClientFormDialog({ open, onOpenChange, context, client, onSaved 
           return;
         }
         toast.success("Client adăugat");
+        onSaved(inserted?.id);
+        onOpenChange(false);
+        return;
       } else {
         const update: Record<string, unknown> = {
           name: trimmedName,
