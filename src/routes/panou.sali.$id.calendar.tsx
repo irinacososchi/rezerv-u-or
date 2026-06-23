@@ -270,6 +270,28 @@ function RoomCalendarPage() {
   const [manualError, setManualError] = useState<string | null>(null);
   const [manualSubmitting, setManualSubmitting] = useState(false);
 
+  async function handleManualClientChange(newClientId: string | null) {
+    setManualOwnerClientId(newClientId);
+    if (newClientId === null) {
+      setManualName("");
+      setManualPhone("");
+      setManualEmail("");
+      return;
+    }
+    const { data, error } = await supabase
+      .from("clients")
+      .select("name, phone, email")
+      .eq("id", newClientId)
+      .maybeSingle();
+    if (error || !data) {
+      toast.error("Nu am putut prelua datele clientului.");
+      return;
+    }
+    setManualName((data as { name: string | null }).name ?? "");
+    setManualPhone((data as { phone: string | null }).phone ?? "");
+    setManualEmail((data as { email: string | null }).email ?? "");
+  }
+
   const days = useMemo(
     () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
     [weekStart],
@@ -1014,6 +1036,7 @@ function RoomCalendarPage() {
               setManualSubmitting={setManualSubmitting}
               manualOwnerClientId={manualOwnerClientId}
               setManualOwnerClientId={setManualOwnerClientId}
+              onClientChange={handleManualClientChange}
               onClose={() => setCellModal(null)}
               onChanged={loadEntries}
             />
@@ -2046,6 +2069,7 @@ function ManualBookingForm({
   setManualSubmitting,
   manualOwnerClientId,
   setManualOwnerClientId,
+  onClientChange,
   onClose,
   onChanged,
 }: {
@@ -2072,6 +2096,7 @@ function ManualBookingForm({
   setManualSubmitting: (v: boolean) => void;
   manualOwnerClientId: string | null;
   setManualOwnerClientId: (v: string | null) => void;
+  onClientChange: (id: string | null) => void;
   onClose: () => void;
   onChanged: () => void;
 }) {
@@ -2251,11 +2276,28 @@ function ManualBookingForm({
         </div>
 
         <div className="space-y-1">
+          <Label htmlFor="manual-client" className="text-xs">Client (opțional)</Label>
+          <ClientSelect
+            context="owner"
+            value={manualOwnerClientId}
+            onChange={onClientChange}
+            placeholder="Fără client atribuit"
+          />
+        </div>
+
+        {manualOwnerClientId !== null && (
+          <p className="text-xs text-muted-foreground -mb-2">
+            Datele sunt preluate din clientul selectat.
+          </p>
+        )}
+
+        <div className="space-y-1">
           <Label className="text-xs">Nume client *</Label>
           <Input
             value={manualName}
             onChange={(e) => setManualName(e.target.value)}
             placeholder="ex: Ana Ionescu"
+            disabled={manualOwnerClientId !== null}
           />
         </div>
 
@@ -2265,6 +2307,7 @@ function ManualBookingForm({
             value={manualPhone}
             onChange={(e) => setManualPhone(e.target.value)}
             placeholder="07xxxxxxxx"
+            disabled={manualOwnerClientId !== null}
           />
         </div>
 
@@ -2275,6 +2318,7 @@ function ManualBookingForm({
             value={manualEmail}
             onChange={(e) => setManualEmail(e.target.value)}
             placeholder="client@email.ro"
+            disabled={manualOwnerClientId !== null}
           />
         </div>
 
@@ -2316,15 +2360,7 @@ function ManualBookingForm({
           />
         </div>
 
-        <div className="space-y-1">
-          <Label htmlFor="manual-client" className="text-xs">Client (opțional)</Label>
-          <ClientSelect
-            context="owner"
-            value={manualOwnerClientId}
-            onChange={setManualOwnerClientId}
-            placeholder="Fără client atribuit"
-          />
-        </div>
+
 
 
 
