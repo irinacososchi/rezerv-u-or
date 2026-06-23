@@ -2175,7 +2175,8 @@ function ManualBookingForm({
         payment_method: "la_sala",
         payment_status: manualPaymentStatus,
         renter_notes: manualNote.trim() || null,
-      });
+        owner_client_id: manualOwnerClientId,
+      } as any);
 
       if (error) {
         if (error.code === "23P01") {
