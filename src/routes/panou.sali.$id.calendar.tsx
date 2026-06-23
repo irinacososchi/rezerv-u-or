@@ -36,6 +36,67 @@ import {
   minutesToTime,
 } from "@/lib/time-slots";
 import { ClientSelect } from "@/components/clients/ClientSelect";
+import { LinkedBadge } from "@/components/clients/LinkedBadge";
+
+function AttachedClientDisplay({ bookingId }: { bookingId: string }) {
+  const [client, setClient] = useState<{
+    name: string;
+    phone: string | null;
+    linked_user_id: string | null;
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: booking } = (await supabase
+        .from("bookings")
+        .select("owner_client_id")
+        .eq("id", bookingId)
+        .maybeSingle()) as { data: { owner_client_id: string | null } | null };
+
+      if (cancelled) return;
+
+      if (!booking?.owner_client_id) {
+        setLoading(false);
+        return;
+      }
+
+      const { data: clientData } = (await supabase
+        .from("clients")
+        .select("name, phone, linked_user_id")
+        .eq("id", booking.owner_client_id)
+        .maybeSingle()) as {
+        data: { name: string; phone: string | null; linked_user_id: string | null } | null;
+      };
+
+      if (cancelled) return;
+
+      if (clientData) setClient(clientData);
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [bookingId]);
+
+  if (loading || !client) return null;
+
+  return (
+    <div className="rounded-md border bg-muted/30 p-3 space-y-1">
+      <div className="text-xs uppercase tracking-wide text-muted-foreground">
+        Client atribuit
+      </div>
+      <div className="flex items-center gap-2 text-sm font-medium">
+        <span>{client.name}</span>
+        {client.linked_user_id && <LinkedBadge />}
+      </div>
+      {client.phone && (
+        <div className="text-xs text-muted-foreground">{client.phone}</div>
+      )}
+    </div>
+  );
+}
 
 type PricingRule = {
   id: string;
@@ -1294,6 +1355,7 @@ function BookingDetails({
           </div>
         </div>
       )}
+      <AttachedClientDisplay bookingId={entry.id} />
       <div className="space-y-2 text-sm">
         <Row label="Chiriaș" value={details.renter_name ?? "—"} />
         {details.renter_email && !details.renter_email.startsWith("noemail+") && (
@@ -1698,6 +1760,7 @@ function BlockDetails({
           )}
         </DialogDescription>
       </DialogHeader>
+      <AttachedClientDisplay bookingId={entry.id} />
       <div className="space-y-2 text-sm">
         <Label htmlFor="block-reason">Motiv blocare</Label>
         <Textarea
