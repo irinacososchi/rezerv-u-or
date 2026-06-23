@@ -2044,6 +2044,8 @@ function ManualBookingForm({
   setManualPaymentStatus,
   setManualError,
   setManualSubmitting,
+  manualOwnerClientId,
+  setManualOwnerClientId,
   onClose,
   onChanged,
 }: {
