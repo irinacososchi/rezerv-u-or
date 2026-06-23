@@ -108,7 +108,7 @@ export function ClientSelect({
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-            <Command shouldFilter={true}>
+            <Command shouldFilter={false}>
               <CommandInput
                 placeholder="Caută client..."
                 value={query}
