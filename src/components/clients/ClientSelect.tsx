@@ -64,6 +64,8 @@ export function ClientSelect({
   }, [context]);
 
   const selected = value ? clients.find((c) => c.id === value) ?? null : null;
+  const q = query.trim().toLowerCase();
+  const filtered = q ? clients.filter((c) => c.name.toLowerCase().includes(q)) : clients;
 
   function openAddDialog(nameSeed: string) {
     setInitialName(nameSeed);
