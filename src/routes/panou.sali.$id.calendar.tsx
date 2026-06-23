@@ -1355,6 +1355,7 @@ function BookingDetails({
           </div>
         </div>
       )}
+      <AttachedClientDisplay bookingId={entry.id} />
       <div className="space-y-2 text-sm">
         <Row label="Chiriaș" value={details.renter_name ?? "—"} />
         {details.renter_email && !details.renter_email.startsWith("noemail+") && (
