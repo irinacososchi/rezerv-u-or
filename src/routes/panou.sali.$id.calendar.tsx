@@ -1012,6 +1012,8 @@ function RoomCalendarPage() {
               setManualPaymentStatus={setManualPaymentStatus}
               setManualError={setManualError}
               setManualSubmitting={setManualSubmitting}
+              manualOwnerClientId={manualOwnerClientId}
+              setManualOwnerClientId={setManualOwnerClientId}
               onClose={() => setCellModal(null)}
               onChanged={loadEntries}
             />
