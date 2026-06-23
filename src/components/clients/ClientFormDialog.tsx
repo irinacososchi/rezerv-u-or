@@ -116,7 +116,7 @@ export function ClientFormDialog({ open, onOpenChange, context, client, onSaved,
           toast.error("Sesiune expirată.");
           return;
         }
-        const { error } = await supabase.from("clients").insert({
+        const { data: inserted, error } = await supabase.from("clients").insert({
           owner_id: user.id,
           context,
           linked_user_id: null,
@@ -125,7 +125,7 @@ export function ClientFormDialog({ open, onOpenChange, context, client, onSaved,
           email: trimmedEmail || null,
           notes: trimmedNotes || null,
           active: true,
-        });
+        }).select("id").single();
         if (error) {
           if ((error as { code?: string }).code === "23505") {
             toast.error("Există deja un client cu acest număr de telefon în această listă.");
@@ -135,6 +135,9 @@ export function ClientFormDialog({ open, onOpenChange, context, client, onSaved,
           return;
         }
         toast.success("Client adăugat");
+        onSaved(inserted?.id);
+        onOpenChange(false);
+        return;
       } else {
         const update: Record<string, unknown> = {
           name: trimmedName,
