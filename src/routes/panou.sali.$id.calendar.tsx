@@ -266,6 +266,7 @@ function RoomCalendarPage() {
   const [manualEmail, setManualEmail] = useState("");
   const [manualNote, setManualNote] = useState("");
   const [manualPaymentStatus, setManualPaymentStatus] = useState("neplatit");
+  const [manualOwnerClientId, setManualOwnerClientId] = useState<string | null>(null);
   const [manualError, setManualError] = useState<string | null>(null);
   const [manualSubmitting, setManualSubmitting] = useState(false);
 
