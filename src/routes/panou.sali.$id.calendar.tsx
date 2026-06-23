@@ -384,6 +384,7 @@ function RoomCalendarPage() {
       setManualEmail("");
       setManualNote("");
       setManualPaymentStatus("neplatit");
+      setManualOwnerClientId(null);
       setManualError(null);
       setCellModal({ date: dateISO, slotStart, mode: "choose" });
       return;
