@@ -2316,6 +2316,18 @@ function ManualBookingForm({
           />
         </div>
 
+        <div className="space-y-1">
+          <Label htmlFor="manual-client" className="text-xs">Client (opțional)</Label>
+          <ClientSelect
+            context="owner"
+            value={manualOwnerClientId}
+            onChange={setManualOwnerClientId}
+            placeholder="Fără client atribuit"
+          />
+        </div>
+
+
+
         <div className="space-y-2 pt-2 border-t">
           <label className="flex items-center gap-2 text-sm cursor-pointer">
             <input
