@@ -54,14 +54,14 @@ export function ClientFormDialog({ open, onOpenChange, context, client, onSaved,
 
   useEffect(() => {
     if (open) {
-      setName(client?.name ?? "");
+      setName(client?.name ?? initialName ?? "");
       setPhone(client?.phone ?? "");
       setEmail(client?.email ?? "");
       setNotes(client?.notes ?? "");
       setSaving(false);
       setSyncing(false);
     }
-  }, [open, client]);
+  }, [open, client, initialName]);
 
   async function handleSyncFromProfile() {
     if (!client?.linked_user_id) return;
