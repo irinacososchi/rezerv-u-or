@@ -41,7 +41,7 @@ type Props = {
 const PHONE_RE = /^(\+?40|0)[237][0-9]{8}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export function ClientFormDialog({ open, onOpenChange, context, client, onSaved }: Props) {
+export function ClientFormDialog({ open, onOpenChange, context, client, onSaved, initialName }: Props) {
   const isEdit = client !== null;
   const isLinked = isEdit && client.linked_user_id !== null;
 
