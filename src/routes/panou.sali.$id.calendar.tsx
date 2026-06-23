@@ -35,6 +35,7 @@ import {
   timeToMinutes,
   minutesToTime,
 } from "@/lib/time-slots";
+import { ClientSelect } from "@/components/clients/ClientSelect";
 
 type PricingRule = {
   id: string;
