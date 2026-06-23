@@ -1760,6 +1760,7 @@ function BlockDetails({
           )}
         </DialogDescription>
       </DialogHeader>
+      <AttachedClientDisplay bookingId={entry.id} />
       <div className="space-y-2 text-sm">
         <Label htmlFor="block-reason">Motiv blocare</Label>
         <Textarea
