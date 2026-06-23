@@ -106,7 +106,9 @@ export function ClientSelect({
                   <span className="truncate">{placeholder}</span>
                 )}
               </span>
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              {!value && (
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              )}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
