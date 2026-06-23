@@ -35,6 +35,7 @@ import {
   timeToMinutes,
   minutesToTime,
 } from "@/lib/time-slots";
+import { ClientSelect } from "@/components/clients/ClientSelect";
 
 type PricingRule = {
   id: string;
@@ -265,6 +266,7 @@ function RoomCalendarPage() {
   const [manualEmail, setManualEmail] = useState("");
   const [manualNote, setManualNote] = useState("");
   const [manualPaymentStatus, setManualPaymentStatus] = useState("neplatit");
+  const [manualOwnerClientId, setManualOwnerClientId] = useState<string | null>(null);
   const [manualError, setManualError] = useState<string | null>(null);
   const [manualSubmitting, setManualSubmitting] = useState(false);
 
@@ -382,6 +384,7 @@ function RoomCalendarPage() {
       setManualEmail("");
       setManualNote("");
       setManualPaymentStatus("neplatit");
+      setManualOwnerClientId(null);
       setManualError(null);
       setCellModal({ date: dateISO, slotStart, mode: "choose" });
       return;
@@ -1009,6 +1012,8 @@ function RoomCalendarPage() {
               setManualPaymentStatus={setManualPaymentStatus}
               setManualError={setManualError}
               setManualSubmitting={setManualSubmitting}
+              manualOwnerClientId={manualOwnerClientId}
+              setManualOwnerClientId={setManualOwnerClientId}
               onClose={() => setCellModal(null)}
               onChanged={loadEntries}
             />
@@ -2039,6 +2044,8 @@ function ManualBookingForm({
   setManualPaymentStatus,
   setManualError,
   setManualSubmitting,
+  manualOwnerClientId,
+  setManualOwnerClientId,
   onClose,
   onChanged,
 }: {
@@ -2063,6 +2070,8 @@ function ManualBookingForm({
   setManualPaymentStatus: (v: string) => void;
   setManualError: (v: string | null) => void;
   setManualSubmitting: (v: boolean) => void;
+  manualOwnerClientId: string | null;
+  setManualOwnerClientId: (v: string | null) => void;
   onClose: () => void;
   onChanged: () => void;
 }) {
@@ -2166,7 +2175,8 @@ function ManualBookingForm({
         payment_method: "la_sala",
         payment_status: manualPaymentStatus,
         renter_notes: manualNote.trim() || null,
-      });
+        owner_client_id: manualOwnerClientId,
+      } as any);
 
       if (error) {
         if (error.code === "23P01") {
@@ -2305,6 +2315,18 @@ function ManualBookingForm({
             placeholder="ex: A sunat joi seara"
           />
         </div>
+
+        <div className="space-y-1">
+          <Label htmlFor="manual-client" className="text-xs">Client (opțional)</Label>
+          <ClientSelect
+            context="owner"
+            value={manualOwnerClientId}
+            onChange={setManualOwnerClientId}
+            placeholder="Fără client atribuit"
+          />
+        </div>
+
+
 
         <div className="space-y-2 pt-2 border-t">
           <label className="flex items-center gap-2 text-sm cursor-pointer">
