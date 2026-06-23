@@ -2070,6 +2070,8 @@ function ManualBookingForm({
   setManualPaymentStatus: (v: string) => void;
   setManualError: (v: string | null) => void;
   setManualSubmitting: (v: boolean) => void;
+  manualOwnerClientId: string | null;
+  setManualOwnerClientId: (v: string | null) => void;
   onClose: () => void;
   onChanged: () => void;
 }) {
