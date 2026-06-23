@@ -34,7 +34,8 @@ type Props = {
   onOpenChange: (open: boolean) => void;
   context: "owner" | "renter";
   client: Client | null;
-  onSaved: () => void;
+  onSaved: (newClientId?: string) => void;
+  initialName?: string;
 };
 
 const PHONE_RE = /^(\+?40|0)[237][0-9]{8}$/;
