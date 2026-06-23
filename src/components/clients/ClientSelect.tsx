@@ -123,13 +123,14 @@ export function ClientSelect({
                   </div>
                 ) : (
                   <>
-                    <CommandEmpty>Niciun client cu acest nume.</CommandEmpty>
-                    {clients.length > 0 && (
+                    {filtered.length === 0 ? (
+                      <CommandEmpty>Niciun client cu acest nume.</CommandEmpty>
+                    ) : (
                       <CommandGroup>
-                        {clients.map((c) => (
+                        {filtered.map((c) => (
                           <CommandItem
                             key={c.id}
-                            value={c.name}
+                            value={c.id}
                             onSelect={() => {
                               onChange(c.id);
                               setOpen(false);
