@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, CalendarX } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarX, Repeat } from "lucide-react";
 import { OwnerLayout } from "@/components/owner-layout";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -382,7 +382,14 @@ function OrarulMeu() {
                     <div className="flex-1 px-3 py-1 text-sm">
                       {showLabel && (
                         <div className="min-w-0">
-                          <div className="font-medium truncate">{b!.room_name}</div>
+                          <div className="font-medium truncate flex items-center gap-1">
+                            <span className="truncate">{b!.room_name}</span>
+                            {b!.recurrence_id && (
+                              <span title="Rezervare recurentă" className="inline-flex shrink-0">
+                                <Repeat size={14} className="text-muted-foreground" />
+                              </span>
+                            )}
+                          </div>
                           <div className="text-xs text-muted-foreground mt-0.5">
                             {b!.start_time.slice(0, 5)}–{b!.end_time.slice(0, 5)}
                           </div>
@@ -458,7 +465,14 @@ function OrarulMeu() {
                             }
                           >
                             {showLabel && (
-                              <div className="truncate font-medium">{b!.room_name}</div>
+                              <div className="truncate font-medium flex items-center gap-1">
+                                <span className="truncate">{b!.room_name}</span>
+                                {b!.recurrence_id && (
+                                  <span title="Rezervare recurentă" className="inline-flex shrink-0">
+                                    <Repeat size={14} className="text-muted-foreground" />
+                                  </span>
+                                )}
+                              </div>
                             )}
                           </button>
                         );
@@ -524,12 +538,17 @@ function OrarulMeu() {
                           key={b.id}
                           onClick={() => setSelected(b)}
                           className={
-                            "w-full text-left truncate px-1 py-0.5 rounded text-[10px] " +
+                            "w-full text-left px-1 py-0.5 rounded text-[10px] flex items-center gap-1 " +
                             cellClass(b)
                           }
                           title={`${b.room_name} · ${b.start_time.slice(0, 5)}–${b.end_time.slice(0, 5)}`}
                         >
-                          {b.start_time.slice(0, 5)} {b.room_name}
+                          <span className="truncate">
+                            {b.start_time.slice(0, 5)} {b.room_name}
+                          </span>
+                          {b.recurrence_id && (
+                            <Repeat size={12} className="shrink-0 text-muted-foreground" />
+                          )}
                         </button>
                       ))}
                       {more > 0 && (
