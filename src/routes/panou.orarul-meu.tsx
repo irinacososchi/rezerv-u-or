@@ -465,7 +465,14 @@ function OrarulMeu() {
                             }
                           >
                             {showLabel && (
-                              <div className="truncate font-medium">{b!.room_name}</div>
+                              <div className="truncate font-medium flex items-center gap-1">
+                                <span className="truncate">{b!.room_name}</span>
+                                {b!.recurrence_id && (
+                                  <span title="Rezervare recurentă" className="inline-flex shrink-0">
+                                    <Repeat size={14} className="text-muted-foreground" />
+                                  </span>
+                                )}
+                              </div>
                             )}
                           </button>
                         );
