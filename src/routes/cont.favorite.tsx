@@ -24,6 +24,7 @@ type FavRow = {
     address: string | null;
     city: string | null;
     neighbourhood: string | null;
+    google_maps_url: string | null;
     is_active?: boolean | null;
     room_photos: { storage_url: string; is_cover: boolean | null }[];
     pricing_rules: { price_per_hour: number; is_active: boolean }[];
@@ -60,7 +61,7 @@ function FavoriteContPage() {
           id,
           created_at,
           rooms(
-            id, name, slug, address, city, neighbourhood, is_active,
+            id, name, slug, address, city, neighbourhood, google_maps_url, is_active,
             room_photos(storage_url, is_cover),
             pricing_rules(price_per_hour, is_active)
           )
@@ -142,6 +143,7 @@ function FavoriteContPage() {
                     hasSound: false,
                     hasBarre: false,
                     isActive: r.is_active ?? true,
+                    googleMapsUrl: r.google_maps_url ?? null,
                   };
                   return (
                     <div key={f.id} className="relative">

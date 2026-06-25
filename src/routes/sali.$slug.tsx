@@ -858,16 +858,32 @@ function RoomDetailsPage() {
                 )}
               </div>
 
-              <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
-                <MapPin className="h-4 w-4" />
-                {[
+              {(() => {
+                const fullAddress = [
                   room.neighbourhood,
                   room.city_name ?? room.city,
                   room.county_name,
                 ]
                   .filter(Boolean)
-                  .join(", ")}
-              </p>
+                  .join(", ");
+                const cls = "mt-2 flex items-center gap-1.5 text-sm text-muted-foreground";
+                return room.google_maps_url ? (
+                  <a
+                    href={room.google_maps_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`${cls} hover:underline`}
+                  >
+                    <MapPin className="h-4 w-4" />
+                    {fullAddress}
+                  </a>
+                ) : (
+                  <p className={cls}>
+                    <MapPin className="h-4 w-4" />
+                    {fullAddress}
+                  </p>
+                );
+              })()}
 
               
               {room.virtual_tour_url && (

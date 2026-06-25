@@ -13,6 +13,7 @@ type RoomRow = {
   city: string;
   city_id: number | null;
   neighbourhood: string | null;
+  google_maps_url: string | null;
   has_mirrors: boolean | null;
   has_sound_system: boolean | null;
   has_ballet_barre: boolean | null;
@@ -57,7 +58,7 @@ export async function fetchRooms(
   let query = supabase
     .from("rooms")
     .select(
-      `id, name, slug, city, city_id, neighbourhood, has_mirrors, has_sound_system, has_ballet_barre, is_active, cities(id, name, county_id, counties(id, name)), room_photos(storage_url, is_cover, sort_order), pricing_rules(price_per_hour, is_active)`,
+      `id, name, slug, city, city_id, neighbourhood, google_maps_url, has_mirrors, has_sound_system, has_ballet_barre, is_active, cities(id, name, county_id, counties(id, name)), room_photos(storage_url, is_cover, sort_order), pricing_rules(price_per_hour, is_active)`,
     )
     .limit(limit);
 
@@ -97,6 +98,7 @@ export async function fetchRooms(
       hasSound: !!row.has_sound_system,
       hasBarre: !!row.has_ballet_barre,
       isActive: !!row.is_active,
+      googleMapsUrl: row.google_maps_url ?? null,
     };
   });
 }

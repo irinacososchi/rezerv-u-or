@@ -69,6 +69,7 @@ type Room = {
   address: string | null;
   city: string | null;
   neighbourhood: string | null;
+  google_maps_url: string | null;
   booking_type: string | null;
   currency: string | null;
 };
@@ -592,7 +593,7 @@ function CheckoutPage() {
       setLoading(true);
       const { data: r } = await supabase
         .from("rooms")
-        .select("id, slug, name, address, city, neighbourhood, booking_type, currency")
+        .select("id, slug, name, address, city, neighbourhood, google_maps_url, booking_type, currency")
         .eq("slug", slug)
         .eq("is_active", true)
         .maybeSingle();
@@ -1184,11 +1185,23 @@ function CheckoutPage() {
             <div className="sticky top-6 rounded-xl border border-border bg-background p-6 shadow-sm">
               <h2 className="text-lg font-semibold">Rezumat rezervare</h2>
               <p className="mt-1 text-sm text-muted-foreground">{room.name}</p>
-              {(room.neighbourhood || room.city) && (
-                <p className="text-xs text-muted-foreground">
-                  {[room.neighbourhood, room.city].filter(Boolean).join(", ")}
-                </p>
-              )}
+              {(room.neighbourhood || room.city) &&
+                (() => {
+                  const fullAddress = [room.neighbourhood, room.city].filter(Boolean).join(", ");
+                  const cls = "text-xs text-muted-foreground";
+                  return room.google_maps_url ? (
+                    <a
+                      href={room.google_maps_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`${cls} hover:underline`}
+                    >
+                      {fullAddress}
+                    </a>
+                  ) : (
+                    <p className={cls}>{fullAddress}</p>
+                  );
+                })()}
 
               <div className="mt-5 space-y-3 text-sm">
                 {isMultiDay ? (

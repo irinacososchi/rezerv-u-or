@@ -155,7 +155,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
   const [checkingSlug, setCheckingSlug] = useState(false);
   const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([]);
-  const [tourUrlError, setTourUrlError] = useState<string | null>(null);
+  
   const [counties, setCounties] = useState<County[]>([]);
   const [cities, setCities] = useState<City[]>([]);
 
@@ -185,24 +185,6 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
     };
   }, [form.county_id]);
 
-  function validateTourUrl(url: string): string | null {
-    if (!url || url.trim() === "") return null;
-    const trimmed = url.trim();
-    let parsed: URL;
-    try {
-      parsed = new URL(trimmed);
-    } catch {
-      return "Link invalid. Verifică că ai copiat tot URL-ul.";
-    }
-    const host = parsed.hostname.toLowerCase();
-    if (host === "maps.app.goo.gl" || host === "goo.gl") {
-      return null;
-    }
-    if (host.match(/^(www\.)?google\.[a-z.]+$/) && parsed.pathname.startsWith("/maps/")) {
-      return null;
-    }
-    return "Linkul trebuie să fie din Google Maps. Folosește butonul 'Partajează' din Google Maps și copiază linkul.";
-  }
 
   async function checkSlugAvailability(value: string) {
     const v = value.trim();
@@ -443,13 +425,6 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
       toast.error("URL-ul ales este deja folosit. Te rugăm să alegi altul.");
       return;
     }
-    const tourError = validateTourUrl(form.virtual_tour_url);
-    if (tourError) {
-      setTourUrlError(tourError);
-      toast.error(tourError);
-      return;
-    }
-    setTourUrlError(null);
     const validPricing = pricing.filter(
       (r) => r.is_active && Number(r.price_per_hour) > 0 && r.days_of_week.length > 0,
     );
