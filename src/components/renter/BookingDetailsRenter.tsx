@@ -174,10 +174,6 @@ export function BookingDetailsRenter({ booking, userEmail, onClose, onCancelled 
   }
 
   function handleConfirmRecurring() {
-    if (mode === "series") {
-      setSeriesConfirmOpen(true);
-      return;
-    }
     executeRecurringChoice();
   }
 
@@ -316,15 +312,6 @@ export function BookingDetailsRenter({ booking, userEmail, onClose, onCancelled 
               </div>
             </label>
             <label className="flex gap-3 items-start cursor-pointer rounded-md border p-3 hover:bg-muted/40">
-              <RadioGroupItem value="series" id="cm-series" className="mt-0.5" />
-              <div className="space-y-0.5">
-                <div className="text-sm font-medium">Toată seria</div>
-                <div className="text-xs text-muted-foreground">
-                  Oprești complet seria. Toate sesiunile viitoare se anulează.
-                </div>
-              </div>
-            </label>
-            <label className="flex gap-3 items-start cursor-pointer rounded-md border p-3 hover:bg-muted/40">
               <RadioGroupItem value="suspend" id="cm-suspend" className="mt-0.5" />
               <div className="space-y-1 flex-1">
                 <div className="text-sm font-medium">Suspendă temporar (vacanță)</div>
@@ -369,28 +356,6 @@ export function BookingDetailsRenter({ booking, userEmail, onClose, onCancelled 
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={seriesConfirmOpen} onOpenChange={(o) => !busy && setSeriesConfirmOpen(o)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Oprești toată seria?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Ești sigur că vrei să oprești toată seria? Acțiunea e ireversibilă.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={busy}>Înapoi</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault();
-                executeRecurringChoice();
-              }}
-              disabled={busy}
-            >
-              {busy ? "Se anulează..." : "Da, anulează seria"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
