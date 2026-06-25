@@ -151,17 +151,6 @@ export function BookingDetailsRenter({ booking, userEmail, onClose, onCancelled 
         ok = true;
         successMsg = typeof data === "string" ? data : "Sesiunile viitoare au fost anulate.";
       }
-    } else if (mode === "series") {
-      const { data, error } = await supabase.rpc("cancel_recurrence_series", {
-        p_recurrence_id: booking.recurrence_id!,
-        p_owner_override: false,
-      });
-      if (error) {
-        toast.error(error.message);
-      } else {
-        ok = true;
-        successMsg = typeof data === "string" ? data : "Seria a fost anulată.";
-      }
     } else if (mode === "suspend") {
       const { data, error } = await supabase.rpc("suspend_recurrence_until", {
         p_recurrence_id: booking.recurrence_id!,
@@ -179,7 +168,6 @@ export function BookingDetailsRenter({ booking, userEmail, onClose, onCancelled 
     if (ok) {
       if (successMsg) toast.success(successMsg);
       setRecurringOpen(false);
-      setSeriesConfirmOpen(false);
       onCancelled();
       onClose();
     }
