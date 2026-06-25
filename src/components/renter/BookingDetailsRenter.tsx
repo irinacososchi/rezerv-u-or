@@ -20,8 +20,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/external-client";
-import { formatDateRO, parseISODate } from "@/lib/date-utils";
+import { formatDateRO, parseISODate, formatDateISO, addDays } from "@/lib/date-utils";
 
 export type RenterBookingRow = {
   id: string;
@@ -49,6 +52,8 @@ type Props = {
   onCancelled: () => void;
 };
 
+type CancelMode = "single" | "future" | "series" | "suspend";
+
 function formatDurationRO(minutes: number): string {
   if (minutes <= 0) return "0 minute";
   const hours = Math.floor(minutes / 60);
@@ -75,6 +80,10 @@ function paymentBadgeClass(payment: string): string {
 export function BookingDetailsRenter({ booking, userEmail, onClose, onCancelled }: Props) {
   const navigate = useNavigate();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [recurringOpen, setRecurringOpen] = useState(false);
+  const [mode, setMode] = useState<CancelMode>("single");
+  const [untilDate, setUntilDate] = useState<string>("");
+  const [seriesConfirmOpen, setSeriesConfirmOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
   if (!booking) return null;
@@ -87,23 +96,105 @@ export function BookingDetailsRenter({ booking, userEmail, onClose, onCancelled 
   const durationMinutes =
     booking.duration_minutes ?? Math.round((booking.duration_hours ?? 0) * 60);
 
-  async function handleCancel() {
-    if (!booking) return;
-    setBusy(true);
+  const isRecurring = !!booking.recurrence_id;
+  const minUntilDate = formatDateISO(addDays(new Date(), 1));
+
+  async function cancelSingle() {
+    if (!booking) return false;
     const { error } = await supabase.rpc("cancel_booking", {
       p_booking_id: booking.id,
       p_guest_email: userEmail || booking.guest_email,
     });
-    setBusy(false);
     if (error) {
       toast.error(error.message);
-      return;
+      return false;
     }
     toast.success("Rezervarea a fost anulată.");
-    setConfirmOpen(false);
-    onCancelled();
-    onClose();
+    return true;
   }
+
+  async function handleSimpleCancel() {
+    setBusy(true);
+    const ok = await cancelSingle();
+    setBusy(false);
+    if (ok) {
+      setConfirmOpen(false);
+      onCancelled();
+      onClose();
+    }
+  }
+
+  function handleAnulareClick() {
+    if (isRecurring) {
+      setMode("single");
+      setUntilDate("");
+      setRecurringOpen(true);
+    } else {
+      setConfirmOpen(true);
+    }
+  }
+
+  async function executeRecurringChoice() {
+    if (!booking) return;
+    setBusy(true);
+    let ok = false;
+    let successMsg = "";
+    if (mode === "single") {
+      ok = await cancelSingle();
+    } else if (mode === "future") {
+      const { data, error } = await supabase.rpc("cancel_booking_and_future", {
+        p_booking_id: booking.id,
+        p_owner_override: false,
+      });
+      if (error) {
+        toast.error(error.message);
+      } else {
+        ok = true;
+        successMsg = typeof data === "string" ? data : "Sesiunile viitoare au fost anulate.";
+      }
+    } else if (mode === "series") {
+      const { data, error } = await supabase.rpc("cancel_recurrence_series", {
+        p_recurrence_id: booking.recurrence_id!,
+        p_owner_override: false,
+      });
+      if (error) {
+        toast.error(error.message);
+      } else {
+        ok = true;
+        successMsg = typeof data === "string" ? data : "Seria a fost anulată.";
+      }
+    } else if (mode === "suspend") {
+      const { data, error } = await supabase.rpc("suspend_recurrence_until", {
+        p_recurrence_id: booking.recurrence_id!,
+        p_until_date: untilDate,
+        p_owner_override: false,
+      });
+      if (error) {
+        toast.error(error.message);
+      } else {
+        ok = true;
+        successMsg = typeof data === "string" ? data : "Seria a fost suspendată.";
+      }
+    }
+    setBusy(false);
+    if (ok) {
+      if (successMsg) toast.success(successMsg);
+      setRecurringOpen(false);
+      setSeriesConfirmOpen(false);
+      onCancelled();
+      onClose();
+    }
+  }
+
+  function handleConfirmRecurring() {
+    if (mode === "series") {
+      setSeriesConfirmOpen(true);
+      return;
+    }
+    executeRecurringChoice();
+  }
+
+  const confirmDisabled = busy || (mode === "suspend" && !untilDate);
 
   return (
     <>
@@ -173,7 +264,7 @@ export function BookingDetailsRenter({ booking, userEmail, onClose, onCancelled 
               <Button
                 variant="destructive"
                 size="sm"
-                onClick={() => setConfirmOpen(true)}
+                onClick={handleAnulareClick}
               >
                 Anulează
               </Button>
@@ -195,11 +286,120 @@ export function BookingDetailsRenter({ booking, userEmail, onClose, onCancelled 
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
-                handleCancel();
+                handleSimpleCancel();
               }}
               disabled={busy}
             >
               {busy ? "Se anulează..." : "Da, anulează"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Dialog open={recurringOpen} onOpenChange={(o) => !busy && setRecurringOpen(o)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Cum vrei să anulezi?</DialogTitle>
+            <DialogDescription>
+              Această rezervare face parte dintr-o serie recurentă.
+            </DialogDescription>
+          </DialogHeader>
+
+          <RadioGroup
+            value={mode}
+            onValueChange={(v) => setMode(v as CancelMode)}
+            className="gap-3"
+          >
+            <label className="flex gap-3 items-start cursor-pointer rounded-md border p-3 hover:bg-muted/40">
+              <RadioGroupItem value="single" id="cm-single" className="mt-0.5" />
+              <div className="space-y-0.5">
+                <div className="text-sm font-medium">Doar această sesiune</div>
+                <div className="text-xs text-muted-foreground">
+                  Anulezi doar rezervarea din această zi. Restul seriei rămâne.
+                </div>
+              </div>
+            </label>
+            <label className="flex gap-3 items-start cursor-pointer rounded-md border p-3 hover:bg-muted/40">
+              <RadioGroupItem value="future" id="cm-future" className="mt-0.5" />
+              <div className="space-y-0.5">
+                <div className="text-sm font-medium">Această sesiune și toate viitoarele</div>
+                <div className="text-xs text-muted-foreground">
+                  Anulezi de azi înainte. Sesiunile trecute rămân.
+                </div>
+              </div>
+            </label>
+            <label className="flex gap-3 items-start cursor-pointer rounded-md border p-3 hover:bg-muted/40">
+              <RadioGroupItem value="series" id="cm-series" className="mt-0.5" />
+              <div className="space-y-0.5">
+                <div className="text-sm font-medium">Toată seria</div>
+                <div className="text-xs text-muted-foreground">
+                  Oprești complet seria. Toate sesiunile viitoare se anulează.
+                </div>
+              </div>
+            </label>
+            <label className="flex gap-3 items-start cursor-pointer rounded-md border p-3 hover:bg-muted/40">
+              <RadioGroupItem value="suspend" id="cm-suspend" className="mt-0.5" />
+              <div className="space-y-1 flex-1">
+                <div className="text-sm font-medium">Suspendă temporar (vacanță)</div>
+                <div className="text-xs text-muted-foreground">
+                  Anulezi sesiunile până la o dată, apoi seria continuă automat.
+                </div>
+                {mode === "suspend" && (
+                  <div className="pt-2 space-y-1">
+                    <Label htmlFor="suspend-until" className="text-xs">
+                      Seria se reia de la data:
+                    </Label>
+                    <Input
+                      id="suspend-until"
+                      type="date"
+                      min={minUntilDate}
+                      value={untilDate}
+                      onChange={(e) => setUntilDate(e.target.value)}
+                      onClick={(e) => e.preventDefault()}
+                    />
+                  </div>
+                )}
+              </div>
+            </label>
+          </RadioGroup>
+
+          <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setRecurringOpen(false)}
+              disabled={busy}
+            >
+              Înapoi
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmRecurring}
+              disabled={confirmDisabled}
+            >
+              {busy ? "Se procesează..." : "Confirmă anularea"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={seriesConfirmOpen} onOpenChange={(o) => !busy && setSeriesConfirmOpen(o)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Oprești toată seria?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ești sigur că vrei să oprești toată seria? Acțiunea e ireversibilă.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={busy}>Înapoi</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                executeRecurringChoice();
+              }}
+              disabled={busy}
+            >
+              {busy ? "Se anulează..." : "Da, anulează seria"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
