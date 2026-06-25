@@ -382,7 +382,18 @@ function OrarulMeu() {
                     <div className="flex-1 px-3 py-1 text-sm">
                       {showLabel && (
                         <div className="min-w-0">
-                          <div className="font-medium truncate">{b!.room_name}</div>
+                          <div className="font-medium truncate flex items-center gap-1">
+                            <span className="truncate">{b!.room_name}</span>
+                            {b!.recurrence_id && (
+                              <Repeat
+                                size={14}
+                                className="shrink-0 text-muted-foreground"
+                                aria-label="Rezervare recurentă"
+                              >
+                                <title>Rezervare recurentă</title>
+                              </Repeat>
+                            )}
+                          </div>
                           <div className="text-xs text-muted-foreground mt-0.5">
                             {b!.start_time.slice(0, 5)}–{b!.end_time.slice(0, 5)}
                           </div>
