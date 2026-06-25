@@ -538,12 +538,17 @@ function OrarulMeu() {
                           key={b.id}
                           onClick={() => setSelected(b)}
                           className={
-                            "w-full text-left truncate px-1 py-0.5 rounded text-[10px] " +
+                            "w-full text-left px-1 py-0.5 rounded text-[10px] flex items-center gap-1 " +
                             cellClass(b)
                           }
                           title={`${b.room_name} · ${b.start_time.slice(0, 5)}–${b.end_time.slice(0, 5)}`}
                         >
-                          {b.start_time.slice(0, 5)} {b.room_name}
+                          <span className="truncate">
+                            {b.start_time.slice(0, 5)} {b.room_name}
+                          </span>
+                          {b.recurrence_id && (
+                            <Repeat size={12} className="shrink-0 text-muted-foreground" />
+                          )}
                         </button>
                       ))}
                       {more > 0 && (
