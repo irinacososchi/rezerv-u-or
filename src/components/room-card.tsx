@@ -18,6 +18,7 @@ export interface Room {
   hasSound: boolean;
   hasBarre: boolean;
   isActive: boolean;
+  googleMapsUrl: string | null;
 }
 
 export function RoomCard({ room }: { room: Room }) {
@@ -57,10 +58,27 @@ export function RoomCard({ room }: { room: Room }) {
       <div className="flex flex-1 flex-col gap-3 p-5">
         <div>
           <h3 className="text-lg font-semibold tracking-tight">{room.name}</h3>
-          <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
-            <MapPin className="h-3.5 w-3.5" />
-            {[room.neighbourhood, room.city, room.countyName].filter(Boolean).join(", ")}
-          </p>
+          {(() => {
+            const fullAddress = [room.neighbourhood, room.city, room.countyName].filter(Boolean).join(", ");
+            const addressClasses = "mt-1 flex items-center gap-1.5 text-sm text-muted-foreground";
+            return room.googleMapsUrl ? (
+              <a
+                href={room.googleMapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className={`${addressClasses} hover:underline`}
+              >
+                <MapPin className="h-3.5 w-3.5" />
+                {fullAddress}
+              </a>
+            ) : (
+              <p className={addressClasses}>
+                <MapPin className="h-3.5 w-3.5" />
+                {fullAddress}
+              </p>
+            );
+          })()}
           {inactive && (
             <p className="mt-2 text-xs font-medium text-destructive">
               Momentan nu acceptă rezervări
