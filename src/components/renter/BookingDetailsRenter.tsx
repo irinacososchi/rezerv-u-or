@@ -83,7 +83,6 @@ export function BookingDetailsRenter({ booking, userEmail, onClose, onCancelled 
   const [recurringOpen, setRecurringOpen] = useState(false);
   const [mode, setMode] = useState<CancelMode>("single");
   const [untilDate, setUntilDate] = useState<string>("");
-  const [seriesConfirmOpen, setSeriesConfirmOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
   if (!booking) return null;
