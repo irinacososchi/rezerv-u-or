@@ -52,7 +52,7 @@ type Props = {
   onCancelled: () => void;
 };
 
-type CancelMode = "single" | "future" | "series" | "suspend";
+type CancelMode = "single" | "future" | "suspend";
 
 function formatDurationRO(minutes: number): string {
   if (minutes <= 0) return "0 minute";
@@ -83,7 +83,6 @@ export function BookingDetailsRenter({ booking, userEmail, onClose, onCancelled 
   const [recurringOpen, setRecurringOpen] = useState(false);
   const [mode, setMode] = useState<CancelMode>("single");
   const [untilDate, setUntilDate] = useState<string>("");
-  const [seriesConfirmOpen, setSeriesConfirmOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
   if (!booking) return null;
@@ -152,17 +151,6 @@ export function BookingDetailsRenter({ booking, userEmail, onClose, onCancelled 
         ok = true;
         successMsg = typeof data === "string" ? data : "Sesiunile viitoare au fost anulate.";
       }
-    } else if (mode === "series") {
-      const { data, error } = await supabase.rpc("cancel_recurrence_series", {
-        p_recurrence_id: booking.recurrence_id!,
-        p_owner_override: false,
-      });
-      if (error) {
-        toast.error(error.message);
-      } else {
-        ok = true;
-        successMsg = typeof data === "string" ? data : "Seria a fost anulată.";
-      }
     } else if (mode === "suspend") {
       const { data, error } = await supabase.rpc("suspend_recurrence_until", {
         p_recurrence_id: booking.recurrence_id!,
@@ -180,17 +168,12 @@ export function BookingDetailsRenter({ booking, userEmail, onClose, onCancelled 
     if (ok) {
       if (successMsg) toast.success(successMsg);
       setRecurringOpen(false);
-      setSeriesConfirmOpen(false);
       onCancelled();
       onClose();
     }
   }
 
   function handleConfirmRecurring() {
-    if (mode === "series") {
-      setSeriesConfirmOpen(true);
-      return;
-    }
     executeRecurringChoice();
   }
 
@@ -329,15 +312,6 @@ export function BookingDetailsRenter({ booking, userEmail, onClose, onCancelled 
               </div>
             </label>
             <label className="flex gap-3 items-start cursor-pointer rounded-md border p-3 hover:bg-muted/40">
-              <RadioGroupItem value="series" id="cm-series" className="mt-0.5" />
-              <div className="space-y-0.5">
-                <div className="text-sm font-medium">Toată seria</div>
-                <div className="text-xs text-muted-foreground">
-                  Oprești complet seria. Toate sesiunile viitoare se anulează.
-                </div>
-              </div>
-            </label>
-            <label className="flex gap-3 items-start cursor-pointer rounded-md border p-3 hover:bg-muted/40">
               <RadioGroupItem value="suspend" id="cm-suspend" className="mt-0.5" />
               <div className="space-y-1 flex-1">
                 <div className="text-sm font-medium">Suspendă temporar (vacanță)</div>
@@ -382,28 +356,6 @@ export function BookingDetailsRenter({ booking, userEmail, onClose, onCancelled 
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={seriesConfirmOpen} onOpenChange={(o) => !busy && setSeriesConfirmOpen(o)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Oprești toată seria?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Ești sigur că vrei să oprești toată seria? Acțiunea e ireversibilă.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={busy}>Înapoi</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault();
-                executeRecurringChoice();
-              }}
-              disabled={busy}
-            >
-              {busy ? "Se anulează..." : "Da, anulează seria"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
