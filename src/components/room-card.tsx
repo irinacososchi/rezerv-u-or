@@ -18,6 +18,7 @@ export interface Room {
   hasSound: boolean;
   hasBarre: boolean;
   isActive: boolean;
+  googleMapsUrl: string | null;
 }
 
 export function RoomCard({ room }: { room: Room }) {
