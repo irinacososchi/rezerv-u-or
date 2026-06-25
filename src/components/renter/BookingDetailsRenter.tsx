@@ -52,7 +52,7 @@ type Props = {
   onCancelled: () => void;
 };
 
-type CancelMode = "single" | "future" | "series" | "suspend";
+type CancelMode = "single" | "future" | "suspend";
 
 function formatDurationRO(minutes: number): string {
   if (minutes <= 0) return "0 minute";
