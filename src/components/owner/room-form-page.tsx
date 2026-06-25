@@ -831,17 +831,11 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
             <Label htmlFor="virtual_tour_url">Link Google Maps</Label>
             <Input
               id="virtual_tour_url"
-              type="url"
+              type="text"
               value={form.virtual_tour_url}
-              onChange={(e) => {
-                update("virtual_tour_url", e.target.value);
-                if (tourUrlError) setTourUrlError(null);
-              }}
+              onChange={(e) => update("virtual_tour_url", e.target.value)}
               placeholder="https://www.google.com/maps/place/..."
             />
-            {tourUrlError && (
-              <p className="text-sm text-destructive mt-1">{tourUrlError}</p>
-            )}
             <details className="mt-3">
               <summary className="text-sm text-primary cursor-pointer hover:underline">
                 Cum obțin linkul?
