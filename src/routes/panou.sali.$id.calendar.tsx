@@ -1012,7 +1012,7 @@ function RoomCalendarPage() {
         open={!!cellModal}
         onOpenChange={(o) => !o && setCellModal(null)}
       >
-        <DialogContent>
+        <DialogContent className={cellModal?.mode === "choose" ? "" : "max-h-[90vh] flex flex-col p-0"}>
           {cellModal?.mode === "choose" && (
             <>
               <DialogHeader>
@@ -1992,102 +1992,104 @@ function BlockSlotForm({
 
   return (
     <>
-      <DialogHeader>
+      <DialogHeader className="shrink-0 px-6 py-4 border-b">
         <DialogTitle>Blochează interval</DialogTitle>
         <DialogDescription>{date}</DialogDescription>
       </DialogHeader>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <Label htmlFor="start">Ora start</Label>
-          <select
-            id="start"
-            value={start}
-            onChange={(e) => setStart(e.target.value)}
-            className="w-full border rounded-md h-9 px-2 text-sm bg-background"
-          >
-            {startOptions.map((v) => (
-              <option key={v} value={v}>{v}</option>
-            ))}
-          </select>
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="end">Ora final</Label>
-          <select
-            id="end"
-            value={end}
-            onChange={(e) => setEnd(e.target.value)}
-            className="w-full border rounded-md h-9 px-2 text-sm bg-background"
-          >
-            {endOptions.map((v) => (
-              <option key={v} value={v}>{v}</option>
-            ))}
-          </select>
-        </div>
-        <div className="col-span-2 space-y-1">
-          <Label htmlFor="reason">Motiv (opțional)</Label>
-          <Input
-            id="reason"
-            placeholder="ex: Curs privat"
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-          />
-        </div>
-        <div className="col-span-2 space-y-2 pt-2 border-t">
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <input
-              type="checkbox"
-              checked={isRecurrent}
-              onChange={(e) => {
-                setIsRecurrent(e.target.checked);
-                setRecurrenceEndDate("");
-              }}
-              className="accent-primary h-4 w-4"
+      <div className="overflow-y-auto flex-1 px-6 py-4">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label htmlFor="start">Ora start</Label>
+            <select
+              id="start"
+              value={start}
+              onChange={(e) => setStart(e.target.value)}
+              className="w-full border rounded-md h-9 px-2 text-sm bg-background"
+            >
+              {startOptions.map((v) => (
+                <option key={v} value={v}>{v}</option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="end">Ora final</Label>
+            <select
+              id="end"
+              value={end}
+              onChange={(e) => setEnd(e.target.value)}
+              className="w-full border rounded-md h-9 px-2 text-sm bg-background"
+            >
+              {endOptions.map((v) => (
+                <option key={v} value={v}>{v}</option>
+              ))}
+            </select>
+          </div>
+          <div className="col-span-2 space-y-1">
+            <Label htmlFor="reason">Motiv (opțional)</Label>
+            <Input
+              id="reason"
+              placeholder="ex: Curs privat"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
             />
-            Repetă săptămânal
-          </label>
-          {isRecurrent && (
-            <div className="space-y-1 pl-6">
-              <Label className="text-xs">Până la:</Label>
-              <Input
-                type="date"
-                value={recurrenceEndDate}
-                min={date}
-                onChange={(e) => setRecurrenceEndDate(e.target.value)}
+          </div>
+          <div className="col-span-2 space-y-2 pt-2 border-t">
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isRecurrent}
+                onChange={(e) => {
+                  setIsRecurrent(e.target.checked);
+                  setRecurrenceEndDate("");
+                }}
+                className="accent-primary h-4 w-4"
               />
-              {recurrenceDates.length > 0 && (
-                <p className="text-xs text-muted-foreground">
-                  {recurrenceDates.length} blocări săptămânale
-                </p>
-              )}
+              Repetă săptămânal
+            </label>
+            {isRecurrent && (
+              <div className="space-y-1 pl-6">
+                <Label className="text-xs">Până la:</Label>
+                <Input
+                  type="date"
+                  value={recurrenceEndDate}
+                  min={date}
+                  onChange={(e) => setRecurrenceEndDate(e.target.value)}
+                />
+                {recurrenceDates.length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {recurrenceDates.length} blocări săptămânale
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+          {blockError && (
+            <div className="col-span-2 text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-md px-3 py-2">
+              {blockError}
             </div>
           )}
-        </div>
-        {blockError && (
-          <div className="col-span-2 text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-md px-3 py-2">
-            {blockError}
+          {(() => {
+            const allDates =
+              isRecurrent && recurrenceEndDate
+                ? generateWeeklyDates(date, recurrenceEndDate)
+                : [date];
+            const past = pastDates(allDates, start);
+            if (past.length === 0) return null;
+            const list = past.slice(0, 5).map(formatShortRO).join(", ");
+            const more = past.length > 5 ? ` și încă ${past.length - 5}` : "";
+            return (
+              <div className="col-span-2 text-sm text-amber-900 dark:text-amber-200 bg-amber-100/70 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 rounded-md px-3 py-2">
+                <strong>Atenție:</strong>{" "}
+                {past.length === 1
+                  ? "blochezi un interval în trecut"
+                  : `blochezi ${past.length} intervale în trecut`}{" "}
+                ({list}{more}).
+              </div>
+            );
+          })()}
           </div>
-        )}
-        {(() => {
-          const allDates =
-            isRecurrent && recurrenceEndDate
-              ? generateWeeklyDates(date, recurrenceEndDate)
-              : [date];
-          const past = pastDates(allDates, start);
-          if (past.length === 0) return null;
-          const list = past.slice(0, 5).map(formatShortRO).join(", ");
-          const more = past.length > 5 ? ` și încă ${past.length - 5}` : "";
-          return (
-            <div className="col-span-2 text-sm text-amber-900 dark:text-amber-200 bg-amber-100/70 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 rounded-md px-3 py-2">
-              <strong>Atenție:</strong>{" "}
-              {past.length === 1
-                ? "blochezi un interval în trecut"
-                : `blochezi ${past.length} intervale în trecut`}{" "}
-              ({list}{more}).
-            </div>
-          );
-        })()}
       </div>
-      <DialogFooter className="gap-2">
+      <DialogFooter className="shrink-0 px-6 py-4 border-t gap-2">
         <Button onClick={submit} disabled={busy}>
           Blochează
         </Button>
@@ -2301,193 +2303,195 @@ function ManualBookingForm({
 
   return (
     <>
-      <DialogHeader>
+      <DialogHeader className="shrink-0 px-6 py-4 border-b">
         <DialogTitle>Rezervare nouă</DialogTitle>
         <DialogDescription>{formatDateRO(parseISODate(date))}</DialogDescription>
       </DialogHeader>
 
-      <div className="space-y-3">
-        <div className="grid grid-cols-2 gap-3">
+      <div className="overflow-y-auto flex-1 px-6 py-4">
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Ora start</Label>
+              <select
+                value={manualStart}
+                onChange={(e) => setManualStart(e.target.value)}
+                className="w-full rounded-md border border-border h-9 px-2 text-sm bg-background"
+              >
+                {startOptions.map((v) => (
+                  <option key={v} value={v}>
+                    {v}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Ora final</Label>
+              <select
+                value={manualEnd}
+                onChange={(e) => setManualEnd(e.target.value)}
+                className="w-full rounded-md border border-border h-9 px-2 text-sm bg-background"
+              >
+                {endOptions.map((v) => (
+                  <option key={v} value={v}>
+                    {v}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <div className="space-y-1">
-            <Label className="text-xs">Ora start</Label>
-            <select
-              value={manualStart}
-              onChange={(e) => setManualStart(e.target.value)}
-              className="w-full rounded-md border border-border h-9 px-2 text-sm bg-background"
-            >
-              {startOptions.map((v) => (
-                <option key={v} value={v}>
-                  {v}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Ora final</Label>
-            <select
-              value={manualEnd}
-              onChange={(e) => setManualEnd(e.target.value)}
-              className="w-full rounded-md border border-border h-9 px-2 text-sm bg-background"
-            >
-              {endOptions.map((v) => (
-                <option key={v} value={v}>
-                  {v}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="space-y-1">
-          <Label htmlFor="manual-client" className="text-xs">Client (opțional)</Label>
-          <ClientSelect
-            context="owner"
-            value={manualOwnerClientId}
-            onChange={onClientChange}
-            placeholder="Fără client atribuit"
-          />
-        </div>
-
-        {manualOwnerClientId !== null && (
-          <p className="text-xs text-muted-foreground -mb-2">
-            Datele sunt preluate din clientul selectat.
-          </p>
-        )}
-
-        <div className="space-y-1">
-          <Label className="text-xs">Nume client *</Label>
-          <Input
-            value={manualName}
-            onChange={(e) => setManualName(e.target.value)}
-            placeholder="ex: Ana Ionescu"
-            disabled={manualOwnerClientId !== null}
-          />
-        </div>
-
-        <div className="space-y-1">
-          <Label className="text-xs">Telefon *</Label>
-          <Input
-            value={manualPhone}
-            onChange={(e) => setManualPhone(e.target.value)}
-            placeholder="07xxxxxxxx"
-            disabled={manualOwnerClientId !== null}
-          />
-        </div>
-
-        <div className="space-y-1">
-          <Label className="text-xs">Email (opțional)</Label>
-          <Input
-            type="email"
-            value={manualEmail}
-            onChange={(e) => setManualEmail(e.target.value)}
-            placeholder="client@email.ro"
-            disabled={manualOwnerClientId !== null}
-          />
-        </div>
-
-        {validRange && (
-          <div className="rounded-md bg-muted/40 border border-border p-3 text-sm space-y-1">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Durată</span>
-              <span className="font-medium">{formatDurationRO(durationMinutes)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Preț/oră</span>
-              <span className="font-medium">{pricePerHour} RON</span>
-            </div>
-            <div className="flex justify-between border-t pt-1 mt-1">
-              <span className="text-muted-foreground">Total</span>
-              <span className="font-semibold">{total} RON</span>
-            </div>
-          </div>
-        )}
-
-        <div className="space-y-1">
-          <Label className="text-xs">Status plată</Label>
-          <select
-            value={manualPaymentStatus}
-            onChange={(e) => setManualPaymentStatus(e.target.value)}
-            className="w-full rounded-md border border-border h-9 px-2 text-sm bg-background"
-          >
-            <option value="neplatit">Neplatit</option>
-            <option value="platit">Plătit</option>
-          </select>
-        </div>
-
-        <div className="space-y-1">
-          <Label className="text-xs">Notă (opțional)</Label>
-          <Input
-            value={manualNote}
-            onChange={(e) => setManualNote(e.target.value)}
-            placeholder="ex: A sunat joi seara"
-          />
-        </div>
-
-
-
-
-
-        <div className="space-y-2 pt-2 border-t">
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <input
-              type="checkbox"
-              checked={isRecurrent}
-              onChange={(e) => {
-                setIsRecurrent(e.target.checked);
-                setRecurrenceEndDate("");
-              }}
-              className="accent-primary h-4 w-4"
+            <Label htmlFor="manual-client" className="text-xs">Client (opțional)</Label>
+            <ClientSelect
+              context="owner"
+              value={manualOwnerClientId}
+              onChange={onClientChange}
+              placeholder="Fără client atribuit"
             />
-            Rezervare recurentă săptămânală
-          </label>
-          {isRecurrent && (
-            <div className="space-y-1 pl-6">
-              <Label className="text-xs">Până la:</Label>
-              <Input
-                type="date"
-                value={recurrenceEndDate}
-                min={date}
-                onChange={(e) => setRecurrenceEndDate(e.target.value)}
-              />
-              {recurrenceDates.length > 0 && validRange && (
-                <p className="text-xs text-muted-foreground">
-                  {recurrenceDates.length} rezervări săptămânale · Total:{" "}
-                  <span className="font-semibold text-foreground">
-                    {recurrenceDates.length * total} RON
-                  </span>
-                </p>
-              )}
+          </div>
+
+          {manualOwnerClientId !== null && (
+            <p className="text-xs text-muted-foreground -mb-2">
+              Datele sunt preluate din clientul selectat.
+            </p>
+          )}
+
+          <div className="space-y-1">
+            <Label className="text-xs">Nume client *</Label>
+            <Input
+              value={manualName}
+              onChange={(e) => setManualName(e.target.value)}
+              placeholder="ex: Ana Ionescu"
+              disabled={manualOwnerClientId !== null}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <Label className="text-xs">Telefon *</Label>
+            <Input
+              value={manualPhone}
+              onChange={(e) => setManualPhone(e.target.value)}
+              placeholder="07xxxxxxxx"
+              disabled={manualOwnerClientId !== null}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <Label className="text-xs">Email (opțional)</Label>
+            <Input
+              type="email"
+              value={manualEmail}
+              onChange={(e) => setManualEmail(e.target.value)}
+              placeholder="client@email.ro"
+              disabled={manualOwnerClientId !== null}
+            />
+          </div>
+
+          {validRange && (
+            <div className="rounded-md bg-muted/40 border border-border p-3 text-sm space-y-1">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Durată</span>
+                <span className="font-medium">{formatDurationRO(durationMinutes)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Preț/oră</span>
+                <span className="font-medium">{pricePerHour} RON</span>
+              </div>
+              <div className="flex justify-between border-t pt-1 mt-1">
+                <span className="text-muted-foreground">Total</span>
+                <span className="font-semibold">{total} RON</span>
+              </div>
             </div>
           )}
-        </div>
 
-        {manualError && (
-          <div className="text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-md px-3 py-2">
-            {manualError}
+          <div className="space-y-1">
+            <Label className="text-xs">Status plată</Label>
+            <select
+              value={manualPaymentStatus}
+              onChange={(e) => setManualPaymentStatus(e.target.value)}
+              className="w-full rounded-md border border-border h-9 px-2 text-sm bg-background"
+            >
+              <option value="neplatit">Neplatit</option>
+              <option value="platit">Plătit</option>
+            </select>
           </div>
-        )}
-        {(() => {
-          const allDates =
-            isRecurrent && recurrenceEndDate
-              ? generateWeeklyDates(date, recurrenceEndDate)
-              : [date];
-          const past = pastDates(allDates, manualStart);
-          if (past.length === 0) return null;
-          const list = past.slice(0, 5).map(formatShortRO).join(", ");
-          const more = past.length > 5 ? ` și încă ${past.length - 5}` : "";
-          return (
-            <div className="text-sm text-amber-900 dark:text-amber-200 bg-amber-100/70 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 rounded-md px-3 py-2">
-              <strong>Atenție:</strong>{" "}
-              {past.length === 1
-                ? "rezervarea este în trecut"
-                : `${past.length} apariții sunt în trecut`}{" "}
-              ({list}{more}).
+
+          <div className="space-y-1">
+            <Label className="text-xs">Notă (opțional)</Label>
+            <Input
+              value={manualNote}
+              onChange={(e) => setManualNote(e.target.value)}
+              placeholder="ex: A sunat joi seara"
+            />
+          </div>
+
+
+
+
+
+          <div className="space-y-2 pt-2 border-t">
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isRecurrent}
+                onChange={(e) => {
+                  setIsRecurrent(e.target.checked);
+                  setRecurrenceEndDate("");
+                }}
+                className="accent-primary h-4 w-4"
+              />
+              Rezervare recurentă săptămânală
+            </label>
+            {isRecurrent && (
+              <div className="space-y-1 pl-6">
+                <Label className="text-xs">Până la:</Label>
+                <Input
+                  type="date"
+                  value={recurrenceEndDate}
+                  min={date}
+                  onChange={(e) => setRecurrenceEndDate(e.target.value)}
+                />
+                {recurrenceDates.length > 0 && validRange && (
+                  <p className="text-xs text-muted-foreground">
+                    {recurrenceDates.length} rezervări săptămânale · Total:{" "}
+                    <span className="font-semibold text-foreground">
+                      {recurrenceDates.length * total} RON
+                    </span>
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
+          {manualError && (
+            <div className="text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-md px-3 py-2">
+              {manualError}
             </div>
-          );
-        })()}
+          )}
+          {(() => {
+            const allDates =
+              isRecurrent && recurrenceEndDate
+                ? generateWeeklyDates(date, recurrenceEndDate)
+                : [date];
+            const past = pastDates(allDates, manualStart);
+            if (past.length === 0) return null;
+            const list = past.slice(0, 5).map(formatShortRO).join(", ");
+            const more = past.length > 5 ? ` și încă ${past.length - 5}` : "";
+            return (
+              <div className="text-sm text-amber-900 dark:text-amber-200 bg-amber-100/70 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 rounded-md px-3 py-2">
+                <strong>Atenție:</strong>{" "}
+                {past.length === 1
+                  ? "rezervarea este în trecut"
+                  : `${past.length} apariții sunt în trecut`}{" "}
+                ({list}{more}).
+              </div>
+            );
+          })()}
+          </div>
       </div>
 
-      <DialogFooter className="gap-2">
+      <DialogFooter className="shrink-0 px-6 py-4 border-t gap-2">
         <Button variant="outline" onClick={onClose} disabled={manualSubmitting}>
           Anulează
         </Button>
