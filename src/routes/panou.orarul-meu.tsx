@@ -385,13 +385,9 @@ function OrarulMeu() {
                           <div className="font-medium truncate flex items-center gap-1">
                             <span className="truncate">{b!.room_name}</span>
                             {b!.recurrence_id && (
-                              <Repeat
-                                size={14}
-                                className="shrink-0 text-muted-foreground"
-                                aria-label="Rezervare recurentă"
-                              >
-                                <title>Rezervare recurentă</title>
-                              </Repeat>
+                              <span title="Rezervare recurentă" className="inline-flex shrink-0">
+                                <Repeat size={14} className="text-muted-foreground" />
+                              </span>
                             )}
                           </div>
                           <div className="text-xs text-muted-foreground mt-0.5">
