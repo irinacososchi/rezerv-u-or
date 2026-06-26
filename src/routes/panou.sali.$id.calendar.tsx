@@ -1326,7 +1326,41 @@ function BookingDetails({
     }
   }
 
+  async function saveTariff() {
+    const newTariff = Number(tariffValue);
+    if (!Number.isFinite(newTariff) || newTariff < 0) {
+      return toast.error("Tarif invalid.");
+    }
+    setBusy(true);
+    const scope: "single" | "future" = recurrenceInfo ? tariffScope : "single";
+    const { data, error } = await supabase.rpc("edit_booking_tariff", {
+      p_booking_id: entry.id,
+      p_new_tariff: newTariff,
+      p_scope: scope,
+      p_owner_override: true,
+    });
+    setBusy(false);
+    if (error) {
+      return toast.error(error.message || "Eroare la salvarea tarifului");
+    }
+    toast.success(typeof data === "string" ? data : "Tarif actualizat.");
+    setTariffOpen(false);
+    onChanged();
+    onClose();
+  }
+
   const isPaid = details.payment_status === "platit";
+  const currentPph = details.price_per_hour ?? 0;
+  const durationHoursForTariff = details.duration_hours ?? 0;
+  const discountForTariff = details.discount_amount ?? 0;
+  const parsedTariff = Number(tariffValue);
+  const tariffValid =
+    tariffValue.trim() !== "" &&
+    Number.isFinite(parsedTariff) &&
+    parsedTariff >= 0 &&
+    parsedTariff !== currentPph;
+  const previewSubtotal = Number.isFinite(parsedTariff) ? parsedTariff * durationHoursForTariff : 0;
+  const previewTotal = Math.max(0, previewSubtotal - discountForTariff);
 
   return (
     <>
