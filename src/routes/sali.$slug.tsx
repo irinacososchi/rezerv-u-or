@@ -416,9 +416,25 @@ function RoomDetailsPage() {
     if (daySelections.length > 1 && isRecurrent) {
       setIsRecurrent(false);
       setRecurrenceDates([]);
-      setRecurrenceDates([]);
     }
   }, [daySelections.length, isRecurrent]);
+
+  // Auto-populate recurrence dates from the selected start date through end of
+  // (start month + 3 full months). No user-provided end date.
+  useEffect(() => {
+    if (!isRecurrent) {
+      setRecurrenceDates([]);
+      return;
+    }
+    const startDate = daySelections[0]?.date;
+    if (!startDate) {
+      setRecurrenceDates([]);
+      return;
+    }
+    setRecurrenceDates(generateWeeklyDatesHorizon(startDate));
+  }, [isRecurrent, daySelections]);
+
+
 
   // Auth + favorite state
   useEffect(() => {
