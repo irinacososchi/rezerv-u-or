@@ -636,6 +636,8 @@ function CheckoutPage() {
   }, [dateObj, slotStart, pricing]);
 
   const isRecurrentSearch = search.recurrent === "true";
+  const isRecurringView =
+    isRecurrentSearch && (search.recurrenceCount ?? 0) > 0 && !isMultiDay;
 
   // ---------- Build full list of slots that WILL be created (incl recurrence) ----------
   const allSlotsToCreate = useMemo<ParsedSlot[]>(() => {
