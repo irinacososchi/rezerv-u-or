@@ -923,7 +923,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
                       <p className="font-medium capitalize">{t === "instant" ? "Instant" : "Manual"}</p>
                       <p className="text-xs text-muted-foreground mt-1">
                         {t === "instant"
-                          ? "Rezervările se confirmă automat."
+                          ? "Rezervările se confirmă automat. Rezervările recurente trebuie aprobate manual."
                           : "Aprobi manual fiecare cerere."}
                       </p>
                     </label>
