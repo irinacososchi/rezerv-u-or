@@ -525,10 +525,12 @@ function CheckoutPage() {
       if (cancelled) return;
       if (!user) {
         setIsLoggedIn(false);
+        setRenterUserId(null);
         setProfileLoaded(true);
         return;
       }
       setIsLoggedIn(true);
+      setRenterUserId(user.id);
       const { data: profile } = await supabase
         .from("profiles")
         .select("full_name, email, phone")
