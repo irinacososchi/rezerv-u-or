@@ -15,10 +15,13 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ChevronLeft, ChevronRight, CalendarPlus, Ban, ChevronDown, Check, Repeat } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { ChevronLeft, ChevronRight, CalendarPlus, Ban, ChevronDown, Check, Repeat, CalendarIcon } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import {
   getDayOfWeek,
   formatDateISO,
@@ -1143,7 +1146,7 @@ function BookingDetails({
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelScope, setCancelScope] = useState<"this" | "future" | "suspend">("this");
   const [cancelUntilDate, setCancelUntilDate] = useState("");
-  const minUntilDate = formatDateISO(addDays(new Date(), 1));
+  
 
   const [tariffOpen, setTariffOpen] = useState(false);
   const [tariffValue, setTariffValue] = useState("");
@@ -1576,17 +1579,34 @@ function BookingDetails({
                   </div>
                   {cancelScope === "suspend" && (
                     <div className="pt-2 space-y-1">
-                      <Label htmlFor="owner-suspend-until" className="text-xs">
-                        Seria se reia de la data:
-                      </Label>
-                      <Input
-                        id="owner-suspend-until"
-                        type="date"
-                        min={minUntilDate}
-                        value={cancelUntilDate}
-                        onChange={(e) => setCancelUntilDate(e.target.value)}
-                        onClick={(e) => e.preventDefault()}
-                      />
+                      <Label className="text-xs">Seria se reia de la data:</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !cancelUntilDate && "text-muted-foreground",
+                            )}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {cancelUntilDate
+                              ? format(parseISODate(cancelUntilDate), "dd.MM.yyyy")
+                              : "Alege o dată"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start" onClick={(e) => e.stopPropagation()}>
+                          <Calendar
+                            mode="single"
+                            selected={cancelUntilDate ? parseISODate(cancelUntilDate) : undefined}
+                            onSelect={(d) => d && setCancelUntilDate(format(d, "yyyy-MM-dd"))}
+                            disabled={(d) => details.booking_date ? d < parseISODate(details.booking_date) : false}
+                            initialFocus
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                        </PopoverContent>
+                      </Popover>
                     </div>
                   )}
                 </div>
