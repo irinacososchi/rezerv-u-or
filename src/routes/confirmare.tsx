@@ -182,14 +182,14 @@ function ConfirmarePage() {
           </div>
           <h1 className="mt-6 text-3xl font-bold tracking-tight">
             {search.recurrent && search.recurrenceCount > 1
-              ? "Rezervări recurente confirmate!"
+              ? "Cerere de rezervare recurentă trimisă!"
               : isConfirmed
                 ? "Rezervare confirmată!"
                 : "Cerere trimisă!"}
           </h1>
           <p className="mt-3 text-muted-foreground">
             {search.recurrent && search.recurrenceCount > 1
-              ? `${search.recurrenceCount} rezervări săptămânale au fost create cu succes.`
+              ? `Cererea pentru ${search.recurrenceCount} apariții a fost trimisă. Aștepți confirmarea proprietarului.`
               : isConfirmed
                 ? "Vei primi detaliile pe email și WhatsApp."
                 : "Proprietarul va confirma în curând. Vei fi notificat pe email."}
