@@ -1632,12 +1632,6 @@ function BookingDetails({
                 value={tariffValue}
                 onChange={(e) => setTariffValue(e.target.value)}
               />
-              <div className="text-xs text-muted-foreground">
-                Total nou: {Number.isFinite(parsedTariff) ? previewTotal : 0} RON
-                {discountForTariff > 0 && (
-                  <> (subtotal {Number.isFinite(parsedTariff) ? previewSubtotal : 0} − discount {discountForTariff})</>
-                )}
-              </div>
             </div>
             {recurrenceInfo && (
               <RadioGroup
