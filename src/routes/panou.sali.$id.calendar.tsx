@@ -1146,7 +1146,7 @@ function BookingDetails({
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelScope, setCancelScope] = useState<"this" | "future" | "suspend">("this");
   const [cancelUntilDate, setCancelUntilDate] = useState("");
-  const minUntilDate = formatDateISO(addDays(new Date(), 1));
+  
 
   const [tariffOpen, setTariffOpen] = useState(false);
   const [tariffValue, setTariffValue] = useState("");
