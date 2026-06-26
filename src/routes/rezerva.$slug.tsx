@@ -1268,84 +1268,88 @@ function CheckoutPage() {
                   );
                 })()}
 
-              <div className="mt-5 space-y-3 text-sm">
-                {isMultiDay ? (
-                  <div>
-                    <span className="text-sm text-muted-foreground">
-                      Rezervări ({parsedSlots.length} intervale în {uniqueDates.length} zile)
-                    </span>
-                    <ul className="mt-2 space-y-2">
-                      {uniqueDates.map((d) => {
-                        const slotsForDate = parsedSlots.filter((s) => s.date === d);
-                        const dObj = parseISODate(d);
-                        return (
-                          <li key={d} className="border-b border-border pb-2 last:border-0">
-                            <div className="text-sm font-medium">
-                              {formatDateRO(dObj)}
-                            </div>
-                            <ul className="ml-3 mt-1">
-                              {slotsForDate.map((s, i) => (
-                                <li key={i} className="text-sm">
-                                  {s.start}–{s.end}
-                                </li>
-                              ))}
-                            </ul>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                ) : (
-                  <>
-                    <Row label="Data" value={formatDateRO(dateObj)} />
-                    {isMultiSlot ? (
+              {!isRecurringView && (
+                <>
+                  <div className="mt-5 space-y-3 text-sm">
+                    {isMultiDay ? (
                       <div>
                         <span className="text-sm text-muted-foreground">
-                          Intervale ({parsedSlots.length})
+                          Rezervări ({parsedSlots.length} intervale în {uniqueDates.length} zile)
                         </span>
-                        <ul className="mt-1 space-y-0.5">
-                          {parsedSlots.map((iv, i) => (
-                            <li key={i} className="text-sm font-medium">
-                              {iv.start}–{iv.end}
-                            </li>
-                          ))}
+                        <ul className="mt-2 space-y-2">
+                          {uniqueDates.map((d) => {
+                            const slotsForDate = parsedSlots.filter((s) => s.date === d);
+                            const dObj = parseISODate(d);
+                            return (
+                              <li key={d} className="border-b border-border pb-2 last:border-0">
+                                <div className="text-sm font-medium">
+                                  {formatDateRO(dObj)}
+                                </div>
+                                <ul className="ml-3 mt-1">
+                                  {slotsForDate.map((s, i) => (
+                                    <li key={i} className="text-sm">
+                                      {s.start}–{s.end}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </li>
+                            );
+                          })}
                         </ul>
                       </div>
                     ) : (
-                      <Row label="Interval" value={`${effectiveStart}–${effectiveEnd}`} />
+                      <>
+                        <Row label="Data" value={formatDateRO(dateObj)} />
+                        {isMultiSlot ? (
+                          <div>
+                            <span className="text-sm text-muted-foreground">
+                              Intervale ({parsedSlots.length})
+                            </span>
+                            <ul className="mt-1 space-y-0.5">
+                              {parsedSlots.map((iv, i) => (
+                                <li key={i} className="text-sm font-medium">
+                                  {iv.start}–{iv.end}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ) : (
+                          <Row label="Interval" value={`${effectiveStart}–${effectiveEnd}`} />
+                        )}
+                      </>
                     )}
-                  </>
-                )}
-                <Row
-                  label="Durată"
-                  value={`${recalculatedDuration} ${recalculatedDuration === 1 ? "oră" : "ore"}`}
-                />
-                <Row label="Subtotal" value={`${subtotal} ${currency}`} />
+                    <Row
+                      label="Durată"
+                      value={`${recalculatedDuration} ${recalculatedDuration === 1 ? "oră" : "ore"}`}
+                    />
+                    <Row label="Subtotal" value={`${subtotal} ${currency}`} />
 
-                {voucher && (
-                  <Row
-                    label={
-                      <span className="inline-flex items-center gap-1 text-primary">
-                        <Tag className="h-3 w-3" />
-                        Voucher {voucher.code}
-                      </span>
-                    }
-                    value={<span className="text-primary">−{discountAmount} {currency}</span>}
-                  />
-                )}
-              </div>
+                    {voucher && (
+                      <Row
+                        label={
+                          <span className="inline-flex items-center gap-1 text-primary">
+                            <Tag className="h-3 w-3" />
+                            Voucher {voucher.code}
+                          </span>
+                        }
+                        value={<span className="text-primary">−{discountAmount} {currency}</span>}
+                      />
+                    )}
+                  </div>
 
-              <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
-                <span className="text-base font-semibold">Total</span>
-                <span className="text-2xl font-bold text-primary">
-                  {finalTotal} {currency}
-                </span>
-              </div>
+                  <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
+                    <span className="text-base font-semibold">Total</span>
+                    <span className="text-2xl font-bold text-primary">
+                      {finalTotal} {currency}
+                    </span>
+                  </div>
 
-              {recalculatedTotal !== (search.total ?? 0) && (
-                <p className="text-xs text-muted-foreground mt-1 text-right">
-                  Total actualizat după excluderea manuală a unor slot-uri.
-                </p>
+                  {recalculatedTotal !== (search.total ?? 0) && (
+                    <p className="text-xs text-muted-foreground mt-1 text-right">
+                      Total actualizat după excluderea manuală a unor slot-uri.
+                    </p>
+                  )}
+                </>
               )}
 
               {(() => {
