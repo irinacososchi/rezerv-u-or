@@ -215,7 +215,6 @@ function RoomDetailsPage() {
   const [activeDayIndex, setActiveDayIndex] = useState<number | null>(null);
   const [isPickingNewDay, setIsPickingNewDay] = useState(true);
   const [isRecurrent, setIsRecurrent] = useState(false);
-  const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
   const [recurrenceDates, setRecurrenceDates] = useState<Date[]>([]);
 
   // Favorites
