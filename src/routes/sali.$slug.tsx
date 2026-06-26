@@ -148,13 +148,22 @@ function getPriceForSlot(
   return getPriceForSlotDetailed(date, slotStart, pricingRules).price;
 }
 
-function generateWeeklyDates(selectedDate: Date, endDateStr: string): Date[] {
-  if (!endDateStr) return [];
-  const end = new Date(endDateStr);
+/**
+ * Generate weekly occurrences AFTER the selected start date, through the end
+ * of (start month + 3 full months). The start date itself is NOT included
+ * here — it's the first booking; this list is the additional recurring dates.
+ */
+function generateWeeklyDatesHorizon(selectedDate: Date): Date[] {
+  // Last day of (startMonth + 3): day 0 of month+4
+  const horizon = new Date(
+    selectedDate.getFullYear(),
+    selectedDate.getMonth() + 4,
+    0,
+  );
   const dates: Date[] = [];
   const current = new Date(selectedDate);
   current.setDate(current.getDate() + 7);
-  while (current <= end) {
+  while (current <= horizon) {
     dates.push(new Date(current));
     current.setDate(current.getDate() + 7);
   }
@@ -206,7 +215,6 @@ function RoomDetailsPage() {
   const [activeDayIndex, setActiveDayIndex] = useState<number | null>(null);
   const [isPickingNewDay, setIsPickingNewDay] = useState(true);
   const [isRecurrent, setIsRecurrent] = useState(false);
-  const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
   const [recurrenceDates, setRecurrenceDates] = useState<Date[]>([]);
 
   // Favorites
@@ -407,10 +415,26 @@ function RoomDetailsPage() {
   useEffect(() => {
     if (daySelections.length > 1 && isRecurrent) {
       setIsRecurrent(false);
-      setRecurrenceEndDate("");
       setRecurrenceDates([]);
     }
   }, [daySelections.length, isRecurrent]);
+
+  // Auto-populate recurrence dates from the selected start date through end of
+  // (start month + 3 full months). No user-provided end date.
+  useEffect(() => {
+    if (!isRecurrent) {
+      setRecurrenceDates([]);
+      return;
+    }
+    const startDate = daySelections[0]?.date;
+    if (!startDate) {
+      setRecurrenceDates([]);
+      return;
+    }
+    setRecurrenceDates(generateWeeklyDatesHorizon(startDate));
+  }, [isRecurrent, daySelections]);
+
+
 
   // Auth + favorite state
   useEffect(() => {
@@ -1422,8 +1446,6 @@ function RoomDetailsPage() {
                         checked={isRecurrent}
                         onChange={(e) => {
                           setIsRecurrent(e.target.checked);
-                          setRecurrenceEndDate("");
-                          setRecurrenceDates([]);
                         }}
                         className="accent-primary"
                       />
@@ -1432,44 +1454,21 @@ function RoomDetailsPage() {
                       </span>
                     </label>
 
-                    {isRecurrent && summary.days[0] && (
-                      <div className="mt-3 space-y-3">
-                        <div>
-                          <label className="text-xs text-muted-foreground">
-                            Repetă până la:
-                          </label>
-                          <input
-                            type="date"
-                            value={recurrenceEndDate}
-                            min={formatDateISO(addDays(summary.days[0].date, 7))}
-                            max={formatDateISO(addDays(new Date(), 365 * 2))}
-                            onChange={(e) => {
-                              setRecurrenceEndDate(e.target.value);
-                              setRecurrenceDates(
-                                generateWeeklyDates(summary.days[0].date, e.target.value),
-                              );
-                            }}
-                            className="mt-1 w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm"
-                          />
-                        </div>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Programarea se reînnoiește automat lunar. O poți anula oricând.
+                    </p>
 
-                        {recurrenceDates.length > 0 && (
-                          <div className="rounded-md bg-primary/5 border border-primary/20 p-3 text-sm">
-                            <div className="font-medium text-primary">
-                              {recurrenceDates.length + 1} rezervări săptămânale
-                            </div>
-                            <div className="mt-1 text-xs text-muted-foreground">
-                              În fiecare {DAY_NAMES_RO[getDayOfWeek(summary.days[0].date)]}
-                            </div>
-                            <div className="mt-1 text-xs text-muted-foreground">
-                              Din {summary.days[0].date.toLocaleDateString("ro-RO")} până în{" "}
-                              {new Date(recurrenceEndDate).toLocaleDateString("ro-RO")}
-                            </div>
-                            <div className="mt-2 font-semibold text-primary">
-                              Total: {(recurrenceDates.length + 1) * summary.total} {currency}
-                            </div>
-                          </div>
-                        )}
+                    {isRecurrent && summary.days[0] && recurrenceDates.length > 0 && (
+                      <div className="mt-3 rounded-md bg-primary/5 border border-primary/20 p-3 text-sm">
+                        <div className="font-medium text-primary">
+                          {recurrenceDates.length + 1} rezervări săptămânale
+                        </div>
+                        <div className="mt-1 text-xs text-muted-foreground">
+                          În fiecare {DAY_NAMES_RO[getDayOfWeek(summary.days[0].date)]}
+                        </div>
+                        <div className="mt-2 font-semibold text-primary">
+                          Total: {(recurrenceDates.length + 1) * summary.total} {currency}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -1515,7 +1514,7 @@ function RoomDetailsPage() {
                         duration: (summary.totalHours * SLOT_GRANULARITY_MINUTES) / 60,
                         total: summary.total,
                         recurrent: recurrentActive ? "true" : "false",
-                        recurrenceEnd: recurrentActive ? recurrenceEndDate : "",
+                        recurrenceEnd: "",
                         recurrenceCount: recurrentActive ? recurrenceDates.length + 1 : 0,
                       },
                     });
