@@ -1514,7 +1514,7 @@ function RoomDetailsPage() {
                         duration: (summary.totalHours * SLOT_GRANULARITY_MINUTES) / 60,
                         total: summary.total,
                         recurrent: recurrentActive ? "true" : "false",
-                        recurrenceEnd: recurrentActive ? recurrenceEndDate : "",
+                        recurrenceEnd: "",
                         recurrenceCount: recurrentActive ? recurrenceDates.length + 1 : 0,
                       },
                     });
