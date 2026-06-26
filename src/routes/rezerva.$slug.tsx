@@ -809,7 +809,7 @@ function CheckoutPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [renterUserId, finalSlotsToCreate, room?.id]);
 
-
+  const recalculatedTotal = useMemo(() => {
     return finalSlotsToCreate.reduce((sum, s) => sum + calcSlotTotal(s, pricing), 0);
   }, [finalSlotsToCreate, pricing]);
 
