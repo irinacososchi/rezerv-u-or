@@ -1489,6 +1489,32 @@ function BookingDetails({
             </Button>
           )}
           {details.status !== "anulată" && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span tabIndex={0}>
+                    <Button
+                      variant="secondary"
+                      disabled={busy || tariffLocked}
+                      onClick={() => {
+                        setTariffValue(String(currentPph));
+                        setTariffScope("single");
+                        setTariffOpen(true);
+                      }}
+                    >
+                      Editează tarif
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                {tariffLocked && (
+                  <TooltipContent>
+                    Tariful nu mai poate fi modificat cu mai puțin de 48 de ore înainte.
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          {details.status !== "anulată" && (
             recurrenceInfo ? (
               <Button
                 variant="destructive"
