@@ -1376,6 +1376,43 @@ function CheckoutPage() {
                       </>
                     )}
                   </div>
+                  {(() => {
+                    if (finalSlotsToCreate.length === 0) return null;
+                    const monthMap = new Map<string, number>();
+                    for (const s of finalSlotsToCreate) {
+                      const d = parseISODate(s.date);
+                      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+                      monthMap.set(key, (monthMap.get(key) ?? 0) + calcSlotTotal(s, pricing));
+                    }
+                    const sortedKeys = Array.from(monthMap.keys()).sort();
+                    const startDate = parseISODate(firstDate);
+                    const startMonthKey = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, "0")}`;
+                    const proRataCurrentMonth = monthMap.get(startMonthKey) ?? 0;
+                    const firstFullMonthKey = sortedKeys.find((k) => k > startMonthKey);
+                    const monthlyPrice = firstFullMonthKey ? (monthMap.get(firstFullMonthKey) ?? 0) : 0;
+                    const startsFirstOfMonth = startDate.getDate() === 1;
+                    return (
+                      <div className="mt-3 space-y-2 border-t border-primary/10 pt-3">
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="text-muted-foreground">Preț lunar:</span>
+                          <span className="text-right font-medium">
+                            {monthlyPrice.toFixed(2)} {currency}
+                          </span>
+                        </div>
+                        {!startsFirstOfMonth && (
+                          <div className="flex items-center justify-between gap-4">
+                            <span className="text-muted-foreground">Luna curentă (pro-rata):</span>
+                            <span className="text-right font-medium">
+                              {proRataCurrentMonth.toFixed(2)} {currency}
+                            </span>
+                          </div>
+                        )}
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                          Prima plată include luna curentă pro-rata. Apoi se facturează lunar.
+                        </p>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
 
