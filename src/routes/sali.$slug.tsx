@@ -1458,19 +1458,38 @@ function RoomDetailsPage() {
                       Programarea se reînnoiește automat lunar. O poți anula oricând.
                     </p>
 
-                    {isRecurrent && summary.days[0] && recurrenceDates.length > 0 && (
-                      <div className="mt-3 rounded-md bg-primary/5 border border-primary/20 p-3 text-sm">
-                        <div className="font-medium text-primary">
-                          {recurrenceDates.length + 1} rezervări săptămânale
+                    {isRecurrent && summary.days[0] && recurrenceDates.length > 0 && (() => {
+                      const allDates = [summary.days[0].date, ...recurrenceDates];
+                      const monthMap = new Map<string, number>();
+                      for (const d of allDates) {
+                        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+                        monthMap.set(key, (monthMap.get(key) ?? 0) + summary.total);
+                      }
+                      const sortedKeys = Array.from(monthMap.keys()).sort();
+                      const startDate = summary.days[0].date;
+                      const startMonthKey = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, "0")}`;
+                      const proRata = monthMap.get(startMonthKey) ?? 0;
+                      const firstFullMonthKey = sortedKeys.find((k) => k > startMonthKey);
+                      const monthlyPrice = firstFullMonthKey ? (monthMap.get(firstFullMonthKey) ?? 0) : 0;
+                      const startsFirstOfMonth = startDate.getDate() === 1;
+                      const weekday = DAY_NAMES_RO[getDayOfWeek(summary.days[0].date)];
+                      return (
+                        <div className="mt-3 rounded-md bg-primary/5 border border-primary/20 p-3 text-sm space-y-2">
+                          <div className="font-semibold text-primary">În fiecare {weekday}</div>
+                          <div className="text-xs text-muted-foreground">Se reînnoiește automat lunar.</div>
+                          <div className="flex items-center justify-between gap-4 pt-1">
+                            <span className="text-muted-foreground">Preț lunar:</span>
+                            <span className="font-medium">{monthlyPrice.toFixed(2)} {currency}</span>
+                          </div>
+                          {!startsFirstOfMonth && (
+                            <div className="flex items-center justify-between gap-4">
+                              <span className="text-muted-foreground">Luna curentă (pro-rata):</span>
+                              <span className="font-medium">{proRata.toFixed(2)} {currency}</span>
+                            </div>
+                          )}
                         </div>
-                        <div className="mt-1 text-xs text-muted-foreground">
-                          În fiecare {DAY_NAMES_RO[getDayOfWeek(summary.days[0].date)]}
-                        </div>
-                        <div className="mt-2 font-semibold text-primary">
-                          Total: {(recurrenceDates.length + 1) * summary.total} {currency}
-                        </div>
-                      </div>
-                    )}
+                      );
+                    })()}
                   </div>
                 )}
 
