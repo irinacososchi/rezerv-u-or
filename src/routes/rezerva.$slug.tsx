@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Tag, Check, Loader2, AlertCircle, AlertTriangle, ChevronDown, ChevronUp, X } from "lucide-react";
+import { ArrowLeft, Tag, Check, Loader2, AlertCircle, AlertTriangle, ChevronDown, ChevronUp, X, Info } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
@@ -1029,7 +1030,7 @@ function CheckoutPage() {
         voucher_code_id: applyVoucher ? voucher?.id ?? null : null,
         voucher_code_used: applyVoucher ? voucher?.code ?? null : null,
         total_amount: intervalTotal,
-        status: room.booking_type === "instant" ? "confirmată" : "în așteptare",
+        status: recurrenceId ? "în așteptare" : (room.booking_type === "instant" ? "confirmată" : "în așteptare"),
         payment_method: paymentMethod,
         payment_status: "neplatit",
         needs_invoice: needsInvoice,
@@ -1378,7 +1379,16 @@ function CheckoutPage() {
                 </div>
               )}
 
-              {room.booking_type !== "instant" && (
+              {search.recurrent === "true" && search.recurrenceCount > 1 && !isMultiDay && room.booking_type === "instant" && (
+                <Alert className="mt-3 border-blue-200 bg-blue-50 text-blue-900 [&>svg]:text-blue-600">
+                  <Info className="h-4 w-4" />
+                  <AlertDescription className="text-xs text-blue-900">
+                    Rezervările recurente necesită aprobarea proprietarului. Vei primi o confirmare după ce proprietarul acceptă seria.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {room.booking_type !== "instant" && !(search.recurrent === "true" && search.recurrenceCount > 1) && (
                 <p className="mt-3 rounded-md bg-secondary px-3 py-2 text-xs text-muted-foreground">
                   Această sală necesită confirmarea proprietarului. Vei primi un răspuns în scurt timp.
                 </p>
