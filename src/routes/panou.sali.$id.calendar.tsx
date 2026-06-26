@@ -1352,15 +1352,12 @@ function BookingDetails({
   const isPaid = details.payment_status === "platit";
   const currentPph = details.price_per_hour ?? 0;
   const durationHoursForTariff = details.duration_hours ?? 0;
-  const discountForTariff = details.discount_amount ?? 0;
   const parsedTariff = Number(tariffValue);
   const tariffValid =
     tariffValue.trim() !== "" &&
     Number.isFinite(parsedTariff) &&
     parsedTariff >= 0 &&
     parsedTariff !== currentPph;
-  const previewSubtotal = Number.isFinite(parsedTariff) ? parsedTariff * durationHoursForTariff : 0;
-  const previewTotal = Math.max(0, previewSubtotal - discountForTariff);
 
   return (
     <>
@@ -1632,12 +1629,6 @@ function BookingDetails({
                 value={tariffValue}
                 onChange={(e) => setTariffValue(e.target.value)}
               />
-              <div className="text-xs text-muted-foreground">
-                Total nou: {Number.isFinite(parsedTariff) ? previewTotal : 0} RON
-                {discountForTariff > 0 && (
-                  <> (subtotal {Number.isFinite(parsedTariff) ? previewSubtotal : 0} − discount {discountForTariff})</>
-                )}
-              </div>
             </div>
             {recurrenceInfo && (
               <RadioGroup
