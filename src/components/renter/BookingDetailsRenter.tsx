@@ -100,7 +100,7 @@ export function BookingDetailsRenter({ booking, userEmail, onClose, onCancelled 
     booking.duration_minutes ?? Math.round((booking.duration_hours ?? 0) * 60);
 
   const isRecurring = !!booking.recurrence_id;
-  const minUntilDate = formatDateISO(addDays(new Date(), 1));
+  
 
   async function cancelSingle() {
     if (!booking) return false;
