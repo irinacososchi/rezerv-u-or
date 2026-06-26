@@ -325,17 +325,32 @@ export function BookingDetailsRenter({ booking, userEmail, onClose, onCancelled 
                 </div>
                 {mode === "suspend" && (
                   <div className="pt-2 space-y-1">
-                    <Label htmlFor="suspend-until" className="text-xs">
-                      Seria se reia de la data:
-                    </Label>
-                    <Input
-                      id="suspend-until"
-                      type="date"
-                      min={minUntilDate}
-                      value={untilDate}
-                      onChange={(e) => setUntilDate(e.target.value)}
-                      onClick={(e) => e.preventDefault()}
-                    />
+                    <Label className="text-xs">Seria se reia de la data:</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !untilDate && "text-muted-foreground",
+                          )}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {untilDate ? format(parseISODate(untilDate), "dd.MM.yyyy") : "Alege o dată"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start" onClick={(e) => e.stopPropagation()}>
+                        <Calendar
+                          mode="single"
+                          selected={untilDate ? parseISODate(untilDate) : undefined}
+                          onSelect={(d) => d && setUntilDate(format(d, "yyyy-MM-dd"))}
+                          disabled={(d) => booking ? d < parseISODate(booking.booking_date) : false}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 )}
               </div>
