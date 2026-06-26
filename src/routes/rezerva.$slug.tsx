@@ -1669,6 +1669,50 @@ function CheckoutPage() {
               </div>
             )}
 
+            {selfConflicts.length > 0 && (() => {
+              const isRecurring = search.recurrent === "true" && search.recurrenceCount > 1;
+              const fmt = (c: SelfConflict) => {
+                const d = parseISODate(c.date);
+                const dd = String(d.getDate()).padStart(2, "0");
+                const mm = String(d.getMonth() + 1).padStart(2, "0");
+                return `${dd}.${mm}.${d.getFullYear()} · ${c.start}–${c.end}`;
+              };
+              const shown = selfConflicts.slice(0, 5);
+              const extra = selfConflicts.length - shown.length;
+              return (
+                <Alert className="border-amber-300 bg-amber-50 text-amber-900 [&>svg]:text-amber-600">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription className="text-sm text-amber-900">
+                    {isRecurring || selfConflicts.length > 1 ? (
+                      <>
+                        <div className="font-medium">Unele date se suprapun cu rezervările tale</div>
+                        <div className="mt-1">
+                          {selfConflicts.length} din sesiunile recurente se suprapun cu rezervări existente:
+                        </div>
+                        <ul className="mt-1 list-disc pl-5 text-xs">
+                          {shown.map((c) => (
+                            <li key={`${c.date}-${c.start}-${c.end}`}>{fmt(c)}</li>
+                          ))}
+                        </ul>
+                        {extra > 0 && (
+                          <div className="mt-1 text-xs">și încă {extra}</div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <div className="font-medium">Suprapunere cu o altă rezervare</div>
+                        <div className="mt-1">
+                          Ai deja o rezervare în acest interval. Poți continua, dar verifică să nu fie o greșeală.
+                        </div>
+                      </>
+                    )}
+                  </AlertDescription>
+                </Alert>
+              );
+            })()}
+
+
+
             <Button
               type="submit"
               size="lg"
