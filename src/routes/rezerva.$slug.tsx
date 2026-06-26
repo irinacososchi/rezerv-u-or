@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Tag, Check, Loader2, AlertCircle, AlertTriangle, ChevronDown, ChevronUp, X } from "lucide-react";
+import { ArrowLeft, Tag, Check, Loader2, AlertCircle, AlertTriangle, ChevronDown, ChevronUp, X, Info } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
