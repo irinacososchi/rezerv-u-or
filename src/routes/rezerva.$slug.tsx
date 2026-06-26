@@ -1352,7 +1352,7 @@ function CheckoutPage() {
                 </>
               )}
 
-              {(() => {
+              {!isRecurringView && (() => {
                 const allLabels = new Set<string>();
                 for (const s of finalSlotsToCreate) {
                   const startMin = timeToMinutes(s.start);
@@ -1403,16 +1403,18 @@ function CheckoutPage() {
                 </div>
               )}
 
-              <BookingSlotsPreview
-                allSlots={allSlotsToCreate}
-                excludedKeys={excludedSlotKeys}
-                onToggleExclusion={toggleSlotExclusion}
-                busyKeys={busySlotKeys}
-                pricing={pricing}
-                currency={currency}
-              />
+              {!isRecurringView && (
+                <BookingSlotsPreview
+                  allSlots={allSlotsToCreate}
+                  excludedKeys={excludedSlotKeys}
+                  onToggleExclusion={toggleSlotExclusion}
+                  busyKeys={busySlotKeys}
+                  pricing={pricing}
+                  currency={currency}
+                />
+              )}
 
-              {hasBusyConflicts && (
+              {!isRecurringView && hasBusyConflicts && (
                 <div className="mt-3">
                   <button
                     type="button"
@@ -1430,22 +1432,11 @@ function CheckoutPage() {
                 </div>
               )}
 
-              {search.recurrent === "true" && search.recurrenceCount > 0 && !isMultiDay && (
-                <div className="mt-3 rounded-md bg-primary/5 border border-primary/20 p-3 text-sm">
-                  <div className="font-medium text-primary">
-                    Rezervare recurentă săptămânală
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    {search.recurrenceCount} apariții
-                    {search.recurrenceEnd && (
-                      <>
-                        {" "}· până în{" "}
-                        {parseISODate(search.recurrenceEnd).toLocaleDateString("ro-RO")}
-                      </>
-                    )}
-                  </div>
+              {isRecurringView && (
+                <div className="mt-5 rounded-md bg-primary/5 border border-primary/20 p-4 text-sm space-y-3">
                   {(() => {
-                    if (finalSlotsToCreate.length === 0) return null;
+                    const startDate = parseISODate(firstDate);
+                    const weekday = DAY_NAMES_RO[getDayOfWeek(startDate)];
                     const monthMap = new Map<string, number>();
                     for (const s of finalSlotsToCreate) {
                       const d = parseISODate(s.date);
@@ -1453,32 +1444,41 @@ function CheckoutPage() {
                       monthMap.set(key, (monthMap.get(key) ?? 0) + calcSlotTotal(s, pricing));
                     }
                     const sortedKeys = Array.from(monthMap.keys()).sort();
-                    const startDate = parseISODate(firstDate);
                     const startMonthKey = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, "0")}`;
                     const proRataCurrentMonth = monthMap.get(startMonthKey) ?? 0;
                     const firstFullMonthKey = sortedKeys.find((k) => k > startMonthKey);
                     const monthlyPrice = firstFullMonthKey ? (monthMap.get(firstFullMonthKey) ?? 0) : 0;
                     const startsFirstOfMonth = startDate.getDate() === 1;
                     return (
-                      <div className="mt-3 space-y-2 border-t border-primary/10 pt-3">
-                        <div className="flex items-center justify-between gap-4">
-                          <span className="text-muted-foreground">Preț lunar:</span>
-                          <span className="text-right font-medium">
-                            {monthlyPrice.toFixed(2)} {currency}
-                          </span>
+                      <>
+                        <div className="space-y-2">
+                          <Row label="Data început" value={formatDateRO(startDate)} />
+                          <Row label="Interval" value={`${effectiveStart}–${effectiveEnd}`} />
+                          <Row
+                            label="Recurență"
+                            value={`În fiecare ${weekday}, se reînnoiește lunar`}
+                          />
                         </div>
-                        {!startsFirstOfMonth && (
+                        <div className="space-y-2 border-t border-primary/10 pt-3">
                           <div className="flex items-center justify-between gap-4">
-                            <span className="text-muted-foreground">Luna curentă (pro-rata):</span>
-                            <span className="text-right font-medium">
-                              {proRataCurrentMonth.toFixed(2)} {currency}
+                            <span className="text-muted-foreground">Preț lunar:</span>
+                            <span className="text-right font-semibold text-primary">
+                              {monthlyPrice.toFixed(2)} {currency}
                             </span>
                           </div>
-                        )}
-                        <p className="text-[10px] text-muted-foreground leading-relaxed">
-                          Prima plată include luna curentă pro-rata. Apoi se facturează lunar.
-                        </p>
-                      </div>
+                          {!startsFirstOfMonth && (
+                            <div className="flex items-center justify-between gap-4">
+                              <span className="text-muted-foreground">Luna curentă (pro-rata):</span>
+                              <span className="text-right font-medium">
+                                {proRataCurrentMonth.toFixed(2)} {currency}
+                              </span>
+                            </div>
+                          )}
+                          <p className="text-[11px] text-muted-foreground leading-relaxed pt-1">
+                            Prima plată include luna curentă pro-rata. Apoi se facturează lunar.
+                          </p>
+                        </div>
+                      </>
                     );
                   })()}
                 </div>
