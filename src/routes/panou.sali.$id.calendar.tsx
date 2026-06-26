@@ -1359,8 +1359,6 @@ function BookingDetails({
     Number.isFinite(parsedTariff) &&
     parsedTariff >= 0 &&
     parsedTariff !== currentPph;
-  const previewSubtotal = Number.isFinite(parsedTariff) ? parsedTariff * durationHoursForTariff : 0;
-  const previewTotal = Math.max(0, previewSubtotal - discountForTariff);
 
   return (
     <>
