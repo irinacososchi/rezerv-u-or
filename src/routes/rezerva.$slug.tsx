@@ -1379,7 +1379,16 @@ function CheckoutPage() {
                 </div>
               )}
 
-              {room.booking_type !== "instant" && (
+              {search.recurrent === "true" && search.recurrenceCount > 1 && !isMultiDay && room.booking_type === "instant" && (
+                <Alert className="mt-3 border-blue-200 bg-blue-50 text-blue-900 [&>svg]:text-blue-600">
+                  <Info className="h-4 w-4" />
+                  <AlertDescription className="text-xs text-blue-900">
+                    Rezervările recurente necesită aprobarea proprietarului. Vei primi o confirmare după ce proprietarul acceptă seria.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {room.booking_type !== "instant" && !(search.recurrent === "true" && search.recurrenceCount > 1) && (
                 <p className="mt-3 rounded-md bg-secondary px-3 py-2 text-xs text-muted-foreground">
                   Această sală necesită confirmarea proprietarului. Vei primi un răspuns în scurt timp.
                 </p>
