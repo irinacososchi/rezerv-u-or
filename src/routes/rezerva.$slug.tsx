@@ -515,6 +515,7 @@ function CheckoutPage() {
 
   // ---------- Auth / profile prefill ----------
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [renterUserId, setRenterUserId] = useState<string | null>(null);
   const [, setProfileLoaded] = useState(false);
 
   useEffect(() => {
@@ -524,10 +525,12 @@ function CheckoutPage() {
       if (cancelled) return;
       if (!user) {
         setIsLoggedIn(false);
+        setRenterUserId(null);
         setProfileLoaded(true);
         return;
       }
       setIsLoggedIn(true);
+      setRenterUserId(user.id);
       const { data: profile } = await supabase
         .from("profiles")
         .select("full_name, email, phone")
@@ -746,6 +749,65 @@ function CheckoutPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allSlotsToCreate.length, room?.id]);
 
+  // ---------- Self-overlap check (warning, non-blocking) ----------
+  type SelfConflict = { date: string; start: string; end: string };
+  const [selfConflicts, setSelfConflicts] = useState<SelfConflict[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function run() {
+      if (!renterUserId || finalSlotsToCreate.length === 0) {
+        setSelfConflicts([]);
+        return;
+      }
+      const dates = Array.from(new Set(finalSlotsToCreate.map((s) => s.date)));
+      const { data, error } = await supabase
+        .from("bookings")
+        .select("booking_date, start_time, end_time, status, room_id")
+        .eq("renter_id", renterUserId)
+        .in("status", ["în așteptare", "confirmată"])
+        .in("booking_date", dates);
+      if (cancelled) return;
+      if (error) {
+        setSelfConflicts([]);
+        return;
+      }
+      const existing = (data ?? []) as {
+        booking_date: string;
+        start_time: string;
+        end_time: string;
+        room_id: string;
+      }[];
+      const conflicts: SelfConflict[] = [];
+      for (const s of finalSlotsToCreate) {
+        const hit = existing.some((b) => {
+          if (b.booking_date !== s.date) return false;
+          // Skip if same room+exact same slot (means it's already-this-booking edge);
+          // since this is pre-insert, normally no match — but guard just in case.
+          if (
+            b.room_id === room?.id &&
+            slotFromTime(b.start_time) === s.start &&
+            slotFromTime(b.end_time) === s.end
+          ) {
+            return true;
+          }
+          return intervalsOverlap(
+            s.start,
+            s.end,
+            slotFromTime(b.start_time),
+            slotFromTime(b.end_time),
+          );
+        });
+        if (hit) conflicts.push({ date: s.date, start: s.start, end: s.end });
+      }
+      setSelfConflicts(conflicts);
+    }
+    run();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [renterUserId, finalSlotsToCreate, room?.id]);
 
   const recalculatedTotal = useMemo(() => {
     return finalSlotsToCreate.reduce((sum, s) => sum + calcSlotTotal(s, pricing), 0);
@@ -1606,6 +1668,50 @@ function CheckoutPage() {
                 <span>{submitError}</span>
               </div>
             )}
+
+            {selfConflicts.length > 0 && (() => {
+              const isRecurring = search.recurrent === "true" && search.recurrenceCount > 1;
+              const fmt = (c: SelfConflict) => {
+                const d = parseISODate(c.date);
+                const dd = String(d.getDate()).padStart(2, "0");
+                const mm = String(d.getMonth() + 1).padStart(2, "0");
+                return `${dd}.${mm}.${d.getFullYear()} · ${c.start}–${c.end}`;
+              };
+              const shown = selfConflicts.slice(0, 5);
+              const extra = selfConflicts.length - shown.length;
+              return (
+                <Alert className="border-amber-300 bg-amber-50 text-amber-900 [&>svg]:text-amber-600">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription className="text-sm text-amber-900">
+                    {isRecurring || selfConflicts.length > 1 ? (
+                      <>
+                        <div className="font-medium">Unele date se suprapun cu rezervările tale</div>
+                        <div className="mt-1">
+                          {selfConflicts.length} din sesiunile recurente se suprapun cu rezervări existente:
+                        </div>
+                        <ul className="mt-1 list-disc pl-5 text-xs">
+                          {shown.map((c) => (
+                            <li key={`${c.date}-${c.start}-${c.end}`}>{fmt(c)}</li>
+                          ))}
+                        </ul>
+                        {extra > 0 && (
+                          <div className="mt-1 text-xs">și încă {extra}</div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <div className="font-medium">Suprapunere cu o altă rezervare</div>
+                        <div className="mt-1">
+                          Ai deja o rezervare în acest interval. Poți continua, dar verifică să nu fie o greșeală.
+                        </div>
+                      </>
+                    )}
+                  </AlertDescription>
+                </Alert>
+              );
+            })()}
+
+
 
             <Button
               type="submit"
