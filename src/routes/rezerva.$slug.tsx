@@ -1030,7 +1030,7 @@ function CheckoutPage() {
         voucher_code_id: applyVoucher ? voucher?.id ?? null : null,
         voucher_code_used: applyVoucher ? voucher?.code ?? null : null,
         total_amount: intervalTotal,
-        status: room.booking_type === "instant" ? "confirmată" : "în așteptare",
+        status: recurrenceId ? "în așteptare" : (room.booking_type === "instant" ? "confirmată" : "în așteptare"),
         payment_method: paymentMethod,
         payment_status: "neplatit",
         needs_invoice: needsInvoice,
