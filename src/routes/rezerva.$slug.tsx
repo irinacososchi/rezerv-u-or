@@ -515,6 +515,7 @@ function CheckoutPage() {
 
   // ---------- Auth / profile prefill ----------
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [renterUserId, setRenterUserId] = useState<string | null>(null);
   const [, setProfileLoaded] = useState(false);
 
   useEffect(() => {
