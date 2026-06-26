@@ -1446,8 +1446,6 @@ function RoomDetailsPage() {
                         checked={isRecurrent}
                         onChange={(e) => {
                           setIsRecurrent(e.target.checked);
-                          setRecurrenceEndDate("");
-                          setRecurrenceDates([]);
                         }}
                         className="accent-primary"
                       />
@@ -1456,44 +1454,21 @@ function RoomDetailsPage() {
                       </span>
                     </label>
 
-                    {isRecurrent && summary.days[0] && (
-                      <div className="mt-3 space-y-3">
-                        <div>
-                          <label className="text-xs text-muted-foreground">
-                            Repetă până la:
-                          </label>
-                          <input
-                            type="date"
-                            value={recurrenceEndDate}
-                            min={formatDateISO(addDays(summary.days[0].date, 7))}
-                            max={formatDateISO(addDays(new Date(), 365 * 2))}
-                            onChange={(e) => {
-                              setRecurrenceEndDate(e.target.value);
-                              setRecurrenceDates(
-                                generateWeeklyDates(summary.days[0].date, e.target.value),
-                              );
-                            }}
-                            className="mt-1 w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm"
-                          />
-                        </div>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Programarea se reînnoiește automat lunar. O poți anula oricând.
+                    </p>
 
-                        {recurrenceDates.length > 0 && (
-                          <div className="rounded-md bg-primary/5 border border-primary/20 p-3 text-sm">
-                            <div className="font-medium text-primary">
-                              {recurrenceDates.length + 1} rezervări săptămânale
-                            </div>
-                            <div className="mt-1 text-xs text-muted-foreground">
-                              În fiecare {DAY_NAMES_RO[getDayOfWeek(summary.days[0].date)]}
-                            </div>
-                            <div className="mt-1 text-xs text-muted-foreground">
-                              Din {summary.days[0].date.toLocaleDateString("ro-RO")} până în{" "}
-                              {new Date(recurrenceEndDate).toLocaleDateString("ro-RO")}
-                            </div>
-                            <div className="mt-2 font-semibold text-primary">
-                              Total: {(recurrenceDates.length + 1) * summary.total} {currency}
-                            </div>
-                          </div>
-                        )}
+                    {isRecurrent && summary.days[0] && recurrenceDates.length > 0 && (
+                      <div className="mt-3 rounded-md bg-primary/5 border border-primary/20 p-3 text-sm">
+                        <div className="font-medium text-primary">
+                          {recurrenceDates.length + 1} rezervări săptămânale
+                        </div>
+                        <div className="mt-1 text-xs text-muted-foreground">
+                          În fiecare {DAY_NAMES_RO[getDayOfWeek(summary.days[0].date)]}
+                        </div>
+                        <div className="mt-2 font-semibold text-primary">
+                          Total: {(recurrenceDates.length + 1) * summary.total} {currency}
+                        </div>
                       </div>
                     )}
                   </div>
