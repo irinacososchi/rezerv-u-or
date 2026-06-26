@@ -1352,7 +1352,6 @@ function BookingDetails({
   const isPaid = details.payment_status === "platit";
   const currentPph = details.price_per_hour ?? 0;
   const durationHoursForTariff = details.duration_hours ?? 0;
-  
   const parsedTariff = Number(tariffValue);
   const tariffValid =
     tariffValue.trim() !== "" &&
