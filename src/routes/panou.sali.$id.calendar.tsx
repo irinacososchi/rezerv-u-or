@@ -1610,6 +1610,72 @@ function BookingDetails({
           </DialogContent>
         </Dialog>
       )}
+
+      <Dialog open={tariffOpen} onOpenChange={setTariffOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editează tariful</DialogTitle>
+            <DialogDescription>
+              Tarif curent: {currentPph} RON/oră · Durată: {durationHoursForTariff}h
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor="new-tariff" className="text-xs">
+                Tarif nou (RON/oră)
+              </Label>
+              <Input
+                id="new-tariff"
+                type="number"
+                min={0}
+                step="any"
+                value={tariffValue}
+                onChange={(e) => setTariffValue(e.target.value)}
+              />
+              <div className="text-xs text-muted-foreground">
+                Total nou: {Number.isFinite(parsedTariff) ? previewTotal : 0} RON
+                {discountForTariff > 0 && (
+                  <> (subtotal {Number.isFinite(parsedTariff) ? previewSubtotal : 0} − discount {discountForTariff})</>
+                )}
+              </div>
+            </div>
+            {recurrenceInfo && (
+              <RadioGroup
+                value={tariffScope}
+                onValueChange={(v) => setTariffScope(v as "single" | "future")}
+                className="gap-3"
+              >
+                <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer hover:bg-muted/40">
+                  <RadioGroupItem value="single" className="mt-0.5" />
+                  <div className="text-sm">
+                    <div className="font-medium">Doar această rezervare</div>
+                    <div className="text-xs text-muted-foreground">
+                      Schimbi tariful doar pentru această sesiune.
+                    </div>
+                  </div>
+                </label>
+                <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer hover:bg-muted/40">
+                  <RadioGroupItem value="future" className="mt-0.5" />
+                  <div className="text-sm">
+                    <div className="font-medium">Această sesiune și toate viitoarele</div>
+                    <div className="text-xs text-muted-foreground">
+                      Schimbi tariful pentru această apariție și toate cele viitoare din serie (peste 48h). Trecutul rămâne neschimbat.
+                    </div>
+                  </div>
+                </label>
+              </RadioGroup>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTariffOpen(false)} disabled={busy}>
+              Renunță
+            </Button>
+            <Button onClick={saveTariff} disabled={busy || !tariffValid}>
+              {busy ? "Se salvează..." : "Salvează tariful"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
