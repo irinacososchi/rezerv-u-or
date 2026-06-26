@@ -17,6 +17,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChevronLeft, ChevronRight, CalendarPlus, Ban, ChevronDown, Check, Repeat } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import {
   getDayOfWeek,
@@ -1144,6 +1145,18 @@ function BookingDetails({
   const [cancelUntilDate, setCancelUntilDate] = useState("");
   const minUntilDate = formatDateISO(addDays(new Date(), 1));
 
+  const [tariffOpen, setTariffOpen] = useState(false);
+  const [tariffValue, setTariffValue] = useState("");
+  const [tariffScope, setTariffScope] = useState<"single" | "future">("single");
+
+  const bookingStartMs = useMemo(() => {
+    if (!details.booking_date || !details.start_time) return null;
+    const [y, m, d] = details.booking_date.split("-").map((n) => parseInt(n, 10));
+    const [hh, mm] = details.start_time.slice(0, 5).split(":").map((n) => parseInt(n, 10));
+    return new Date(y, m - 1, d, hh, mm).getTime();
+  }, [details.booking_date, details.start_time]);
+  const tariffLocked = bookingStartMs != null && bookingStartMs < Date.now() + 48 * 3600 * 1000;
+
   // Fetch full booking row (price_per_hour, discount_amount, renter_notes)
   useEffect(() => {
     let cancelled = false;
@@ -1313,7 +1326,41 @@ function BookingDetails({
     }
   }
 
+  async function saveTariff() {
+    const newTariff = Number(tariffValue);
+    if (!Number.isFinite(newTariff) || newTariff < 0) {
+      return toast.error("Tarif invalid.");
+    }
+    setBusy(true);
+    const scope: "single" | "future" = recurrenceInfo ? tariffScope : "single";
+    const { data, error } = await supabase.rpc("edit_booking_tariff", {
+      p_booking_id: entry.id,
+      p_new_tariff: newTariff,
+      p_scope: scope,
+      p_owner_override: true,
+    });
+    setBusy(false);
+    if (error) {
+      return toast.error(error.message || "Eroare la salvarea tarifului");
+    }
+    toast.success(typeof data === "string" ? data : "Tarif actualizat.");
+    setTariffOpen(false);
+    onChanged();
+    onClose();
+  }
+
   const isPaid = details.payment_status === "platit";
+  const currentPph = details.price_per_hour ?? 0;
+  const durationHoursForTariff = details.duration_hours ?? 0;
+  const discountForTariff = details.discount_amount ?? 0;
+  const parsedTariff = Number(tariffValue);
+  const tariffValid =
+    tariffValue.trim() !== "" &&
+    Number.isFinite(parsedTariff) &&
+    parsedTariff >= 0 &&
+    parsedTariff !== currentPph;
+  const previewSubtotal = Number.isFinite(parsedTariff) ? parsedTariff * durationHoursForTariff : 0;
+  const previewTotal = Math.max(0, previewSubtotal - discountForTariff);
 
   return (
     <>
@@ -1442,6 +1489,32 @@ function BookingDetails({
             </Button>
           )}
           {details.status !== "anulată" && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span tabIndex={0}>
+                    <Button
+                      variant="secondary"
+                      disabled={busy || tariffLocked}
+                      onClick={() => {
+                        setTariffValue(String(currentPph));
+                        setTariffScope("single");
+                        setTariffOpen(true);
+                      }}
+                    >
+                      Editează tarif
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                {tariffLocked && (
+                  <TooltipContent>
+                    Tariful nu mai poate fi modificat cu mai puțin de 48 de ore înainte.
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          {details.status !== "anulată" && (
             recurrenceInfo ? (
               <Button
                 variant="destructive"
@@ -1537,6 +1610,72 @@ function BookingDetails({
           </DialogContent>
         </Dialog>
       )}
+
+      <Dialog open={tariffOpen} onOpenChange={setTariffOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editează tariful</DialogTitle>
+            <DialogDescription>
+              Tarif curent: {currentPph} RON/oră · Durată: {durationHoursForTariff}h
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor="new-tariff" className="text-xs">
+                Tarif nou (RON/oră)
+              </Label>
+              <Input
+                id="new-tariff"
+                type="number"
+                min={0}
+                step="any"
+                value={tariffValue}
+                onChange={(e) => setTariffValue(e.target.value)}
+              />
+              <div className="text-xs text-muted-foreground">
+                Total nou: {Number.isFinite(parsedTariff) ? previewTotal : 0} RON
+                {discountForTariff > 0 && (
+                  <> (subtotal {Number.isFinite(parsedTariff) ? previewSubtotal : 0} − discount {discountForTariff})</>
+                )}
+              </div>
+            </div>
+            {recurrenceInfo && (
+              <RadioGroup
+                value={tariffScope}
+                onValueChange={(v) => setTariffScope(v as "single" | "future")}
+                className="gap-3"
+              >
+                <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer hover:bg-muted/40">
+                  <RadioGroupItem value="single" className="mt-0.5" />
+                  <div className="text-sm">
+                    <div className="font-medium">Doar această rezervare</div>
+                    <div className="text-xs text-muted-foreground">
+                      Schimbi tariful doar pentru această sesiune.
+                    </div>
+                  </div>
+                </label>
+                <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer hover:bg-muted/40">
+                  <RadioGroupItem value="future" className="mt-0.5" />
+                  <div className="text-sm">
+                    <div className="font-medium">Această sesiune și toate viitoarele</div>
+                    <div className="text-xs text-muted-foreground">
+                      Schimbi tariful pentru această apariție și toate cele viitoare din serie (peste 48h). Trecutul rămâne neschimbat.
+                    </div>
+                  </div>
+                </label>
+              </RadioGroup>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTariffOpen(false)} disabled={busy}>
+              Renunță
+            </Button>
+            <Button onClick={saveTariff} disabled={busy || !tariffValid}>
+              {busy ? "Se salvează..." : "Salvează tariful"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
