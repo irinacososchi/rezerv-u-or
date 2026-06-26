@@ -749,8 +749,67 @@ function CheckoutPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allSlotsToCreate.length, room?.id]);
 
+  // ---------- Self-overlap check (warning, non-blocking) ----------
+  type SelfConflict = { date: string; start: string; end: string };
+  const [selfConflicts, setSelfConflicts] = useState<SelfConflict[]>([]);
 
-  const recalculatedTotal = useMemo(() => {
+  useEffect(() => {
+    let cancelled = false;
+    async function run() {
+      if (!renterUserId || finalSlotsToCreate.length === 0) {
+        setSelfConflicts([]);
+        return;
+      }
+      const dates = Array.from(new Set(finalSlotsToCreate.map((s) => s.date)));
+      const { data, error } = await supabase
+        .from("bookings")
+        .select("booking_date, start_time, end_time, status, room_id")
+        .eq("renter_id", renterUserId)
+        .in("status", ["în așteptare", "confirmată"])
+        .in("booking_date", dates);
+      if (cancelled) return;
+      if (error) {
+        setSelfConflicts([]);
+        return;
+      }
+      const existing = (data ?? []) as {
+        booking_date: string;
+        start_time: string;
+        end_time: string;
+        room_id: string;
+      }[];
+      const conflicts: SelfConflict[] = [];
+      for (const s of finalSlotsToCreate) {
+        const hit = existing.some((b) => {
+          if (b.booking_date !== s.date) return false;
+          // Skip if same room+exact same slot (means it's already-this-booking edge);
+          // since this is pre-insert, normally no match — but guard just in case.
+          if (
+            b.room_id === room?.id &&
+            slotFromTime(b.start_time) === s.start &&
+            slotFromTime(b.end_time) === s.end
+          ) {
+            return true;
+          }
+          return intervalsOverlap(
+            s.start,
+            s.end,
+            slotFromTime(b.start_time),
+            slotFromTime(b.end_time),
+          );
+        });
+        if (hit) conflicts.push({ date: s.date, start: s.start, end: s.end });
+      }
+      setSelfConflicts(conflicts);
+    }
+    run();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [renterUserId, finalSlotsToCreate, room?.id]);
+
+
     return finalSlotsToCreate.reduce((sum, s) => sum + calcSlotTotal(s, pricing), 0);
   }, [finalSlotsToCreate, pricing]);
 
