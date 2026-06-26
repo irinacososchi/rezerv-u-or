@@ -1145,6 +1145,18 @@ function BookingDetails({
   const [cancelUntilDate, setCancelUntilDate] = useState("");
   const minUntilDate = formatDateISO(addDays(new Date(), 1));
 
+  const [tariffOpen, setTariffOpen] = useState(false);
+  const [tariffValue, setTariffValue] = useState("");
+  const [tariffScope, setTariffScope] = useState<"single" | "future">("single");
+
+  const bookingStartMs = useMemo(() => {
+    if (!details.booking_date || !details.start_time) return null;
+    const [y, m, d] = details.booking_date.split("-").map((n) => parseInt(n, 10));
+    const [hh, mm] = details.start_time.slice(0, 5).split(":").map((n) => parseInt(n, 10));
+    return new Date(y, m - 1, d, hh, mm).getTime();
+  }, [details.booking_date, details.start_time]);
+  const tariffLocked = bookingStartMs != null && bookingStartMs < Date.now() + 48 * 3600 * 1000;
+
   // Fetch full booking row (price_per_hour, discount_amount, renter_notes)
   useEffect(() => {
     let cancelled = false;
