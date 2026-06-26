@@ -415,7 +415,7 @@ function RoomDetailsPage() {
   useEffect(() => {
     if (daySelections.length > 1 && isRecurrent) {
       setIsRecurrent(false);
-      setRecurrenceEndDate("");
+      setRecurrenceDates([]);
       setRecurrenceDates([]);
     }
   }, [daySelections.length, isRecurrent]);
