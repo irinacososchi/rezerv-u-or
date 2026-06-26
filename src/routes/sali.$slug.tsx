@@ -148,13 +148,22 @@ function getPriceForSlot(
   return getPriceForSlotDetailed(date, slotStart, pricingRules).price;
 }
 
-function generateWeeklyDates(selectedDate: Date, endDateStr: string): Date[] {
-  if (!endDateStr) return [];
-  const end = new Date(endDateStr);
+/**
+ * Generate weekly occurrences AFTER the selected start date, through the end
+ * of (start month + 3 full months). The start date itself is NOT included
+ * here — it's the first booking; this list is the additional recurring dates.
+ */
+function generateWeeklyDatesHorizon(selectedDate: Date): Date[] {
+  // Last day of (startMonth + 3): day 0 of month+4
+  const horizon = new Date(
+    selectedDate.getFullYear(),
+    selectedDate.getMonth() + 4,
+    0,
+  );
   const dates: Date[] = [];
   const current = new Date(selectedDate);
   current.setDate(current.getDate() + 7);
-  while (current <= end) {
+  while (current <= horizon) {
     dates.push(new Date(current));
     current.setDate(current.getDate() + 7);
   }
