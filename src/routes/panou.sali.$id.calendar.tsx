@@ -15,10 +15,13 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ChevronLeft, ChevronRight, CalendarPlus, Ban, ChevronDown, Check, Repeat } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { ChevronLeft, ChevronRight, CalendarPlus, Ban, ChevronDown, Check, Repeat, CalendarIcon } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import {
   getDayOfWeek,
   formatDateISO,
