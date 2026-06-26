@@ -28,7 +28,7 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/external-client";
-import { formatDateRO, parseISODate, formatDateISO, addDays } from "@/lib/date-utils";
+import { formatDateRO, parseISODate } from "@/lib/date-utils";
 
 export type RenterBookingRow = {
   id: string;
