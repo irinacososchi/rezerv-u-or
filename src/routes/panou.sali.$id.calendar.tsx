@@ -1579,17 +1579,34 @@ function BookingDetails({
                   </div>
                   {cancelScope === "suspend" && (
                     <div className="pt-2 space-y-1">
-                      <Label htmlFor="owner-suspend-until" className="text-xs">
-                        Seria se reia de la data:
-                      </Label>
-                      <Input
-                        id="owner-suspend-until"
-                        type="date"
-                        min={minUntilDate}
-                        value={cancelUntilDate}
-                        onChange={(e) => setCancelUntilDate(e.target.value)}
-                        onClick={(e) => e.preventDefault()}
-                      />
+                      <Label className="text-xs">Seria se reia de la data:</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !cancelUntilDate && "text-muted-foreground",
+                            )}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {cancelUntilDate
+                              ? format(parseISODate(cancelUntilDate), "dd.MM.yyyy")
+                              : "Alege o dată"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start" onClick={(e) => e.stopPropagation()}>
+                          <Calendar
+                            mode="single"
+                            selected={cancelUntilDate ? parseISODate(cancelUntilDate) : undefined}
+                            onSelect={(d) => d && setCancelUntilDate(format(d, "yyyy-MM-dd"))}
+                            disabled={(d) => details.booking_date ? d < parseISODate(details.booking_date) : false}
+                            initialFocus
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                        </PopoverContent>
+                      </Popover>
                     </div>
                   )}
                 </div>
