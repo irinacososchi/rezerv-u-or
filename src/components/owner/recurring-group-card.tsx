@@ -17,6 +17,8 @@ import {
   getGroupStatusLabel,
   type Booking,
 } from "@/lib/group-recurring-bookings";
+import { getDayOfWeek, DAY_NAMES_RO, parseISODate } from "@/lib/date-utils";
+
 
 interface Props {
   groupId: string;
