@@ -1374,7 +1374,7 @@ function BookingDetails({
       {recurrenceInfo && (
         <div className="rounded-md bg-primary/5 border border-primary/20 p-3 text-sm">
           <div className="font-medium text-primary">
-            Rezervare recurentă · apariția {recurrenceInfo.index} din {recurrenceInfo.total}
+            Rezervare recurentă · apariția {recurrenceInfo.index}
           </div>
           <div className="text-xs text-muted-foreground mt-1">
             Săptămânal, același interval
