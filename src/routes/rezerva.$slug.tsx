@@ -1445,7 +1445,7 @@ function CheckoutPage() {
                     }
                     const sortedKeys = Array.from(monthMap.keys()).sort();
                     const startMonthKey = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, "0")}`;
-                    const proRataCurrentMonth = monthMap.get(startMonthKey) ?? 0;
+                    const currentMonthAmount = monthMap.get(startMonthKey) ?? 0;
                     const firstFullMonthKey = sortedKeys.find((k) => k > startMonthKey);
                     const monthlyPrice = firstFullMonthKey ? (monthMap.get(firstFullMonthKey) ?? 0) : 0;
                     const startsFirstOfMonth = startDate.getDate() === 1;
@@ -1468,14 +1468,14 @@ function CheckoutPage() {
                           </div>
                           {!startsFirstOfMonth && (
                             <div className="flex items-center justify-between gap-4">
-                              <span className="text-muted-foreground">Luna curentă (pro-rata):</span>
+                              <span className="text-muted-foreground">Luna curentă:</span>
                               <span className="text-right font-medium">
-                                {proRataCurrentMonth.toFixed(2)} {currency}
+                                {currentMonthAmount.toFixed(2)} {currency}
                               </span>
                             </div>
                           )}
                           <p className="text-[11px] text-muted-foreground leading-relaxed pt-1">
-                            Prima plată include luna curentă pro-rata. Apoi se facturează lunar.
+                            Prima plată acoperă luna curentă. Apoi se facturează lunar.
                           </p>
                         </div>
                       </>

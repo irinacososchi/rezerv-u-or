@@ -1468,7 +1468,7 @@ function RoomDetailsPage() {
                       const sortedKeys = Array.from(monthMap.keys()).sort();
                       const startDate = summary.days[0].date;
                       const startMonthKey = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, "0")}`;
-                      const proRata = monthMap.get(startMonthKey) ?? 0;
+                      const currentMonthAmount = monthMap.get(startMonthKey) ?? 0;
                       const firstFullMonthKey = sortedKeys.find((k) => k > startMonthKey);
                       const monthlyPrice = firstFullMonthKey ? (monthMap.get(firstFullMonthKey) ?? 0) : 0;
                       const startsFirstOfMonth = startDate.getDate() === 1;
@@ -1483,8 +1483,8 @@ function RoomDetailsPage() {
                           </div>
                           {!startsFirstOfMonth && (
                             <div className="flex items-center justify-between gap-4">
-                              <span className="text-muted-foreground">Luna curentă (pro-rata):</span>
-                              <span className="font-medium">{proRata.toFixed(2)} {currency}</span>
+                              <span className="text-muted-foreground">Luna curentă:</span>
+                              <span className="font-medium">{currentMonthAmount.toFixed(2)} {currency}</span>
                             </div>
                           )}
                         </div>
