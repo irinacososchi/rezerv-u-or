@@ -373,7 +373,7 @@ function RezervariPage() {
     }
     if (
       !confirm(
-        `Ești pe cale să anulezi ${ids.length} ${ids.length === 1 ? "rezervare" : "rezervări"} din serie. Continui?`,
+        "Ești pe cale să anulezi această serie recurentă. Continui?",
       )
     ) {
       return;
