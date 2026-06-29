@@ -167,7 +167,7 @@ export function RecurringGroupCard({
     <div className="rounded-xl border border-blue-200 bg-blue-50/30 p-4">
       <div className="flex items-start justify-between gap-2 mb-3">
         <div className="flex items-center gap-2 flex-wrap">
-          <RecurringBadge count={bookings.length} size="md" />
+          <RecurringBadge size="md" />
           <span className={`text-xs font-medium ${variantCls[statusLabel.variant]}`}>
             {statusLabel.label}
           </span>
