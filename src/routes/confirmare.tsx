@@ -172,7 +172,7 @@ function ConfirmarePage() {
   const endLabel = booking.end_time.slice(0, 5);
   const isPaid = booking.payment_status === "platit";
 
-  const isRecurring = search.recurrent && search.recurrenceCount > 1;
+  const isRecurring = search.recurrent;
   const recurringSummary = useMemo(() => {
     if (!isRecurring || !booking) return null;
     const startDate = parseISODate(booking.booking_date);
@@ -208,7 +208,7 @@ function ConfirmarePage() {
             <CheckCircle2 className="h-11 w-11 text-primary-foreground" strokeWidth={2.5} />
           </div>
           <h1 className="mt-6 text-3xl font-bold tracking-tight">
-            {search.recurrent && search.recurrenceCount > 1
+            {isRecurring
               ? "Cerere de rezervare recurentă trimisă!"
               : isConfirmed
                 ? "Rezervare confirmată!"
@@ -216,7 +216,7 @@ function ConfirmarePage() {
           </h1>
           <p className="mt-3 text-muted-foreground">
             {isRecurring
-              ? "Vei primi confirmare pe email după ce proprietarul acceptă seria."
+              ? "Vei primi confirmare pe email."
               : isConfirmed
                 ? "Vei primi detaliile pe email și WhatsApp."
                 : "Proprietarul va confirma în curând. Vei fi notificat pe email."}
@@ -232,7 +232,7 @@ function ConfirmarePage() {
               <div className="rounded-md bg-primary/5 border border-primary/20 p-3 text-sm mt-3">
                 <div className="font-medium text-primary">Rezervare recurentă</div>
                 <div className="text-xs text-muted-foreground mt-1">
-                  Vei primi confirmare pe email după ce proprietarul acceptă seria.
+                  Vei primi confirmare pe email.
                 </div>
               </div>
 
@@ -286,16 +286,6 @@ function ConfirmarePage() {
                 </div>
               )}
 
-              {!isGroup && search.recurrenceCount > 1 && (
-                <div className="rounded-md bg-primary/5 border border-primary/20 p-3 text-sm mt-3">
-                  <div className="font-medium text-primary">
-                    Rezervare recurentă — {search.recurrenceCount} apariții
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Aceeași zi și interval în fiecare săptămână. Vei primi confirmare pe email pentru fiecare apariție.
-                  </div>
-                </div>
-              )}
 
               <dl className="mt-5 space-y-3 text-sm">
                 <DetailRow label="Sală" value={booking.room_name} />
