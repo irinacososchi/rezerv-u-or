@@ -184,8 +184,7 @@ export function RecurringGroupCard({
       <div className="space-y-1 mb-3">
         <div className="font-medium">{rep.room_name ?? "Sală"}</div>
         <div className="text-sm text-muted-foreground">
-          {formatDateShort(firstDate)} → {formatDateShort(lastDate)} ·{" "}
-          {rep.start_time.slice(0, 5)}–{rep.end_time.slice(0, 5)}
+          În fiecare {weekday}, {timeRange}
         </div>
         <div className="text-sm">
           Chiriaș: <span className="font-medium">{renterName}</span>
@@ -194,9 +193,9 @@ export function RecurringGroupCard({
           )}
         </div>
         <div className="text-sm">
-          Total:{" "}
+          Preț lunar:{" "}
           <span className="font-medium">
-            {totalAmount.toFixed(2)} {currency}
+            {monthlyPrice.toFixed(2)} {currency}
           </span>
         </div>
       </div>
