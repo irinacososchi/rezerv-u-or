@@ -172,7 +172,7 @@ function ConfirmarePage() {
   const endLabel = booking.end_time.slice(0, 5);
   const isPaid = booking.payment_status === "platit";
 
-  const isRecurring = search.recurrent && search.recurrenceCount > 1;
+  const isRecurring = search.recurrent;
   const recurringSummary = useMemo(() => {
     if (!isRecurring || !booking) return null;
     const startDate = parseISODate(booking.booking_date);
