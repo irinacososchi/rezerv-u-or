@@ -215,8 +215,8 @@ function ConfirmarePage() {
                 : "Cerere trimisă!"}
           </h1>
           <p className="mt-3 text-muted-foreground">
-            {search.recurrent && search.recurrenceCount > 1
-              ? `Cererea pentru ${search.recurrenceCount} apariții a fost trimisă. Aștepți confirmarea proprietarului.`
+            {isRecurring
+              ? "Vei primi confirmare pe email după ce proprietarul acceptă seria."
               : isConfirmed
                 ? "Vei primi detaliile pe email și WhatsApp."
                 : "Proprietarul va confirma în curând. Vei fi notificat pe email."}
