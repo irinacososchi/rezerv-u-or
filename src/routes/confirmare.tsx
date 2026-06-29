@@ -232,7 +232,7 @@ function ConfirmarePage() {
               <div className="rounded-md bg-primary/5 border border-primary/20 p-3 text-sm mt-3">
                 <div className="font-medium text-primary">Rezervare recurentă</div>
                 <div className="text-xs text-muted-foreground mt-1">
-                  Vei primi confirmare pe email după ce proprietarul acceptă seria.
+                  Vei primi confirmare pe email.
                 </div>
               </div>
 
