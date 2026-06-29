@@ -1166,12 +1166,8 @@ function CheckoutPage() {
     }
 
     if (failed.length > 0) {
-      const list = failed
-        .map((f) => `• ${f.slot.date} ${f.slot.start}–${f.slot.end}`)
-        .join("\n");
       alert(
-        `Am creat ${succeeded.length} din ${allDateIntervals.length} rezervări.\n\n` +
-          `Următoarele intervale nu s-au putut crea (probabil ocupate între timp):\n${list}`,
+        "Unele intervale din serie nu s-au putut crea (probabil ocupate între timp). Vei vedea în confirmare ce s-a rezervat.",
       );
     }
 
