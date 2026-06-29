@@ -635,9 +635,6 @@ function RezervariPage() {
                         bookings={it.bookings}
                         recurrence={recurrences.get(it.recurrenceId)}
                         todayISO={todayISO}
-                        tabContext={tab}
-                        cancelLoadingId={cancelLoading}
-                        onCancelSingle={(b) => handleCancel(b as Booking)}
                         onCancelSeries={() => {
                           setSeriesDialog({
                             mode: "series",
