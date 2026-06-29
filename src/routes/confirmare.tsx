@@ -208,7 +208,7 @@ function ConfirmarePage() {
             <CheckCircle2 className="h-11 w-11 text-primary-foreground" strokeWidth={2.5} />
           </div>
           <h1 className="mt-6 text-3xl font-bold tracking-tight">
-            {search.recurrent && search.recurrenceCount > 1
+            {isRecurring
               ? "Cerere de rezervare recurentă trimisă!"
               : isConfirmed
                 ? "Rezervare confirmată!"
@@ -216,7 +216,7 @@ function ConfirmarePage() {
           </h1>
           <p className="mt-3 text-muted-foreground">
             {isRecurring
-              ? "Vei primi confirmare pe email după ce proprietarul acceptă seria."
+              ? "Vei primi confirmare pe email."
               : isConfirmed
                 ? "Vei primi detaliile pe email și WhatsApp."
                 : "Proprietarul va confirma în curând. Vei fi notificat pe email."}
