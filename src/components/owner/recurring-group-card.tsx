@@ -17,6 +17,8 @@ import {
   getGroupStatusLabel,
   type Booking,
 } from "@/lib/group-recurring-bookings";
+import { getDayOfWeek, DAY_NAMES_RO, parseISODate } from "@/lib/date-utils";
+
 
 interface Props {
   groupId: string;
@@ -70,12 +72,29 @@ export function RecurringGroupCard({
   const renterPhone = rep.guest_phone || rep.renter_phone || "";
 
   const firstDate = bookings[0].booking_date;
-  const lastDate = bookings[bookings.length - 1].booking_date;
-  const totalAmount = bookings.reduce((s, b) => s + Number(b.total_amount ?? 0), 0);
   const currency = rep.room_currency ?? "RON";
+
+  const monthMap = new Map<string, number>();
+  for (const b of bookings) {
+    const d = parseISODate(b.booking_date);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    monthMap.set(key, (monthMap.get(key) ?? 0) + Number(b.total_amount ?? 0));
+  }
+
+  const startDate = parseISODate(firstDate);
+  const startMonthKey = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, "0")}`;
+  const sortedKeys = Array.from(monthMap.keys()).sort();
+  const firstFullMonthKey = sortedKeys.find((k) => k > startMonthKey);
+  const monthlyPrice = firstFullMonthKey
+    ? (monthMap.get(firstFullMonthKey) ?? 0)
+    : (monthMap.get(startMonthKey) ?? 0);
+
+  const weekday = DAY_NAMES_RO[getDayOfWeek(parseISODate(firstDate))];
+  const timeRange = `${rep.start_time.slice(0, 5)}–${rep.end_time.slice(0, 5)}`;
 
   const pendingBookings = bookings.filter((b) => b.status === "în așteptare");
   const canApprove = pendingBookings.length > 0;
+
 
   function toggleSelection(id: string) {
     setSelectedIds((prev) => {
@@ -148,7 +167,7 @@ export function RecurringGroupCard({
     <div className="rounded-xl border border-blue-200 bg-blue-50/30 p-4">
       <div className="flex items-start justify-between gap-2 mb-3">
         <div className="flex items-center gap-2 flex-wrap">
-          <RecurringBadge count={bookings.length} size="md" />
+          <RecurringBadge size="md" />
           <span className={`text-xs font-medium ${variantCls[statusLabel.variant]}`}>
             {statusLabel.label}
           </span>
@@ -165,8 +184,7 @@ export function RecurringGroupCard({
       <div className="space-y-1 mb-3">
         <div className="font-medium">{rep.room_name ?? "Sală"}</div>
         <div className="text-sm text-muted-foreground">
-          {formatDateShort(firstDate)} → {formatDateShort(lastDate)} ·{" "}
-          {rep.start_time.slice(0, 5)}–{rep.end_time.slice(0, 5)}
+          În fiecare {weekday}, {timeRange}
         </div>
         <div className="text-sm">
           Chiriaș: <span className="font-medium">{renterName}</span>
@@ -175,9 +193,9 @@ export function RecurringGroupCard({
           )}
         </div>
         <div className="text-sm">
-          Total:{" "}
+          Preț lunar:{" "}
           <span className="font-medium">
-            {totalAmount.toFixed(2)} {currency}
+            {monthlyPrice.toFixed(2)} {currency}
           </span>
         </div>
       </div>
@@ -254,7 +272,7 @@ export function RecurringGroupCard({
                 className="inline-flex items-center gap-1 rounded-md bg-primary text-primary-foreground px-3 py-1.5 text-xs font-medium hover:bg-primary/90 disabled:opacity-50"
               >
                 <Check className="h-3.5 w-3.5" />
-                Aprobă tot ({pendingBookings.length})
+                Aprobă seria
               </button>
             )}
             {canApprove && (
@@ -265,22 +283,20 @@ export function RecurringGroupCard({
                     className="inline-flex items-center gap-1 rounded-md border border-red-200 text-red-700 px-3 py-1.5 text-xs font-medium hover:bg-red-50 disabled:opacity-50"
                   >
                     <X className="h-3.5 w-3.5" />
-                    Refuză tot
+                    Refuză seria
                   </button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>Sigur vrei să refuzi seria?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Vei refuza {pendingBookings.length} rezervări în așteptare ale
-                      chiriașului {renterName}. Cele deja procesate (aprobate, anulate)
-                      rămân neschimbate.
+                      Vei refuza această serie recurentă. Cele deja procesate rămân neschimbate.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Anulează</AlertDialogCancel>
                     <AlertDialogAction onClick={handleRefuseAll}>
-                      Da, refuză {pendingBookings.length} rezervări
+                      Da, refuză seria
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -295,7 +311,7 @@ export function RecurringGroupCard({
                 disabled={processing}
                 className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted/40 disabled:opacity-50"
               >
-                Modifică selecția
+                Gestionează serie
               </button>
             )}
           </>
