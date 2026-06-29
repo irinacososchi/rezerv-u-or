@@ -72,12 +72,29 @@ export function RecurringGroupCard({
   const renterPhone = rep.guest_phone || rep.renter_phone || "";
 
   const firstDate = bookings[0].booking_date;
-  const lastDate = bookings[bookings.length - 1].booking_date;
-  const totalAmount = bookings.reduce((s, b) => s + Number(b.total_amount ?? 0), 0);
   const currency = rep.room_currency ?? "RON";
+
+  const monthMap = new Map<string, number>();
+  for (const b of bookings) {
+    const d = parseISODate(b.booking_date);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    monthMap.set(key, (monthMap.get(key) ?? 0) + Number(b.total_amount ?? 0));
+  }
+
+  const startDate = parseISODate(firstDate);
+  const startMonthKey = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, "0")}`;
+  const sortedKeys = Array.from(monthMap.keys()).sort();
+  const firstFullMonthKey = sortedKeys.find((k) => k > startMonthKey);
+  const monthlyPrice = firstFullMonthKey
+    ? (monthMap.get(firstFullMonthKey) ?? 0)
+    : (monthMap.get(startMonthKey) ?? 0);
+
+  const weekday = DAY_NAMES_RO[getDayOfWeek(parseISODate(firstDate))];
+  const timeRange = `${rep.start_time.slice(0, 5)}–${rep.end_time.slice(0, 5)}`;
 
   const pendingBookings = bookings.filter((b) => b.status === "în așteptare");
   const canApprove = pendingBookings.length > 0;
+
 
   function toggleSelection(id: string) {
     setSelectedIds((prev) => {
