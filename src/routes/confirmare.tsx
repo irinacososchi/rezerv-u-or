@@ -286,16 +286,6 @@ function ConfirmarePage() {
                 </div>
               )}
 
-              {!isGroup && search.recurrenceCount > 1 && (
-                <div className="rounded-md bg-primary/5 border border-primary/20 p-3 text-sm mt-3">
-                  <div className="font-medium text-primary">
-                    Rezervare recurentă — {search.recurrenceCount} apariții
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Aceeași zi și interval în fiecare săptămână. Vei primi confirmare pe email pentru fiecare apariție.
-                  </div>
-                </div>
-              )}
 
               <dl className="mt-5 space-y-3 text-sm">
                 <DetailRow label="Sală" value={booking.room_name} />
