@@ -272,7 +272,7 @@ export function RecurringGroupCard({
                 className="inline-flex items-center gap-1 rounded-md bg-primary text-primary-foreground px-3 py-1.5 text-xs font-medium hover:bg-primary/90 disabled:opacity-50"
               >
                 <Check className="h-3.5 w-3.5" />
-                Aprobă tot ({pendingBookings.length})
+                Aprobă seria
               </button>
             )}
             {canApprove && (
@@ -283,22 +283,20 @@ export function RecurringGroupCard({
                     className="inline-flex items-center gap-1 rounded-md border border-red-200 text-red-700 px-3 py-1.5 text-xs font-medium hover:bg-red-50 disabled:opacity-50"
                   >
                     <X className="h-3.5 w-3.5" />
-                    Refuză tot
+                    Refuză seria
                   </button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>Sigur vrei să refuzi seria?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Vei refuza {pendingBookings.length} rezervări în așteptare ale
-                      chiriașului {renterName}. Cele deja procesate (aprobate, anulate)
-                      rămân neschimbate.
+                      Vei refuza această serie recurentă. Cele deja procesate rămân neschimbate.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Anulează</AlertDialogCancel>
                     <AlertDialogAction onClick={handleRefuseAll}>
-                      Da, refuză {pendingBookings.length} rezervări
+                      Da, refuză seria
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -313,7 +311,7 @@ export function RecurringGroupCard({
                 disabled={processing}
                 className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted/40 disabled:opacity-50"
               >
-                Modifică selecția
+                Gestionează serie
               </button>
             )}
           </>
