@@ -1,12 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Loader2, Calendar, AlertCircle } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/external-client";
-import { formatDateRO, parseISODate } from "@/lib/date-utils";
+import { formatDateRO, parseISODate, getDayOfWeek, DAY_NAMES_RO } from "@/lib/date-utils";
 
 export const Route = createFileRoute("/confirmare")({
   validateSearch: (raw: Record<string, unknown>) => ({
@@ -172,6 +172,33 @@ function ConfirmarePage() {
   const endLabel = booking.end_time.slice(0, 5);
   const isPaid = booking.payment_status === "platit";
 
+  const isRecurring = search.recurrent && search.recurrenceCount > 1;
+  const recurringSummary = useMemo(() => {
+    if (!isRecurring || !booking) return null;
+    const startDate = parseISODate(booking.booking_date);
+    const monthMap = new Map<string, number>();
+    for (const b of bookings) {
+      const d = parseISODate(b.booking_date);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      monthMap.set(key, (monthMap.get(key) ?? 0) + Number(b.total_amount ?? 0));
+    }
+    const sortedKeys = Array.from(monthMap.keys()).sort();
+    const startMonthKey = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, "0")}`;
+    const currentMonthAmount = monthMap.get(startMonthKey) ?? 0;
+    const firstFullMonthKey = sortedKeys.find((k) => k > startMonthKey);
+    const monthlyPrice = firstFullMonthKey ? (monthMap.get(firstFullMonthKey) ?? 0) : 0;
+    const startsFirstOfMonth = startDate.getDate() === 1;
+    return {
+      weekday: DAY_NAMES_RO[getDayOfWeek(startDate)],
+      startTime: booking.start_time.slice(0, 5),
+      endTime: booking.end_time.slice(0, 5),
+      monthlyPrice,
+      currentMonthAmount,
+      startsFirstOfMonth,
+    };
+  }, [isRecurring, booking, bookings]);
+
+
   return (
     <Shell>
       <div className="container mx-auto max-w-[600px] px-4 py-12">
@@ -188,8 +215,8 @@ function ConfirmarePage() {
                 : "Cerere trimisă!"}
           </h1>
           <p className="mt-3 text-muted-foreground">
-            {search.recurrent && search.recurrenceCount > 1
-              ? `Cererea pentru ${search.recurrenceCount} apariții a fost trimisă. Aștepți confirmarea proprietarului.`
+            {isRecurring
+              ? "Vei primi confirmare pe email după ce proprietarul acceptă seria."
               : isConfirmed
                 ? "Vei primi detaliile pe email și WhatsApp."
                 : "Proprietarul va confirma în curând. Vei fi notificat pe email."}
@@ -200,127 +227,177 @@ function ConfirmarePage() {
         <div className="mt-8 rounded-xl border border-border bg-background p-6 shadow-sm">
           <h2 className="text-lg font-semibold">Detalii rezervare</h2>
 
-          {isGroup && (
-            <div className="rounded-md bg-primary/5 border border-primary/20 p-3 text-sm mt-3">
-              <div className="font-medium text-primary">
-                Grup de rezervări — {bookings.length} intervale
+          {isRecurring ? (
+            <>
+              <div className="rounded-md bg-primary/5 border border-primary/20 p-3 text-sm mt-3">
+                <div className="font-medium text-primary">Rezervare recurentă</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Vei primi confirmare pe email după ce proprietarul acceptă seria.
+                </div>
               </div>
-              <div className="text-xs text-muted-foreground mt-1">
-                Vei primi confirmare pe email pentru fiecare interval în parte.
-              </div>
-            </div>
-          )}
 
-          {!isGroup && search.recurrenceCount > 1 && (
-            <div className="rounded-md bg-primary/5 border border-primary/20 p-3 text-sm mt-3">
-              <div className="font-medium text-primary">
-                Rezervare recurentă — {search.recurrenceCount} apariții
-              </div>
-              <div className="text-xs text-muted-foreground mt-1">
-                Aceeași zi și interval în fiecare săptămână. Vei primi confirmare pe email pentru fiecare apariție.
-              </div>
-            </div>
-          )}
-
-          <dl className="mt-5 space-y-3 text-sm">
-            <DetailRow label="Sală" value={booking.room_name} />
-            {booking.room_address && (
-              <DetailRow
-                label="Adresă"
-                value={[booking.room_address, booking.room_city]
-                  .filter(Boolean)
-                  .join(", ")}
-              />
-            )}
-            {isGroup ? (
-              <div className="border-t border-border pt-3">
-                <div className="text-muted-foreground text-sm mb-2">Intervale</div>
-                <ul className="space-y-1">
-                  {bookings.map((b) => (
-                    <li
-                      key={b.id}
-                      className="flex items-baseline justify-between gap-3 text-sm"
-                    >
-                      <span>
-                        <span className="font-mono text-xs text-muted-foreground mr-2">
-                          #{b.reference}
+              <dl className="mt-5 space-y-3 text-sm">
+                <DetailRow label="Sală" value={booking.room_name} />
+                {booking.room_address && (
+                  <DetailRow
+                    label="Adresă"
+                    value={[booking.room_address, booking.room_city]
+                      .filter(Boolean)
+                      .join(", ")}
+                  />
+                )}
+                {recurringSummary && (
+                  <>
+                    <DetailRow
+                      label="Recurență"
+                      value={`În fiecare ${recurringSummary.weekday}, ${recurringSummary.startTime}–${recurringSummary.endTime}`}
+                    />
+                    <div className="text-xs text-muted-foreground leading-relaxed">
+                      Se reînnoiește automat lunar.
+                    </div>
+                    <DetailRow
+                      label="Preț lunar"
+                      value={
+                        <span className="font-semibold text-primary">
+                          {recurringSummary.monthlyPrice.toFixed(2)} {currency}
                         </span>
-                        {formatDateRO(parseISODate(b.booking_date))} ·{" "}
-                        {b.start_time.slice(0, 5)}–{b.end_time.slice(0, 5)}
-                      </span>
-                      <span className="font-medium">
-                        {b.total_amount} {currency}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : (
-              <>
-                <DetailRow
-                  label="Referință"
-                  value={
-                    <span className="font-mono font-bold">#{booking.reference}</span>
-                  }
-                />
-                <DetailRow label="Data" value={formatDateRO(dateObj)} />
-                <DetailRow label="Interval" value={`${startLabel}–${endLabel}`} />
-                <DetailRow
-                  label="Durată"
-                  value={(() => {
-                    const minutes = booking.duration_minutes ?? Math.round((booking.duration_hours ?? 0) * 60);
-                    const hours = minutes / 60;
-                    return `${hours} ${hours === 1 ? "oră" : "ore"}`;
-                  })()}
-                />
-                <DetailRow
-                  label="Preț/oră"
-                  value={
-                    <>
-                      {booking.price_per_hour} {currency}/oră
-                      {booking.pricing_rule_label && (
-                        <span className="text-muted-foreground">
-                          {" · "}
-                          {booking.pricing_rule_label}
-                        </span>
-                      )}
-                    </>
-                  }
-                />
-              </>
-            )}
-          </dl>
+                      }
+                    />
+                    {!recurringSummary.startsFirstOfMonth && (
+                      <DetailRow
+                        label="Luna curentă"
+                        value={`${recurringSummary.currentMonthAmount.toFixed(2)} ${currency}`}
+                      />
+                    )}
+                  </>
+                )}
+              </dl>
+            </>
+          ) : (
+            <>
+              {isGroup && (
+                <div className="rounded-md bg-primary/5 border border-primary/20 p-3 text-sm mt-3">
+                  <div className="font-medium text-primary">
+                    Grup de rezervări — {bookings.length} intervale
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Vei primi confirmare pe email pentru fiecare interval în parte.
+                  </div>
+                </div>
+              )}
 
-          <div className="mt-5 space-y-2 border-t border-border pt-4 text-sm">
-            {!isGroup && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Subtotal</span>
-                <span>
-                  {booking.subtotal} {currency}
-                </span>
+              {!isGroup && search.recurrenceCount > 1 && (
+                <div className="rounded-md bg-primary/5 border border-primary/20 p-3 text-sm mt-3">
+                  <div className="font-medium text-primary">
+                    Rezervare recurentă — {search.recurrenceCount} apariții
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Aceeași zi și interval în fiecare săptămână. Vei primi confirmare pe email pentru fiecare apariție.
+                  </div>
+                </div>
+              )}
+
+              <dl className="mt-5 space-y-3 text-sm">
+                <DetailRow label="Sală" value={booking.room_name} />
+                {booking.room_address && (
+                  <DetailRow
+                    label="Adresă"
+                    value={[booking.room_address, booking.room_city]
+                      .filter(Boolean)
+                      .join(", ")}
+                  />
+                )}
+                {isGroup ? (
+                  <div className="border-t border-border pt-3">
+                    <div className="text-muted-foreground text-sm mb-2">Intervale</div>
+                    <ul className="space-y-1">
+                      {bookings.map((b) => (
+                        <li
+                          key={b.id}
+                          className="flex items-baseline justify-between gap-3 text-sm"
+                        >
+                          <span>
+                            <span className="font-mono text-xs text-muted-foreground mr-2">
+                              #{b.reference}
+                            </span>
+                            {formatDateRO(parseISODate(b.booking_date))} ·{" "}
+                            {b.start_time.slice(0, 5)}–{b.end_time.slice(0, 5)}
+                          </span>
+                          <span className="font-medium">
+                            {b.total_amount} {currency}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <>
+                    <DetailRow
+                      label="Referință"
+                      value={
+                        <span className="font-mono font-bold">#{booking.reference}</span>
+                      }
+                    />
+                    <DetailRow label="Data" value={formatDateRO(dateObj)} />
+                    <DetailRow label="Interval" value={`${startLabel}–${endLabel}`} />
+                    <DetailRow
+                      label="Durată"
+                      value={(() => {
+                        const minutes = booking.duration_minutes ?? Math.round((booking.duration_hours ?? 0) * 60);
+                        const hours = minutes / 60;
+                        return `${hours} ${hours === 1 ? "oră" : "ore"}`;
+                      })()}
+                    />
+                    <DetailRow
+                      label="Preț/oră"
+                      value={
+                        <>
+                          {booking.price_per_hour} {currency}/oră
+                          {booking.pricing_rule_label && (
+                            <span className="text-muted-foreground">
+                              {" · "}
+                              {booking.pricing_rule_label}
+                            </span>
+                          )}
+                        </>
+                      }
+                    />
+                  </>
+                )}
+              </dl>
+
+              <div className="mt-5 space-y-2 border-t border-border pt-4 text-sm">
+                {!isGroup && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Subtotal</span>
+                    <span>
+                      {booking.subtotal} {currency}
+                    </span>
+                  </div>
+                )}
+                {!isGroup && booking.discount_amount > 0 && (
+                  <div className="flex justify-between text-primary">
+                    <span>
+                      Reducere
+                      {booking.voucher_code_used && ` (${booking.voucher_code_used})`}
+                    </span>
+                    <span>
+                      −{booking.discount_amount} {currency}
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-baseline justify-between border-t border-border pt-3">
+                  <span className="text-base font-semibold">Total</span>
+                  <span className="text-2xl font-bold text-primary">
+                    {isGroup
+                      ? bookings.reduce((s, b) => s + Number(b.total_amount ?? 0), 0)
+                      : booking.total_amount}{" "}
+                    {currency}
+                  </span>
+                </div>
               </div>
-            )}
-            {!isGroup && booking.discount_amount > 0 && (
-              <div className="flex justify-between text-primary">
-                <span>
-                  Reducere
-                  {booking.voucher_code_used && ` (${booking.voucher_code_used})`}
-                </span>
-                <span>
-                  −{booking.discount_amount} {currency}
-                </span>
-              </div>
-            )}
-            <div className="flex items-baseline justify-between border-t border-border pt-3">
-              <span className="text-base font-semibold">Total</span>
-              <span className="text-2xl font-bold text-primary">
-                {isGroup
-                  ? bookings.reduce((s, b) => s + Number(b.total_amount ?? 0), 0)
-                  : booking.total_amount}{" "}
-                {currency}
-              </span>
-            </div>
-          </div>
+            </>
+          )}
 
           <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4 text-sm">
             <div>
