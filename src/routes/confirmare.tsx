@@ -235,9 +235,6 @@ function ConfirmarePage() {
             <>
               <div className="rounded-md bg-primary/5 border border-primary/20 p-3 text-sm mt-3">
                 <div className="font-medium text-primary">Rezervare recurentă</div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  Vei primi confirmare pe email.
-                </div>
               </div>
 
               <dl className="mt-5 space-y-3 text-sm">
@@ -254,11 +251,16 @@ function ConfirmarePage() {
                   <>
                     <DetailRow
                       label="Recurență"
-                      value={`În fiecare ${recurringSummary.weekday}, ${recurringSummary.startTime}–${recurringSummary.endTime}`}
+                      value={`În fiecare ${recurringSummary.weekday}, se reînnoiește lunar`}
                     />
-                    <div className="text-xs text-muted-foreground leading-relaxed">
-                      Se reînnoiește automat lunar.
-                    </div>
+                    <DetailRow
+                      label="Interval"
+                      value={`${recurringSummary.startTime}–${recurringSummary.endTime}`}
+                    />
+                    <DetailRow
+                      label="Data început"
+                      value={recurringSummary.firstSessionDate}
+                    />
                     <DetailRow
                       label="Preț lunar"
                       value={
@@ -269,7 +271,7 @@ function ConfirmarePage() {
                     />
                     {!recurringSummary.startsFirstOfMonth && (
                       <DetailRow
-                        label="Luna curentă"
+                        label="Luna curentă (pro-rata)"
                         value={`${recurringSummary.currentMonthAmount.toFixed(2)} ${currency}`}
                       />
                     )}
