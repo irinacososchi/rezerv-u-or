@@ -139,9 +139,10 @@ function ConfirmarePage() {
 
   const recurringSummary = useMemo(() => {
     if (!isRecurring || !booking) return null;
-    const startDate = parseISODate(booking.booking_date);
-    const monthMap = new Map<string, number>();
     const list = bookings ?? [];
+    const firstBooking = [...list].sort((a, b) => a.booking_date.localeCompare(b.booking_date))[0] ?? booking;
+    const startDate = parseISODate(firstBooking.booking_date);
+    const monthMap = new Map<string, number>();
     for (const b of list) {
       const d = parseISODate(b.booking_date);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
@@ -155,13 +156,15 @@ function ConfirmarePage() {
       ? (monthMap.get(firstFullMonthKey) ?? 0)
       : currentMonthAmount;
     const startsFirstOfMonth = startDate.getDate() === 1;
+    const firstSessionDate = `${String(startDate.getDate()).padStart(2, "0")}.${String(startDate.getMonth() + 1).padStart(2, "0")}.${startDate.getFullYear()}`;
     return {
       weekday: DAY_NAMES_RO[getDayOfWeek(startDate)],
-      startTime: booking.start_time.slice(0, 5),
-      endTime: booking.end_time.slice(0, 5),
+      startTime: firstBooking.start_time.slice(0, 5),
+      endTime: firstBooking.end_time.slice(0, 5),
       monthlyPrice,
       currentMonthAmount,
       startsFirstOfMonth,
+      firstSessionDate,
     };
   }, [isRecurring, booking, bookings]);
 
