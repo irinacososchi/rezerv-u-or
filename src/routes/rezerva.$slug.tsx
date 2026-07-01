@@ -959,7 +959,7 @@ function CheckoutPage() {
     // Revalidare disponibilitate înainte de submit (race condition guard)
     try {
       const freshBusy = await checkSlotAvailability(finalSlotsToCreate);
-      if (freshBusy.size > 0) {
+      if (freshBusy.size > 0 && !isRecurrent) {
         console.warn("=== EARLY RETURN ===", { reason: "precheck_busy", count: freshBusy.size });
         setBusySlotKeys((prev) => {
           const merged = new Set(prev);
@@ -974,6 +974,7 @@ function CheckoutPage() {
         );
         return;
       }
+
     } catch {
       console.warn("=== EARLY RETURN ===", { reason: "precheck_threw" });
       setSubmitting(false);
