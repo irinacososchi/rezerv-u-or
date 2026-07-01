@@ -1721,7 +1721,7 @@ function CheckoutPage() {
               disabled={
                 submitting ||
                 finalSlotsToCreate.length === 0 ||
-                hasBusyConflicts ||
+                (hasBusyConflicts && !isRecurringView) ||
                 checkingAvailability
               }
               className="w-full cursor-pointer text-base"
@@ -1733,10 +1733,12 @@ function CheckoutPage() {
                 </>
               ) : checkingAvailability ? (
                 "Se verifică disponibilitatea..."
-              ) : hasBusyConflicts ? (
+              ) : hasBusyConflicts && !isRecurringView ? (
                 `Exclude ${busyIncludedSlots.length} slot${busyIncludedSlots.length === 1 ? "" : "-uri"} ocupat${busyIncludedSlots.length === 1 ? "" : "e"} pentru a continua`
               ) : finalSlotsToCreate.length === 0 ? (
                 "Selectează cel puțin o rezervare"
+              ) : isRecurringView ? (
+                "Rezervă acum"
               ) : finalSlotsToCreate.length === 1 ? (
                 `Confirmă rezervarea · ${finalTotal} ${currency}`
               ) : (
@@ -1744,11 +1746,12 @@ function CheckoutPage() {
               )}
             </Button>
 
-            {hasBusyConflicts && (
+            {hasBusyConflicts && !isRecurringView && (
               <p className="text-center text-xs text-destructive">
                 Ai {busyIncludedSlots.length} slot{busyIncludedSlots.length === 1 ? "" : "-uri"} ocupat{busyIncludedSlots.length === 1 ? "" : "e"}. Te rugăm să le excluzi din preview ca să continui.
               </p>
             )}
+
 
             <p className="text-center text-xs text-muted-foreground">
               Prin confirmarea rezervării accepți termenii și condițiile.
