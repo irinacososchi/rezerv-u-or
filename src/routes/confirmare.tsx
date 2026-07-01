@@ -139,9 +139,10 @@ function ConfirmarePage() {
 
   const recurringSummary = useMemo(() => {
     if (!isRecurring || !booking) return null;
-    const startDate = parseISODate(booking.booking_date);
-    const monthMap = new Map<string, number>();
     const list = bookings ?? [];
+    const firstBooking = [...list].sort((a, b) => a.booking_date.localeCompare(b.booking_date))[0] ?? booking;
+    const startDate = parseISODate(firstBooking.booking_date);
+    const monthMap = new Map<string, number>();
     for (const b of list) {
       const d = parseISODate(b.booking_date);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
@@ -155,13 +156,15 @@ function ConfirmarePage() {
       ? (monthMap.get(firstFullMonthKey) ?? 0)
       : currentMonthAmount;
     const startsFirstOfMonth = startDate.getDate() === 1;
+    const firstSessionDate = `${String(startDate.getDate()).padStart(2, "0")}.${String(startDate.getMonth() + 1).padStart(2, "0")}.${startDate.getFullYear()}`;
     return {
       weekday: DAY_NAMES_RO[getDayOfWeek(startDate)],
-      startTime: booking.start_time.slice(0, 5),
-      endTime: booking.end_time.slice(0, 5),
+      startTime: firstBooking.start_time.slice(0, 5),
+      endTime: firstBooking.end_time.slice(0, 5),
       monthlyPrice,
       currentMonthAmount,
       startsFirstOfMonth,
+      firstSessionDate,
     };
   }, [isRecurring, booking, bookings]);
 
@@ -213,18 +216,14 @@ function ConfirmarePage() {
             <CheckCircle2 className="h-11 w-11 text-primary-foreground" strokeWidth={2.5} />
           </div>
           <h1 className="mt-6 text-3xl font-bold tracking-tight">
-            {isRecurring
-              ? "Cerere de rezervare recurentă trimisă!"
-              : isConfirmed
-                ? "Rezervare confirmată!"
-                : "Cerere trimisă!"}
+            {isConfirmed
+              ? "Rezervare confirmată!"
+              : "Cerere trimisă!"}
           </h1>
           <p className="mt-3 text-muted-foreground">
-            {isRecurring
-              ? "Vei primi confirmare pe email."
-              : isConfirmed
-                ? "Vei primi detaliile pe email și WhatsApp."
-                : "Proprietarul va confirma în curând. Vei fi notificat pe email."}
+            {isConfirmed
+              ? "Vei primi detaliile pe email și WhatsApp."
+              : "Proprietarul va confirma în curând. Vei fi notificat pe email."}
           </p>
         </div>
 
@@ -236,9 +235,6 @@ function ConfirmarePage() {
             <>
               <div className="rounded-md bg-primary/5 border border-primary/20 p-3 text-sm mt-3">
                 <div className="font-medium text-primary">Rezervare recurentă</div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  Vei primi confirmare pe email.
-                </div>
               </div>
 
               <dl className="mt-5 space-y-3 text-sm">
@@ -255,11 +251,16 @@ function ConfirmarePage() {
                   <>
                     <DetailRow
                       label="Recurență"
-                      value={`În fiecare ${recurringSummary.weekday}, ${recurringSummary.startTime}–${recurringSummary.endTime}`}
+                      value={`În fiecare ${recurringSummary.weekday}, se reînnoiește lunar`}
                     />
-                    <div className="text-xs text-muted-foreground leading-relaxed">
-                      Se reînnoiește automat lunar.
-                    </div>
+                    <DetailRow
+                      label="Interval"
+                      value={`${recurringSummary.startTime}–${recurringSummary.endTime}`}
+                    />
+                    <DetailRow
+                      label="Data început"
+                      value={recurringSummary.firstSessionDate}
+                    />
                     <DetailRow
                       label="Preț lunar"
                       value={
@@ -270,7 +271,7 @@ function ConfirmarePage() {
                     />
                     {!recurringSummary.startsFirstOfMonth && (
                       <DetailRow
-                        label="Luna curentă"
+                        label="Luna curentă (pro-rata)"
                         value={`${recurringSummary.currentMonthAmount.toFixed(2)} ${currency}`}
                       />
                     )}
