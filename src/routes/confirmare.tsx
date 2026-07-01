@@ -135,6 +135,35 @@ function ConfirmarePage() {
 
   const booking = bookings[0] ?? null;
   const isGroup = bookings.length > 1;
+  const isRecurring = search.recurrent;
+
+  const recurringSummary = useMemo(() => {
+    if (!isRecurring || !booking) return null;
+    const startDate = parseISODate(booking.booking_date);
+    const monthMap = new Map<string, number>();
+    const list = bookings ?? [];
+    for (const b of list) {
+      const d = parseISODate(b.booking_date);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      monthMap.set(key, (monthMap.get(key) ?? 0) + Number(b.total_amount ?? 0));
+    }
+    const sortedKeys = Array.from(monthMap.keys()).sort();
+    const startMonthKey = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, "0")}`;
+    const currentMonthAmount = monthMap.get(startMonthKey) ?? 0;
+    const firstFullMonthKey = sortedKeys.find((k) => k > startMonthKey);
+    const monthlyPrice = firstFullMonthKey
+      ? (monthMap.get(firstFullMonthKey) ?? 0)
+      : currentMonthAmount;
+    const startsFirstOfMonth = startDate.getDate() === 1;
+    return {
+      weekday: DAY_NAMES_RO[getDayOfWeek(startDate)],
+      startTime: booking.start_time.slice(0, 5),
+      endTime: booking.end_time.slice(0, 5),
+      monthlyPrice,
+      currentMonthAmount,
+      startsFirstOfMonth,
+    };
+  }, [isRecurring, booking, bookings]);
 
   if (loading) {
     return (
@@ -172,31 +201,7 @@ function ConfirmarePage() {
   const endLabel = booking.end_time.slice(0, 5);
   const isPaid = booking.payment_status === "platit";
 
-  const isRecurring = search.recurrent;
-  const recurringSummary = useMemo(() => {
-    if (!isRecurring || !booking) return null;
-    const startDate = parseISODate(booking.booking_date);
-    const monthMap = new Map<string, number>();
-    for (const b of bookings) {
-      const d = parseISODate(b.booking_date);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      monthMap.set(key, (monthMap.get(key) ?? 0) + Number(b.total_amount ?? 0));
-    }
-    const sortedKeys = Array.from(monthMap.keys()).sort();
-    const startMonthKey = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, "0")}`;
-    const currentMonthAmount = monthMap.get(startMonthKey) ?? 0;
-    const firstFullMonthKey = sortedKeys.find((k) => k > startMonthKey);
-    const monthlyPrice = firstFullMonthKey ? (monthMap.get(firstFullMonthKey) ?? 0) : 0;
-    const startsFirstOfMonth = startDate.getDate() === 1;
-    return {
-      weekday: DAY_NAMES_RO[getDayOfWeek(startDate)],
-      startTime: booking.start_time.slice(0, 5),
-      endTime: booking.end_time.slice(0, 5),
-      monthlyPrice,
-      currentMonthAmount,
-      startsFirstOfMonth,
-    };
-  }, [isRecurring, booking, bookings]);
+
 
 
   return (
