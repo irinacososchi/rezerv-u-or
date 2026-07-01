@@ -959,7 +959,7 @@ function CheckoutPage() {
     // Revalidare disponibilitate înainte de submit (race condition guard)
     try {
       const freshBusy = await checkSlotAvailability(finalSlotsToCreate);
-      if (freshBusy.size > 0) {
+      if (freshBusy.size > 0 && !isRecurrent) {
         console.warn("=== EARLY RETURN ===", { reason: "precheck_busy", count: freshBusy.size });
         setBusySlotKeys((prev) => {
           const merged = new Set(prev);
@@ -974,6 +974,7 @@ function CheckoutPage() {
         );
         return;
       }
+
     } catch {
       console.warn("=== EARLY RETURN ===", { reason: "precheck_threw" });
       setSubmitting(false);
@@ -1721,7 +1722,7 @@ function CheckoutPage() {
               disabled={
                 submitting ||
                 finalSlotsToCreate.length === 0 ||
-                hasBusyConflicts ||
+                (hasBusyConflicts && !isRecurringView) ||
                 checkingAvailability
               }
               className="w-full cursor-pointer text-base"
@@ -1733,10 +1734,12 @@ function CheckoutPage() {
                 </>
               ) : checkingAvailability ? (
                 "Se verifică disponibilitatea..."
-              ) : hasBusyConflicts ? (
+              ) : hasBusyConflicts && !isRecurringView ? (
                 `Exclude ${busyIncludedSlots.length} slot${busyIncludedSlots.length === 1 ? "" : "-uri"} ocupat${busyIncludedSlots.length === 1 ? "" : "e"} pentru a continua`
               ) : finalSlotsToCreate.length === 0 ? (
                 "Selectează cel puțin o rezervare"
+              ) : isRecurringView ? (
+                "Rezervă acum"
               ) : finalSlotsToCreate.length === 1 ? (
                 `Confirmă rezervarea · ${finalTotal} ${currency}`
               ) : (
@@ -1744,11 +1747,12 @@ function CheckoutPage() {
               )}
             </Button>
 
-            {hasBusyConflicts && (
+            {hasBusyConflicts && !isRecurringView && (
               <p className="text-center text-xs text-destructive">
                 Ai {busyIncludedSlots.length} slot{busyIncludedSlots.length === 1 ? "" : "-uri"} ocupat{busyIncludedSlots.length === 1 ? "" : "e"}. Te rugăm să le excluzi din preview ca să continui.
               </p>
             )}
+
 
             <p className="text-center text-xs text-muted-foreground">
               Prin confirmarea rezervării accepți termenii și condițiile.
