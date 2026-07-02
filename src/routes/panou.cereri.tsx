@@ -312,7 +312,26 @@ function CereriPage() {
     await refetch();
   }
 
-  const groupedItems = useMemo(() => groupRecurringBookings(filtered as any), [filtered]);
+  const sortedGroupedItems = useMemo(() => {
+    const items = groupRecurringBookings(filtered as any);
+    return [...items].sort((a, b) => {
+      const pendingA =
+        a.kind === "single"
+          ? a.booking.status === "în așteptare"
+          : a.bookings.some((b) => b.status === "în așteptare");
+      const pendingB =
+        b.kind === "single"
+          ? b.booking.status === "în așteptare"
+          : b.bookings.some((b) => b.status === "în așteptare");
+      const priorityA = pendingA ? 0 : 1;
+      const priorityB = pendingB ? 0 : 1;
+      if (priorityA !== priorityB) return priorityA - priorityB;
+
+      const dateA = a.kind === "single" ? a.booking.booking_date : a.bookings[0].booking_date;
+      const dateB = b.kind === "single" ? b.booking.booking_date : b.bookings[0].booking_date;
+      return dateB.localeCompare(dateA);
+    });
+  }, [filtered]);
 
   const hasActiveFilters =
     filterStatus !== "toate" ||
