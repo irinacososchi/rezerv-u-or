@@ -136,9 +136,7 @@ function ConfirmarePage() {
   const booking = bookings[0] ?? null;
   const isRecurringFromData =
     bookings.length > 0 &&
-    bookings.some(
-      (b: any) => b.is_recurring === true || b.recurrence_id != null || b.booking_group_id != null,
-    );
+    bookings.some((b: any) => b.is_recurring === true || b.recurrence_id != null);
   const isRecurring = isRecurringFromData || (bookings.length === 0 && search.recurrent);
   const isGroup = bookings.length > 1 && !isRecurring;
 
