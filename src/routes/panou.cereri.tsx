@@ -312,7 +312,26 @@ function CereriPage() {
     await refetch();
   }
 
-  const groupedItems = useMemo(() => groupRecurringBookings(filtered as any), [filtered]);
+  const sortedGroupedItems = useMemo(() => {
+    const items = groupRecurringBookings(filtered as any);
+    return [...items].sort((a, b) => {
+      const pendingA =
+        a.kind === "single"
+          ? a.booking.status === "în așteptare"
+          : a.bookings.some((b) => b.status === "în așteptare");
+      const pendingB =
+        b.kind === "single"
+          ? b.booking.status === "în așteptare"
+          : b.bookings.some((b) => b.status === "în așteptare");
+      const priorityA = pendingA ? 0 : 1;
+      const priorityB = pendingB ? 0 : 1;
+      if (priorityA !== priorityB) return priorityA - priorityB;
+
+      const dateA = a.kind === "single" ? a.booking.booking_date : a.bookings[0].booking_date;
+      const dateB = b.kind === "single" ? b.booking.booking_date : b.bookings[0].booking_date;
+      return dateB.localeCompare(dateA);
+    });
+  }, [filtered]);
 
   const hasActiveFilters =
     filterStatus !== "toate" ||
@@ -454,14 +473,14 @@ function CereriPage() {
                 </tr>
               </thead>
               <tbody>
-                {groupedItems.length === 0 ? (
+                {sortedGroupedItems.length === 0 ? (
                   <tr>
                     <td colSpan={9} className="px-4 py-12 text-center text-muted-foreground">
                       Nicio rezervare găsită.
                     </td>
                   </tr>
                 ) : (
-                  groupedItems.map((item) => {
+                  sortedGroupedItems.map((item) => {
                     if (item.kind === "recurring_group") {
                       return (
                         <tr key={`grp-${item.groupId}`} className="border-b border-border last:border-b-0">
@@ -532,12 +551,12 @@ function CereriPage() {
 
           {/* Mobile — carduri */}
           <div className="lg:hidden space-y-3">
-            {groupedItems.length === 0 ? (
+            {sortedGroupedItems.length === 0 ? (
               <div className="rounded-xl border border-border bg-background p-8 text-center text-muted-foreground">
                 Nicio rezervare găsită.
               </div>
             ) : (
-              groupedItems.map((item) => {
+              sortedGroupedItems.map((item) => {
                 if (item.kind === "recurring_group") {
                   return (
                     <RecurringGroupCard
