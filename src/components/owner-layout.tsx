@@ -278,13 +278,13 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
               <div className="pt-2">
                 {renderGroup("CHIRIAȘ", RENTER_ITEMS, renterOpen, setRenterOpen)}
               </div>
-              <div className="pt-2">{COMMON_BOTTOM.map(renderItem)}</div>
             </>
           ) : (
-            flatItems.map(renderItem)
+            desktopNavItems.map(renderItem)
           )}
         </nav>
-        <div className="px-3 py-4 border-t">
+        <div className="px-3 py-4 border-t space-y-1">
+          {COMMON_BOTTOM.map(renderItem)}
           <button
             onClick={handleLogout}
             title={collapsed ? "Deconectare" : undefined}
