@@ -166,6 +166,10 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
     flatItems = [...COMMON_BOTTOM];
   }
 
+  // Desktop navigation excludes the bottom-account item so it can be rendered
+  // right above the logout button in the fixed bottom section.
+  const desktopNavItems = flatItems.filter((item) => item.to !== "/panou/cont");
+
   // Mobile bottom nav selection (max 5)
   let mobileItems: NavItem[];
   if (showBoth) {
@@ -177,7 +181,7 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
       RENTER_ITEMS[0], // Orarul meu
     ];
   } else if (showRenterOnly) {
-    mobileItems = [...RENTER_ITEMS];
+    mobileItems = [...RENTER_ITEMS, ...COMMON_BOTTOM];
   } else {
     // owner only, admin, nothing/loading
     mobileItems = flatItems.slice(0, 5);
