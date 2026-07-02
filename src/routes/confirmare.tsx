@@ -274,7 +274,7 @@ function ConfirmarePage() {
                     />
                     {!recurringSummary.startsFirstOfMonth && (
                       <DetailRow
-                        label="Luna curentă (pro-rata)"
+                        label="Luna curentă:"
                         value={`${recurringSummary.currentMonthAmount.toFixed(2)} ${currency}`}
                       />
                     )}
