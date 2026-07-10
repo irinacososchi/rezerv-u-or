@@ -1172,6 +1172,20 @@ function CheckoutPage() {
       );
     }
 
+    // Trigger recurring confirmation emails (best-effort, non-blocking).
+    // Single bookings are handled by an existing DB webhook.
+    if (isRecurrent && recurrenceId) {
+      void supabase.functions
+        .invoke("send-booking-email", {
+          body: { type: "recurring-created", recurrenceId },
+        })
+        .catch((err) => {
+          console.warn("send-booking-email (recurring-created) failed", err);
+        });
+    }
+
+
+
     navigate({
       to: "/confirmare",
       search: {
