@@ -309,6 +309,21 @@ function CereriPage() {
       alert("Eroare: " + error.message);
       return;
     }
+
+    // Send a single approval email for recurring series approved via "Aprobă tot".
+    if (newStatus === "confirmată" && filter.groupId) {
+      const groupBooking = bookings.find(
+        (b) => b.booking_group_id === filter.groupId && b.recurrence_id,
+      );
+      if (groupBooking?.recurrence_id) {
+        void supabase.functions
+          .invoke("send-booking-email", {
+            body: { type: "recurring-approved", recurrenceId: groupBooking.recurrence_id },
+          })
+          .catch((err) => console.warn("recurring-approved email failed", err));
+      }
+    }
+
     await refetch();
   }
 
