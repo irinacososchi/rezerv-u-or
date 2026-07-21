@@ -517,6 +517,44 @@ function DashboardPage() {
   );
 }
 
+function RoomNameLink({ id, name }: { id: string; name: string | null }) {
+  if (!name) return <span>—</span>;
+  return (
+    <Link
+      to="/panou/sali/$id/calendar"
+      params={{ id }}
+      className="text-foreground hover:text-primary hover:underline cursor-pointer transition-colors"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {name}
+    </Link>
+  );
+}
+
+function RoomNameSpan({ id, name }: { id: string; name: string | null }) {
+  const navigate = useNavigate();
+  if (!name) return <span>—</span>;
+  return (
+    <span
+      role="button"
+      tabIndex={0}
+      onClick={(e) => {
+        e.stopPropagation();
+        navigate({ to: "/panou/sali/$id/calendar", params: { id } });
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          navigate({ to: "/panou/sali/$id/calendar", params: { id } });
+        }
+      }}
+      className="text-foreground hover:text-primary hover:underline cursor-pointer transition-colors"
+    >
+      {name}
+    </span>
+  );
+}
+
 function StatCard({
   label,
   value,
