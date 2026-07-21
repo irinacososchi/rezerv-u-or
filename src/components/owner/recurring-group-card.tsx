@@ -37,7 +37,6 @@ export function RecurringGroupCard({
   onApproveSelected,
   onRefuseSelected,
 }: Props) {
-  const [expanded, setExpanded] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [processing, setProcessing] = useState(false);
