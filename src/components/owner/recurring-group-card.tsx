@@ -40,6 +40,7 @@ export function RecurringGroupCard({
   onApproveSelected,
   onRefuseSelected,
   showManageButton = true,
+  roomId,
 }: Props) {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
