@@ -27,6 +27,7 @@ interface Props {
   onRefuseAll: (groupId: string) => Promise<void>;
   onApproveSelected: (bookingIds: string[]) => Promise<void>;
   onRefuseSelected: (bookingIds: string[]) => Promise<void>;
+  showManageButton?: boolean;
 }
 
 export function RecurringGroupCard({
@@ -36,6 +37,7 @@ export function RecurringGroupCard({
   onRefuseAll,
   onApproveSelected,
   onRefuseSelected,
+  showManageButton = true,
 }: Props) {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -208,7 +210,7 @@ export function RecurringGroupCard({
                 </AlertDialogContent>
               </AlertDialog>
             )}
-            {canApprove && (
+            {canApprove && showManageButton && (
               <button
                 onClick={() => setSelectionMode(true)}
                 disabled={processing}
