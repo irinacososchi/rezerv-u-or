@@ -29,6 +29,7 @@ interface Props {
   onApproveSelected: (bookingIds: string[]) => Promise<void>;
   onRefuseSelected: (bookingIds: string[]) => Promise<void>;
   showManageButton?: boolean;
+  roomId?: string;
 }
 
 export function RecurringGroupCard({
