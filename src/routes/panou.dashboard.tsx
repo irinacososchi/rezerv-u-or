@@ -488,7 +488,7 @@ function DashboardPage() {
                         <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between space-y-0">
                           <div>
                             <div className="flex items-center gap-2 flex-wrap">
-                              <CardTitle className="text-sm">{b.room_name}</CardTitle>
+                              <CardTitle className="text-sm"><RoomNameSpan id={b.room_id} name={b.room_name} /></CardTitle>
                               {b.is_recurring && <RecurringBadge />}
                             </div>
                             <p className="text-xs text-muted-foreground mt-1">{b.renter_name ?? b.renter_email ?? "—"}</p>
