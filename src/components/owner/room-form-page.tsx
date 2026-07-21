@@ -102,6 +102,7 @@ const EMPTY_FORM: FormState = {
   has_ballet_barre: false,
   has_changing_room: false,
   has_air_conditioning: false,
+  has_parking: false,
   extra_equipment: "",
   booking_type: "instant",
   min_booking_hours: "1",
