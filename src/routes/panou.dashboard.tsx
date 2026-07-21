@@ -385,7 +385,7 @@ function DashboardPage() {
                             <td className="px-3 py-2">
                               <RecurringBadge count={item.bookings.length} />
                             </td>
-                            <td className="px-3 py-2">{rep.room_name}</td>
+                            <td className="px-3 py-2"><RoomNameLink id={rep.room_id} name={rep.room_name} /></td>
                             <td className="px-3 py-2">{renterName}</td>
                             <td className="px-3 py-2">
                               {formatDateShort(firstDate)} → {formatDateShort(lastDate)}
