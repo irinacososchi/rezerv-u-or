@@ -457,7 +457,7 @@ function DashboardPage() {
                           <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between space-y-0">
                             <div>
                               <div className="flex items-center gap-2 flex-wrap">
-                                <CardTitle className="text-sm">{rep.room_name}</CardTitle>
+                                <CardTitle className="text-sm"><RoomNameSpan id={rep.room_id} name={rep.room_name} /></CardTitle>
                                 <RecurringBadge count={item.bookings.length} />
                               </div>
                               <p className="text-xs text-muted-foreground mt-1">{renterName}</p>
