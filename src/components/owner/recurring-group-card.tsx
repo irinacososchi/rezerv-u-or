@@ -210,7 +210,7 @@ export function RecurringGroupCard({
                 </AlertDialogContent>
               </AlertDialog>
             )}
-            {canApprove && (
+            {canApprove && showManageButton && (
               <button
                 onClick={() => setSelectionMode(true)}
                 disabled={processing}
