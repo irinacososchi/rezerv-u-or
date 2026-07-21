@@ -74,6 +74,7 @@ type FormState = {
   has_ballet_barre: boolean;
   has_changing_room: boolean;
   has_air_conditioning: boolean;
+  has_parking: boolean;
   extra_equipment: string;
   booking_type: "instant" | "manual";
   min_booking_hours: string;
