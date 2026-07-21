@@ -98,6 +98,7 @@ export async function fetchRooms(
       hasMirrors: !!row.has_mirrors,
       hasSound: !!row.has_sound_system,
       hasBarre: !!row.has_ballet_barre,
+      hasParking: !!row.has_parking,
       isActive: !!row.is_active,
       googleMapsUrl: row.google_maps_url ?? null,
     };
