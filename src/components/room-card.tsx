@@ -17,6 +17,7 @@ export interface Room {
   hasMirrors: boolean;
   hasSound: boolean;
   hasBarre: boolean;
+  hasParking: boolean;
   isActive: boolean;
   googleMapsUrl: string | null;
 }

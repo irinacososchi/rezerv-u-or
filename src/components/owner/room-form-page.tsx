@@ -74,6 +74,7 @@ type FormState = {
   has_ballet_barre: boolean;
   has_changing_room: boolean;
   has_air_conditioning: boolean;
+  has_parking: boolean;
   extra_equipment: string;
   booking_type: "instant" | "manual";
   min_booking_hours: string;
@@ -101,6 +102,7 @@ const EMPTY_FORM: FormState = {
   has_ballet_barre: false,
   has_changing_room: false,
   has_air_conditioning: false,
+  has_parking: false,
   extra_equipment: "",
   booking_type: "instant",
   min_booking_hours: "1",
@@ -243,6 +245,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
         has_ballet_barre: !!r.has_ballet_barre,
         has_changing_room: !!r.has_changing_room,
         has_air_conditioning: !!r.has_air_conditioning,
+        has_parking: !!(r as unknown as { has_parking?: boolean }).has_parking,
         extra_equipment: (r.extra_equipment as string) ?? "",
         booking_type:
           (r.booking_type as "instant" | "manual") === "manual"
@@ -465,6 +468,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
       has_ballet_barre: form.has_ballet_barre,
       has_changing_room: form.has_changing_room,
       has_air_conditioning: form.has_air_conditioning,
+      has_parking: form.has_parking,
       extra_equipment: form.extra_equipment || null,
       booking_type: form.booking_type,
       
@@ -873,6 +877,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
                   { key: "has_ballet_barre", label: "Bară balet" },
                   { key: "has_changing_room", label: "Vestiar" },
                   { key: "has_air_conditioning", label: "Aer condiționat" },
+                  { key: "has_parking", label: "Locuri de parcare" },
                 ].map((a) => (
                   <label key={a.key} className="flex items-center gap-2 cursor-pointer">
                     <Checkbox

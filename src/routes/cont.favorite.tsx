@@ -142,6 +142,7 @@ function FavoriteContPage() {
                     hasMirrors: false,
                     hasSound: false,
                     hasBarre: false,
+                    hasParking: false,
                     isActive: r.is_active ?? true,
                     googleMapsUrl: r.google_maps_url ?? null,
                   };

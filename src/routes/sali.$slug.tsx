@@ -65,6 +65,7 @@ type Room = {
   has_ballet_barre: boolean | null;
   has_changing_room: boolean | null;
   has_air_conditioning: boolean | null;
+  has_parking: boolean | null;
   rules_and_notes: string | null;
   currency: string | null;
   is_active: boolean | null;
@@ -791,6 +792,7 @@ function RoomDetailsPage() {
     { key: "barre", label: "Bară balet", on: !!room.has_ballet_barre },
     { key: "changing", label: "Vestiar", on: !!room.has_changing_room },
     { key: "ac", label: "Aer condiționat", on: !!room.has_air_conditioning },
+    { key: "parking", label: "Locuri de parcare", on: !!room.has_parking },
   ].filter((a) => a.on);
 
   const currency = room.currency ?? "RON";
