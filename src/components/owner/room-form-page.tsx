@@ -245,6 +245,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
         has_ballet_barre: !!r.has_ballet_barre,
         has_changing_room: !!r.has_changing_room,
         has_air_conditioning: !!r.has_air_conditioning,
+        has_parking: !!(r as unknown as { has_parking?: boolean }).has_parking,
         extra_equipment: (r.extra_equipment as string) ?? "",
         booking_type:
           (r.booking_type as "instant" | "manual") === "manual"
