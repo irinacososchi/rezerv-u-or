@@ -228,6 +228,20 @@ function generateWeeklyDates(startDateStr: string, endDateStr: string): string[]
   return dates;
 }
 
+// Weekly dates from startDate through the end of (startMonth + 3 full months).
+// Includes the start date itself. Mirrors the renter horizon logic.
+function generateWeeklyDatesHorizonISO(startDateStr: string): string[] {
+  const start = parseISODate(startDateStr);
+  const horizon = new Date(start.getFullYear(), start.getMonth() + 4, 0);
+  const dates: string[] = [];
+  let current = start;
+  while (current <= horizon) {
+    dates.push(formatDateISO(current));
+    current = addDays(current, 7);
+  }
+  return dates;
+}
+
 function formatShortRO(dateISO: string): string {
   const d = parseISODate(dateISO);
   return `${d.getDate()} ${MONTH_NAMES_RO[d.getMonth()].slice(0, 3)}`;
