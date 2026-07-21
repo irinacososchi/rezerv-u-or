@@ -2329,7 +2329,6 @@ function ManualBookingForm({
   onChanged: () => void;
 }) {
   const [isRecurrent, setIsRecurrent] = useState(false);
-  const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
 
   const startOptions = TIME_OPTIONS.slice(0, -1);
   const endOptions = TIME_OPTIONS.slice(1);
