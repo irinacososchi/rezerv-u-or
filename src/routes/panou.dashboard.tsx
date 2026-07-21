@@ -303,7 +303,7 @@ function DashboardPage() {
                           )}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {b.room_name} · {formatDateRO(parseISODate(b.booking_date))} · {formatTimeRange(b.start_time, b.end_time)}
+                          <RoomNameLink id={b.room_id} name={b.room_name} /> · {formatDateRO(parseISODate(b.booking_date))} · {formatTimeRange(b.start_time, b.end_time)}
                         </p>
                         <p className="text-sm font-semibold text-primary">{formatRON(totalOf(b))}</p>
                         <BookingTimestamps createdAt={b.created_at} updatedAt={b.updated_at} />
