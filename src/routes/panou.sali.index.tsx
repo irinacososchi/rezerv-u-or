@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { OwnerLayout } from "@/components/owner-layout";
 import { supabase } from "@/integrations/supabase/external-client";
 import { Building2, Link as LinkIcon, Calendar, Pencil, Plus } from "lucide-react";
@@ -168,7 +168,13 @@ function RoomsPage() {
                     {/* Name + address */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-semibold truncate">{room.name}</p>
+                        <Link
+                          to="/panou/sali/$id/calendar"
+                          params={{ id: room.id }}
+                          className="font-semibold truncate hover:underline cursor-pointer"
+                        >
+                          {room.name}
+                        </Link>
                         <span
                           className={
                             "inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium " +
@@ -214,10 +220,10 @@ function RoomsPage() {
                         Copiază link
                       </Button>
                       <Button size="sm" variant="outline" asChild>
-                        <a href={`/panou/sali/${room.id}/calendar`}>
+                        <Link to="/panou/sali/$id/calendar" params={{ id: room.id }}>
                           <Calendar className="h-4 w-4" />
                           Calendar
-                        </a>
+                        </Link>
                       </Button>
                       <Button size="sm" asChild>
                         <a href={`/panou/sali/${room.id}/edit`}>
