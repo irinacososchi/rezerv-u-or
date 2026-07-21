@@ -64,6 +64,7 @@ function SaliPage() {
   const [mirrors, setMirrors] = useState(false);
   const [sound, setSound] = useState(false);
   const [barre, setBarre] = useState(false);
+  const [parking, setParking] = useState(false);
   const [rooms, setRooms] = useState<Room[]>([]);
 
   useEffect(() => {
