@@ -2593,7 +2593,6 @@ function ManualBookingForm({
                 checked={isRecurrent}
                 onChange={(e) => {
                   setIsRecurrent(e.target.checked);
-                  setRecurrenceEndDate("");
                 }}
                 className="accent-primary h-4 w-4"
               />
