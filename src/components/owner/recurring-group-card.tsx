@@ -155,7 +155,19 @@ export function RecurringGroupCard({
       </div>
 
       <div className="space-y-1 mb-3">
-        <div className="font-medium">{rep.room_name ?? "Sală"}</div>
+        <div className="font-medium">
+          {roomId ? (
+            <Link
+              to="/panou/sali/$id/calendar"
+              params={{ id: roomId }}
+              className="text-foreground hover:text-primary hover:underline cursor-pointer transition-colors"
+            >
+              {rep.room_name ?? "Sală"}
+            </Link>
+          ) : (
+            rep.room_name ?? "Sală"
+          )}
+        </div>
         <div className="text-sm text-muted-foreground">
           În fiecare {weekday}, {timeRange}
         </div>
