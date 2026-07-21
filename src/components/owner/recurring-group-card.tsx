@@ -210,10 +210,7 @@ export function RecurringGroupCard({
             )}
             {canApprove && (
               <button
-                onClick={() => {
-                  setSelectionMode(true);
-                  setExpanded(true);
-                }}
+                onClick={() => setSelectionMode(true)}
                 disabled={processing}
                 className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted/40 disabled:opacity-50"
               >
