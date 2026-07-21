@@ -468,6 +468,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
       has_ballet_barre: form.has_ballet_barre,
       has_changing_room: form.has_changing_room,
       has_air_conditioning: form.has_air_conditioning,
+      has_parking: form.has_parking,
       extra_equipment: form.extra_equipment || null,
       booking_type: form.booking_type,
       
