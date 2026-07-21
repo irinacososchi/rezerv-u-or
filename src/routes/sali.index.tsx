@@ -99,9 +99,10 @@ function SaliPage() {
       if (mirrors && !r.hasMirrors) return false;
       if (sound && !r.hasSound) return false;
       if (barre && !r.hasBarre) return false;
+      if (parking && !r.hasParking) return false;
       return true;
     });
-  }, [rooms, countyId, cityId, priceMin, priceMax, mirrors, sound, barre]);
+  }, [rooms, countyId, cityId, priceMin, priceMax, mirrors, sound, barre, parking]);
 
   const reset = () => {
     setCountyId(null);
@@ -111,6 +112,7 @@ function SaliPage() {
     setMirrors(false);
     setSound(false);
     setBarre(false);
+    setParking(false);
   };
 
   return (
@@ -230,6 +232,13 @@ function SaliPage() {
                       onCheckedChange={(v) => setBarre(Boolean(v))}
                     />
                     Bară de balet
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <Checkbox
+                      checked={parking}
+                      onCheckedChange={(v) => setParking(Boolean(v))}
+                    />
+                    Locuri de parcare
                   </label>
                 </div>
               </div>
