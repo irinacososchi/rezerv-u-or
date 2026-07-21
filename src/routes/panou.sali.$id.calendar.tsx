@@ -2450,7 +2450,11 @@ function ManualBookingForm({
       );
     } else {
       toast.success(
-        allDates.length > 1 ? `${inserted.length} rezervări adăugate` : "Rezervare adăugată",
+        isRecurrent
+          ? "Rezervare recurentă creată"
+          : allDates.length > 1
+            ? `${inserted.length} rezervări adăugate`
+            : "Rezervare adăugată",
       );
     }
     onChanged();
