@@ -288,6 +288,7 @@ function DashboardPage() {
                       onApproveSelected={(ids) => bulkUpdateStatus({ ids }, "confirmată")}
                       onRefuseSelected={(ids) => bulkUpdateStatus({ ids }, "refuzată")}
                       showManageButton={false}
+                      roomId={item.bookings[0]?.room_id}
                     />
                   );
                 }
