@@ -2601,23 +2601,9 @@ function ManualBookingForm({
               Rezervare recurentă săptămânală
             </label>
             {isRecurrent && (
-              <div className="space-y-1 pl-6">
-                <Label className="text-xs">Până la:</Label>
-                <Input
-                  type="date"
-                  value={recurrenceEndDate}
-                  min={date}
-                  onChange={(e) => setRecurrenceEndDate(e.target.value)}
-                />
-                {recurrenceDates.length > 0 && validRange && (
-                  <p className="text-xs text-muted-foreground">
-                    {recurrenceDates.length} rezervări săptămânale · Total:{" "}
-                    <span className="font-semibold text-foreground">
-                      {recurrenceDates.length * total} RON
-                    </span>
-                  </p>
-                )}
-              </div>
+              <p className="text-xs text-muted-foreground pl-6">
+                Programarea se reînnoiește automat lunar.
+              </p>
             )}
           </div>
 
@@ -2627,10 +2613,7 @@ function ManualBookingForm({
             </div>
           )}
           {(() => {
-            const allDates =
-              isRecurrent && recurrenceEndDate
-                ? generateWeeklyDates(date, recurrenceEndDate)
-                : [date];
+            const allDates = isRecurrent ? generateWeeklyDatesHorizonISO(date) : [date];
             const past = pastDates(allDates, manualStart);
             if (past.length === 0) return null;
             const list = past.slice(0, 5).map(formatShortRO).join(", ");
