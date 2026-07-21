@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Check, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,28 +29,6 @@ interface Props {
   onRefuseSelected: (bookingIds: string[]) => Promise<void>;
 }
 
-function formatDateShort(iso: string): string {
-  const d = new Date(iso);
-  return `${d.getDate().toString().padStart(2, "0")}.${(d.getMonth() + 1)
-    .toString()
-    .padStart(2, "0")}.${d.getFullYear()}`;
-}
-
-function statusBadge(status: string) {
-  const map: Record<string, { label: string; cls: string }> = {
-    "în așteptare": { label: "În așteptare", cls: "bg-amber-100 text-amber-800" },
-    "confirmată": { label: "Aprobată", cls: "bg-emerald-100 text-emerald-800" },
-    "refuzată": { label: "Refuzată", cls: "bg-red-100 text-red-700" },
-    "anulată": { label: "Anulată", cls: "bg-gray-100 text-gray-600" },
-  };
-  const v = map[status] ?? { label: status, cls: "bg-gray-100 text-gray-700" };
-  return (
-    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${v.cls}`}>
-      {v.label}
-    </span>
-  );
-}
-
 export function RecurringGroupCard({
   groupId,
   bookings,
@@ -59,7 +37,6 @@ export function RecurringGroupCard({
   onApproveSelected,
   onRefuseSelected,
 }: Props) {
-  const [expanded, setExpanded] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [processing, setProcessing] = useState(false);
@@ -165,20 +142,11 @@ export function RecurringGroupCard({
 
   return (
     <div className="rounded-xl border border-blue-200 bg-blue-50/30 p-4">
-      <div className="flex items-start justify-between gap-2 mb-3">
-        <div className="flex items-center gap-2 flex-wrap">
-          <RecurringBadge size="md" />
-          <span className={`text-xs font-medium ${variantCls[statusLabel.variant]}`}>
-            {statusLabel.label}
-          </span>
-        </div>
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="text-sm text-primary hover:underline flex items-center gap-1 shrink-0"
-        >
-          {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          {expanded ? "Ascunde" : "Detalii"}
-        </button>
+      <div className="flex items-start gap-2 mb-3">
+        <RecurringBadge size="md" />
+        <span className={`text-xs font-medium ${variantCls[statusLabel.variant]}`}>
+          {statusLabel.label}
+        </span>
       </div>
 
       <div className="space-y-1 mb-3">
@@ -199,68 +167,6 @@ export function RecurringGroupCard({
           </span>
         </div>
       </div>
-
-      {expanded && (
-        <div className="border-t border-blue-200 pt-3 mb-3 space-y-2">
-          {selectionMode && (
-            <div className="flex gap-2 text-xs">
-              <button
-                onClick={selectAllPending}
-                className="text-primary hover:underline"
-              >
-                Selectează toate în așteptare ({pendingBookings.length})
-              </button>
-              <span className="text-muted-foreground">·</span>
-              <button
-                onClick={clearSelection}
-                className="text-muted-foreground hover:underline"
-              >
-                Deselectează tot
-              </button>
-            </div>
-          )}
-          <div className="space-y-1">
-            {bookings.map((b) => {
-              const isSelected = selectedIds.has(b.id);
-              const selectable = selectionMode && b.status === "în așteptare";
-              return (
-                <div
-                  key={b.id}
-                  onClick={() => selectable && toggleSelection(b.id)}
-                  className={`flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm ${
-                    selectable ? "cursor-pointer" : ""
-                  } ${
-                    isSelected
-                      ? "border-primary bg-primary/5"
-                      : "border-border bg-background"
-                  }`}
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    {selectable && (
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => {}}
-                        className="accent-primary"
-                      />
-                    )}
-                    <span className="font-medium">{formatDateShort(b.booking_date)}</span>
-                    <span className="text-muted-foreground">
-                      {b.start_time.slice(0, 5)}–{b.end_time.slice(0, 5)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-xs">
-                      {Number(b.total_amount ?? 0).toFixed(0)} {currency}
-                    </span>
-                    {statusBadge(b.status)}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       <div className="flex flex-wrap gap-2">
         {!selectionMode ? (
@@ -304,10 +210,7 @@ export function RecurringGroupCard({
             )}
             {canApprove && (
               <button
-                onClick={() => {
-                  setSelectionMode(true);
-                  setExpanded(true);
-                }}
+                onClick={() => setSelectionMode(true)}
                 disabled={processing}
                 className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted/40 disabled:opacity-50"
               >
