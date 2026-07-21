@@ -873,6 +873,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
                   { key: "has_ballet_barre", label: "Bară balet" },
                   { key: "has_changing_room", label: "Vestiar" },
                   { key: "has_air_conditioning", label: "Aer condiționat" },
+                  { key: "has_parking", label: "Locuri de parcare" },
                 ].map((a) => (
                   <label key={a.key} className="flex items-center gap-2 cursor-pointer">
                     <Checkbox
