@@ -287,6 +287,7 @@ function DashboardPage() {
                       onRefuseAll={(gid) => bulkUpdateStatus({ groupId: gid }, "refuzată")}
                       onApproveSelected={(ids) => bulkUpdateStatus({ ids }, "confirmată")}
                       onRefuseSelected={(ids) => bulkUpdateStatus({ ids }, "refuzată")}
+                      showManageButton={false}
                     />
                   );
                 }
