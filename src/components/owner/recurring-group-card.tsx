@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
 import { Check, X } from "lucide-react";
 import {
   AlertDialog,
@@ -29,7 +28,6 @@ interface Props {
   onApproveSelected: (bookingIds: string[]) => Promise<void>;
   onRefuseSelected: (bookingIds: string[]) => Promise<void>;
   showManageButton?: boolean;
-  roomId?: string;
 }
 
 export function RecurringGroupCard({
@@ -40,7 +38,6 @@ export function RecurringGroupCard({
   onApproveSelected,
   onRefuseSelected,
   showManageButton = true,
-  roomId,
 }: Props) {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -155,19 +152,7 @@ export function RecurringGroupCard({
       </div>
 
       <div className="space-y-1 mb-3">
-        <div className="font-medium">
-          {roomId ? (
-            <Link
-              to="/panou/sali/$id/calendar"
-              params={{ id: roomId }}
-              className="text-foreground hover:text-primary hover:underline cursor-pointer transition-colors"
-            >
-              {rep.room_name ?? "Sală"}
-            </Link>
-          ) : (
-            rep.room_name ?? "Sală"
-          )}
-        </div>
+        <div className="font-medium">{rep.room_name ?? "Sală"}</div>
         <div className="text-sm text-muted-foreground">
           În fiecare {weekday}, {timeRange}
         </div>

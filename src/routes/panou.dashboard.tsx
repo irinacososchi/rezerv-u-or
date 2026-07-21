@@ -288,7 +288,6 @@ function DashboardPage() {
                       onApproveSelected={(ids) => bulkUpdateStatus({ ids }, "confirmată")}
                       onRefuseSelected={(ids) => bulkUpdateStatus({ ids }, "refuzată")}
                       showManageButton={false}
-                      roomId={item.bookings[0]?.room_id}
                     />
                   );
                 }
@@ -304,7 +303,7 @@ function DashboardPage() {
                           )}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          <RoomNameLink id={b.room_id} name={b.room_name} /> · {formatDateRO(parseISODate(b.booking_date))} · {formatTimeRange(b.start_time, b.end_time)}
+                          {b.room_name} · {formatDateRO(parseISODate(b.booking_date))} · {formatTimeRange(b.start_time, b.end_time)}
                         </p>
                         <p className="text-sm font-semibold text-primary">{formatRON(totalOf(b))}</p>
                         <BookingTimestamps createdAt={b.created_at} updatedAt={b.updated_at} />
@@ -386,7 +385,7 @@ function DashboardPage() {
                             <td className="px-3 py-2">
                               <RecurringBadge count={item.bookings.length} />
                             </td>
-                            <td className="px-3 py-2"><RoomNameLink id={rep.room_id} name={rep.room_name} /></td>
+                            <td className="px-3 py-2">{rep.room_name}</td>
                             <td className="px-3 py-2">{renterName}</td>
                             <td className="px-3 py-2">
                               {formatDateShort(firstDate)} → {formatDateShort(lastDate)}
@@ -419,7 +418,7 @@ function DashboardPage() {
                               <span className="ml-1.5 inline-block align-middle"><RecurringBadge /></span>
                             )}
                           </td>
-                          <td className="px-3 py-2"><RoomNameLink id={b.room_id} name={b.room_name} /></td>
+                          <td className="px-3 py-2">{b.room_name}</td>
                           <td className="px-3 py-2">{b.renter_name ?? b.renter_email ?? "—"}</td>
                           <td className="px-3 py-2">{formatDateShort(b.booking_date)}</td>
                           <td className="px-3 py-2">{formatTimeRange(b.start_time, b.end_time)}</td>
@@ -458,7 +457,7 @@ function DashboardPage() {
                           <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between space-y-0">
                             <div>
                               <div className="flex items-center gap-2 flex-wrap">
-                                <CardTitle className="text-sm"><RoomNameSpan id={rep.room_id} name={rep.room_name} /></CardTitle>
+                                <CardTitle className="text-sm">{rep.room_name}</CardTitle>
                                 <RecurringBadge count={item.bookings.length} />
                               </div>
                               <p className="text-xs text-muted-foreground mt-1">{renterName}</p>
@@ -489,7 +488,7 @@ function DashboardPage() {
                         <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between space-y-0">
                           <div>
                             <div className="flex items-center gap-2 flex-wrap">
-                              <CardTitle className="text-sm"><RoomNameSpan id={b.room_id} name={b.room_name} /></CardTitle>
+                              <CardTitle className="text-sm">{b.room_name}</CardTitle>
                               {b.is_recurring && <RecurringBadge />}
                             </div>
                             <p className="text-xs text-muted-foreground mt-1">{b.renter_name ?? b.renter_email ?? "—"}</p>
@@ -515,44 +514,6 @@ function DashboardPage() {
         </section>
       </div>
     </OwnerLayout>
-  );
-}
-
-function RoomNameLink({ id, name }: { id: string; name: string | null }) {
-  if (!name) return <span>—</span>;
-  return (
-    <Link
-      to="/panou/sali/$id/calendar"
-      params={{ id }}
-      className="text-foreground hover:text-primary hover:underline cursor-pointer transition-colors"
-      onClick={(e) => e.stopPropagation()}
-    >
-      {name}
-    </Link>
-  );
-}
-
-function RoomNameSpan({ id, name }: { id: string; name: string | null }) {
-  const navigate = useNavigate();
-  if (!name) return <span>—</span>;
-  return (
-    <span
-      role="button"
-      tabIndex={0}
-      onClick={(e) => {
-        e.stopPropagation();
-        navigate({ to: "/panou/sali/$id/calendar", params: { id } });
-      }}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          navigate({ to: "/panou/sali/$id/calendar", params: { id } });
-        }
-      }}
-      className="text-foreground hover:text-primary hover:underline cursor-pointer transition-colors"
-    >
-      {name}
-    </span>
   );
 }
 
