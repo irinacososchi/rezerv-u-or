@@ -2342,8 +2342,7 @@ function ManualBookingForm({
   const pricePerHour = calculatePriceForDate(date, manualStart, pricingRules);
   const total = validRange ? durationHours * pricePerHour : 0;
 
-  const recurrenceDates =
-    isRecurrent && recurrenceEndDate ? generateWeeklyDates(date, recurrenceEndDate) : [];
+  const recurrenceDates = isRecurrent ? generateWeeklyDatesHorizonISO(date) : [];
 
   async function handleManualBooking() {
     if (!manualName.trim()) {
