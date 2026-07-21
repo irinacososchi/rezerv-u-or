@@ -228,6 +228,20 @@ function generateWeeklyDates(startDateStr: string, endDateStr: string): string[]
   return dates;
 }
 
+// Weekly dates from startDate through the end of (startMonth + 3 full months).
+// Includes the start date itself. Mirrors the renter horizon logic.
+function generateWeeklyDatesHorizonISO(startDateStr: string): string[] {
+  const start = parseISODate(startDateStr);
+  const horizon = new Date(start.getFullYear(), start.getMonth() + 4, 0);
+  const dates: string[] = [];
+  let current = start;
+  while (current <= horizon) {
+    dates.push(formatDateISO(current));
+    current = addDays(current, 7);
+  }
+  return dates;
+}
+
 function formatShortRO(dateISO: string): string {
   const d = parseISODate(dateISO);
   return `${d.getDate()} ${MONTH_NAMES_RO[d.getMonth()].slice(0, 3)}`;
@@ -2315,7 +2329,6 @@ function ManualBookingForm({
   onChanged: () => void;
 }) {
   const [isRecurrent, setIsRecurrent] = useState(false);
-  const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
 
   const startOptions = TIME_OPTIONS.slice(0, -1);
   const endOptions = TIME_OPTIONS.slice(1);
@@ -2328,8 +2341,7 @@ function ManualBookingForm({
   const pricePerHour = calculatePriceForDate(date, manualStart, pricingRules);
   const total = validRange ? durationHours * pricePerHour : 0;
 
-  const recurrenceDates =
-    isRecurrent && recurrenceEndDate ? generateWeeklyDates(date, recurrenceEndDate) : [];
+  const recurrenceDates = isRecurrent ? generateWeeklyDatesHorizonISO(date) : [];
 
   async function handleManualBooking() {
     if (!manualName.trim()) {
@@ -2348,16 +2360,11 @@ function ManualBookingForm({
       setManualError("Durata trebuie să fie un multiplu de 30 de minute.");
       return;
     }
-    if (isRecurrent && !recurrenceEndDate) {
-      setManualError("Selectează data de sfârșit pentru recurență.");
-      return;
-    }
 
     const startTime = `${manualStart}:00`;
     const endTime = `${manualEnd}:00`;
 
-    const allDates =
-      isRecurrent && recurrenceEndDate ? generateWeeklyDates(date, recurrenceEndDate) : [date];
+    const allDates = isRecurrent ? generateWeeklyDatesHorizonISO(date) : [date];
 
     setManualSubmitting(true);
     setManualError(null);
@@ -2586,30 +2593,15 @@ function ManualBookingForm({
                 checked={isRecurrent}
                 onChange={(e) => {
                   setIsRecurrent(e.target.checked);
-                  setRecurrenceEndDate("");
                 }}
                 className="accent-primary h-4 w-4"
               />
               Rezervare recurentă săptămânală
             </label>
             {isRecurrent && (
-              <div className="space-y-1 pl-6">
-                <Label className="text-xs">Până la:</Label>
-                <Input
-                  type="date"
-                  value={recurrenceEndDate}
-                  min={date}
-                  onChange={(e) => setRecurrenceEndDate(e.target.value)}
-                />
-                {recurrenceDates.length > 0 && validRange && (
-                  <p className="text-xs text-muted-foreground">
-                    {recurrenceDates.length} rezervări săptămânale · Total:{" "}
-                    <span className="font-semibold text-foreground">
-                      {recurrenceDates.length * total} RON
-                    </span>
-                  </p>
-                )}
-              </div>
+              <p className="text-xs text-muted-foreground pl-6">
+                Programarea se reînnoiește automat lunar.
+              </p>
             )}
           </div>
 
@@ -2619,10 +2611,7 @@ function ManualBookingForm({
             </div>
           )}
           {(() => {
-            const allDates =
-              isRecurrent && recurrenceEndDate
-                ? generateWeeklyDates(date, recurrenceEndDate)
-                : [date];
+            const allDates = isRecurrent ? generateWeeklyDatesHorizonISO(date) : [date];
             const past = pastDates(allDates, manualStart);
             if (past.length === 0) return null;
             const list = past.slice(0, 5).map(formatShortRO).join(", ");
