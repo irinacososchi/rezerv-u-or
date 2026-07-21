@@ -2361,16 +2361,11 @@ function ManualBookingForm({
       setManualError("Durata trebuie să fie un multiplu de 30 de minute.");
       return;
     }
-    if (isRecurrent && !recurrenceEndDate) {
-      setManualError("Selectează data de sfârșit pentru recurență.");
-      return;
-    }
 
     const startTime = `${manualStart}:00`;
     const endTime = `${manualEnd}:00`;
 
-    const allDates =
-      isRecurrent && recurrenceEndDate ? generateWeeklyDates(date, recurrenceEndDate) : [date];
+    const allDates = isRecurrent ? generateWeeklyDatesHorizonISO(date) : [date];
 
     setManualSubmitting(true);
     setManualError(null);
