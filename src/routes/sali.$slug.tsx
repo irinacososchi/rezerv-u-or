@@ -65,6 +65,7 @@ type Room = {
   has_ballet_barre: boolean | null;
   has_changing_room: boolean | null;
   has_air_conditioning: boolean | null;
+  has_parking: boolean | null;
   rules_and_notes: string | null;
   currency: string | null;
   is_active: boolean | null;
