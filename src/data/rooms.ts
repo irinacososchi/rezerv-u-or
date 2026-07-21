@@ -17,6 +17,7 @@ type RoomRow = {
   has_mirrors: boolean | null;
   has_sound_system: boolean | null;
   has_ballet_barre: boolean | null;
+  has_parking: boolean | null;
   is_active: boolean | null;
   cities: {
     id: number;
