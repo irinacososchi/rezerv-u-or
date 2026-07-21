@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Check, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,28 +27,6 @@ interface Props {
   onRefuseAll: (groupId: string) => Promise<void>;
   onApproveSelected: (bookingIds: string[]) => Promise<void>;
   onRefuseSelected: (bookingIds: string[]) => Promise<void>;
-}
-
-function formatDateShort(iso: string): string {
-  const d = new Date(iso);
-  return `${d.getDate().toString().padStart(2, "0")}.${(d.getMonth() + 1)
-    .toString()
-    .padStart(2, "0")}.${d.getFullYear()}`;
-}
-
-function statusBadge(status: string) {
-  const map: Record<string, { label: string; cls: string }> = {
-    "în așteptare": { label: "În așteptare", cls: "bg-amber-100 text-amber-800" },
-    "confirmată": { label: "Aprobată", cls: "bg-emerald-100 text-emerald-800" },
-    "refuzată": { label: "Refuzată", cls: "bg-red-100 text-red-700" },
-    "anulată": { label: "Anulată", cls: "bg-gray-100 text-gray-600" },
-  };
-  const v = map[status] ?? { label: status, cls: "bg-gray-100 text-gray-700" };
-  return (
-    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${v.cls}`}>
-      {v.label}
-    </span>
-  );
 }
 
 export function RecurringGroupCard({
