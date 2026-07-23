@@ -924,7 +924,7 @@ function RoomCalendarPage() {
                         const dateISO = formatDateISO(d);
                         const e = cellMap.get(`${dateISO}|${slotStart}`);
                         const showLabel = e && e.start_time.slice(0, 5) === slotStart;
-                        return (
+                        const cellBtn = (
                           <button
                             type="button"
                             key={dateISO + slotStart}
@@ -962,6 +962,15 @@ function RoomCalendarPage() {
                               </>
                             )}
                           </button>
+                        );
+                        if (!e) return cellBtn;
+                        return (
+                          <Tooltip key={dateISO + slotStart}>
+                            <TooltipTrigger asChild>{cellBtn}</TooltipTrigger>
+                            <TooltipContent side="top" className="p-2">
+                              <EntryTooltipCard e={e} />
+                            </TooltipContent>
+                          </Tooltip>
                         );
                       })}
                     </div>
