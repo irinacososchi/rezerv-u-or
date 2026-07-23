@@ -43,6 +43,52 @@ import {
 import { ClientSelect } from "@/components/clients/ClientSelect";
 import { LinkedBadge } from "@/components/clients/LinkedBadge";
 
+function formatDurationRO(mins: number): string {
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  if (h === 0) return `${m} min`;
+  if (m === 0) return `${h} h`;
+  return `${h} h ${m} min`;
+}
+
+function EntryTooltipCard({ e }: { e: Entry }) {
+  const start = e.start_time?.slice(0, 5) ?? "";
+  const end = e.end_time?.slice(0, 5) ?? "";
+  if (e.entry_type === "blocat") {
+    const note = (e.renter_notes ?? e.reason ?? "").trim();
+    return (
+      <div className="space-y-0.5 text-xs">
+        <div className="font-medium">Blocat</div>
+        <div className="text-muted-foreground">{start}–{end}</div>
+        {note && <div className="text-muted-foreground">{note}</div>}
+      </div>
+    );
+  }
+  const durationMin = start && end ? slotDurationMinutes(start, end) : 0;
+  const payment = e.payment_status === "platit" ? "plătit" : e.payment_status === "neplatit" ? "neplătit" : (e.payment_status ?? "—");
+  return (
+    <div className="space-y-1 text-xs min-w-[180px]">
+      <div className="font-medium truncate">{e.renter_name ?? e.reference ?? "Rezervare"}</div>
+      <div className="text-muted-foreground">
+        {start}–{end} · {formatDurationRO(durationMin)}
+      </div>
+      {e.total_amount != null && e.total_amount > 0 && (
+        <div>Total: <span className="font-medium">{e.total_amount} RON</span></div>
+      )}
+      <div className="flex flex-wrap gap-1 pt-0.5">
+        {e.status && (
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full border">{e.status}</span>
+        )}
+        <span className="text-[10px] px-1.5 py-0.5 rounded-full border">{payment}</span>
+      </div>
+      {e.recurrence_id && (
+        <div className="text-muted-foreground pt-0.5">Rezervare recurentă</div>
+      )}
+    </div>
+  );
+}
+
+
 function AttachedClientDisplay({ bookingId }: { bookingId: string }) {
   const [client, setClient] = useState<{
     name: string;
