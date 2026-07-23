@@ -524,6 +524,20 @@ function RoomCalendarPage() {
     return m;
   }, [entries]);
 
+  // Per-day sorted entries for month view chips
+  const entriesByDay = useMemo(() => {
+    const m = new Map<string, Entry[]>();
+    for (const e of entries) {
+      const arr = m.get(e.booking_date) ?? [];
+      arr.push(e);
+      m.set(e.booking_date, arr);
+    }
+    for (const arr of m.values()) {
+      arr.sort((a, b) => a.start_time.localeCompare(b.start_time));
+    }
+    return m;
+  }, [entries]);
+
   function onCellClick(dateISO: string, slotStart: string) {
     const e = cellMap.get(`${dateISO}|${slotStart}`);
     if (!e) {
