@@ -43,14 +43,6 @@ import {
 import { ClientSelect } from "@/components/clients/ClientSelect";
 import { LinkedBadge } from "@/components/clients/LinkedBadge";
 
-function formatDurationRO(mins: number): string {
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  if (h === 0) return `${m} min`;
-  if (m === 0) return `${h} h`;
-  return `${h} h ${m} min`;
-}
-
 function EntryTooltipCard({ e }: { e: Entry }) {
   const start = e.start_time?.slice(0, 5) ?? "";
   const end = e.end_time?.slice(0, 5) ?? "";
