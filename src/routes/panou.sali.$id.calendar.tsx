@@ -38,9 +38,48 @@ import {
   SLOT_GRANULARITY_MINUTES,
   timeToMinutes,
   minutesToTime,
+  slotDurationMinutes,
 } from "@/lib/time-slots";
 import { ClientSelect } from "@/components/clients/ClientSelect";
 import { LinkedBadge } from "@/components/clients/LinkedBadge";
+
+function EntryTooltipCard({ e }: { e: Entry }) {
+  const start = e.start_time?.slice(0, 5) ?? "";
+  const end = e.end_time?.slice(0, 5) ?? "";
+  if (e.entry_type === "blocat") {
+    const note = (e.renter_notes ?? e.reason ?? "").trim();
+    return (
+      <div className="space-y-0.5 text-xs">
+        <div className="font-medium">Blocat</div>
+        <div className="text-muted-foreground">{start}–{end}</div>
+        {note && <div className="text-muted-foreground">{note}</div>}
+      </div>
+    );
+  }
+  const durationMin = start && end ? slotDurationMinutes(start, end) : 0;
+  const payment = e.payment_status === "platit" ? "plătit" : e.payment_status === "neplatit" ? "neplătit" : (e.payment_status ?? "—");
+  return (
+    <div className="space-y-1 text-xs min-w-[180px]">
+      <div className="font-medium truncate">{e.renter_name ?? e.reference ?? "Rezervare"}</div>
+      <div className="text-muted-foreground">
+        {start}–{end} · {formatDurationRO(durationMin)}
+      </div>
+      {e.total_amount != null && e.total_amount > 0 && (
+        <div>Total: <span className="font-medium">{e.total_amount} RON</span></div>
+      )}
+      <div className="flex flex-wrap gap-1 pt-0.5">
+        {e.status && (
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full border">{e.status}</span>
+        )}
+        <span className="text-[10px] px-1.5 py-0.5 rounded-full border">{payment}</span>
+      </div>
+      {e.recurrence_id && (
+        <div className="text-muted-foreground pt-0.5">Rezervare recurentă</div>
+      )}
+    </div>
+  );
+}
+
 
 function AttachedClientDisplay({ bookingId }: { bookingId: string }) {
   const [client, setClient] = useState<{
@@ -749,6 +788,7 @@ function RoomCalendarPage() {
               ))}
             </div>
 
+            <TooltipProvider delayDuration={200}>
             {view === "day" ? (
               <div className="border rounded-lg bg-card overflow-hidden">
                 <div className="px-3 py-2 border-b bg-muted/20 text-sm font-medium capitalize">
@@ -761,7 +801,7 @@ function RoomCalendarPage() {
                   const e = cellMap.get(`${dateISO}|${slotStart}`);
                   const showLabel = e && e.start_time.slice(0, 5) === slotStart;
                   const isHalfHour = slotStart.endsWith(":30");
-                  return (
+                  const cellButton = (
                     <button
                       type="button"
                       key={slotStart}
@@ -824,6 +864,15 @@ function RoomCalendarPage() {
                       </div>
                     </button>
                   );
+                  if (!e) return cellButton;
+                  return (
+                    <Tooltip key={slotStart}>
+                      <TooltipTrigger asChild>{cellButton}</TooltipTrigger>
+                      <TooltipContent side="right" className="p-2">
+                        <EntryTooltipCard e={e} />
+                      </TooltipContent>
+                    </Tooltip>
+                  );
                 })}
                 </div>
               </div>
@@ -876,7 +925,7 @@ function RoomCalendarPage() {
                         const dateISO = formatDateISO(d);
                         const e = cellMap.get(`${dateISO}|${slotStart}`);
                         const showLabel = e && e.start_time.slice(0, 5) === slotStart;
-                        return (
+                        const cellBtn = (
                           <button
                             type="button"
                             key={dateISO + slotStart}
@@ -914,6 +963,15 @@ function RoomCalendarPage() {
                               </>
                             )}
                           </button>
+                        );
+                        if (!e) return cellBtn;
+                        return (
+                          <Tooltip key={dateISO + slotStart}>
+                            <TooltipTrigger asChild>{cellBtn}</TooltipTrigger>
+                            <TooltipContent side="top" className="p-2">
+                              <EntryTooltipCard e={e} />
+                            </TooltipContent>
+                          </Tooltip>
                         );
                       })}
                     </div>
@@ -985,6 +1043,9 @@ function RoomCalendarPage() {
                 </div>
               </div>
             )}
+            </TooltipProvider>
+
+
 
             <div className="flex flex-wrap gap-3 text-xs text-muted-foreground pt-2">
               <LegendDot className="bg-primary/30" label="Confirmată" />
