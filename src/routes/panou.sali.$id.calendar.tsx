@@ -1043,6 +1043,9 @@ function RoomCalendarPage() {
                 </div>
               </div>
             )}
+            </TooltipProvider>
+
+
 
             <div className="flex flex-wrap gap-3 text-xs text-muted-foreground pt-2">
               <LegendDot className="bg-primary/30" label="Confirmată" />
