@@ -38,6 +38,7 @@ import {
   SLOT_GRANULARITY_MINUTES,
   timeToMinutes,
   minutesToTime,
+  slotDurationMinutes,
 } from "@/lib/time-slots";
 import { ClientSelect } from "@/components/clients/ClientSelect";
 import { LinkedBadge } from "@/components/clients/LinkedBadge";
