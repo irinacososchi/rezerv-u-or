@@ -192,13 +192,6 @@ function blockNotePreview(notes?: string | null): string | null {
   return words.slice(0, 2).join(" ") + "...";
 }
 
-function formatDurationRO(mins: number): string {
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  if (h === 0) return `${m} min`;
-  if (m === 0) return `${h} h`;
-  return `${h} h ${m} min`;
-}
 
 function EntryTooltipCard({ e }: { e: Entry }) {
   const start = e.start_time?.slice(0, 5) ?? "";
