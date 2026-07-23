@@ -800,7 +800,7 @@ function RoomCalendarPage() {
                   const e = cellMap.get(`${dateISO}|${slotStart}`);
                   const showLabel = e && e.start_time.slice(0, 5) === slotStart;
                   const isHalfHour = slotStart.endsWith(":30");
-                  return (
+                  const cellButton = (
                     <button
                       type="button"
                       key={slotStart}
@@ -862,6 +862,15 @@ function RoomCalendarPage() {
                         )}
                       </div>
                     </button>
+                  );
+                  if (!e) return cellButton;
+                  return (
+                    <Tooltip key={slotStart}>
+                      <TooltipTrigger asChild>{cellButton}</TooltipTrigger>
+                      <TooltipContent side="right" className="p-2">
+                        <EntryTooltipCard e={e} />
+                      </TooltipContent>
+                    </Tooltip>
                   );
                 })}
                 </div>
