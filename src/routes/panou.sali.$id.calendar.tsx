@@ -249,6 +249,8 @@ function EntryTooltipCard({ e }: { e: Entry }) {
     </div>
   );
 }
+
+function formatRange(weekStart: Date): string {
   const weekEnd = addDays(weekStart, 6);
   const sameMonth = weekStart.getMonth() === weekEnd.getMonth();
   const sameYear = weekStart.getFullYear() === weekEnd.getFullYear();
