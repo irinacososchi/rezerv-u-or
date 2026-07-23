@@ -38,48 +38,9 @@ import {
   SLOT_GRANULARITY_MINUTES,
   timeToMinutes,
   minutesToTime,
-  slotDurationMinutes,
 } from "@/lib/time-slots";
 import { ClientSelect } from "@/components/clients/ClientSelect";
 import { LinkedBadge } from "@/components/clients/LinkedBadge";
-
-function EntryTooltipCard({ e }: { e: Entry }) {
-  const start = e.start_time?.slice(0, 5) ?? "";
-  const end = e.end_time?.slice(0, 5) ?? "";
-  if (e.entry_type === "blocat") {
-    const note = (e.renter_notes ?? e.reason ?? "").trim();
-    return (
-      <div className="space-y-0.5 text-xs">
-        <div className="font-medium">Blocat</div>
-        <div className="text-muted-foreground">{start}–{end}</div>
-        {note && <div className="text-muted-foreground">{note}</div>}
-      </div>
-    );
-  }
-  const durationMin = start && end ? slotDurationMinutes(start, end) : 0;
-  const payment = e.payment_status === "platit" ? "plătit" : e.payment_status === "neplatit" ? "neplătit" : (e.payment_status ?? "—");
-  return (
-    <div className="space-y-1 text-xs min-w-[180px]">
-      <div className="font-medium truncate">{e.renter_name ?? e.reference ?? "Rezervare"}</div>
-      <div className="text-muted-foreground">
-        {start}–{end} · {formatDurationRO(durationMin)}
-      </div>
-      {e.total_amount != null && e.total_amount > 0 && (
-        <div>Total: <span className="font-medium">{e.total_amount} RON</span></div>
-      )}
-      <div className="flex flex-wrap gap-1 pt-0.5">
-        {e.status && (
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full border">{e.status}</span>
-        )}
-        <span className="text-[10px] px-1.5 py-0.5 rounded-full border">{payment}</span>
-      </div>
-      {e.recurrence_id && (
-        <div className="text-muted-foreground pt-0.5">Rezervare recurentă</div>
-      )}
-    </div>
-  );
-}
-
 
 function AttachedClientDisplay({ bookingId }: { bookingId: string }) {
   const [client, setClient] = useState<{
@@ -788,7 +749,6 @@ function RoomCalendarPage() {
               ))}
             </div>
 
-            <TooltipProvider delayDuration={200}>
             {view === "day" ? (
               <div className="border rounded-lg bg-card overflow-hidden">
                 <div className="px-3 py-2 border-b bg-muted/20 text-sm font-medium capitalize">
@@ -801,7 +761,7 @@ function RoomCalendarPage() {
                   const e = cellMap.get(`${dateISO}|${slotStart}`);
                   const showLabel = e && e.start_time.slice(0, 5) === slotStart;
                   const isHalfHour = slotStart.endsWith(":30");
-                  const cellButton = (
+                  return (
                     <button
                       type="button"
                       key={slotStart}
@@ -864,15 +824,6 @@ function RoomCalendarPage() {
                       </div>
                     </button>
                   );
-                  if (!e) return cellButton;
-                  return (
-                    <Tooltip key={slotStart}>
-                      <TooltipTrigger asChild>{cellButton}</TooltipTrigger>
-                      <TooltipContent side="right" className="p-2">
-                        <EntryTooltipCard e={e} />
-                      </TooltipContent>
-                    </Tooltip>
-                  );
                 })}
                 </div>
               </div>
@@ -925,7 +876,7 @@ function RoomCalendarPage() {
                         const dateISO = formatDateISO(d);
                         const e = cellMap.get(`${dateISO}|${slotStart}`);
                         const showLabel = e && e.start_time.slice(0, 5) === slotStart;
-                        const cellBtn = (
+                        return (
                           <button
                             type="button"
                             key={dateISO + slotStart}
@@ -963,15 +914,6 @@ function RoomCalendarPage() {
                               </>
                             )}
                           </button>
-                        );
-                        if (!e) return cellBtn;
-                        return (
-                          <Tooltip key={dateISO + slotStart}>
-                            <TooltipTrigger asChild>{cellBtn}</TooltipTrigger>
-                            <TooltipContent side="top" className="p-2">
-                              <EntryTooltipCard e={e} />
-                            </TooltipContent>
-                          </Tooltip>
                         );
                       })}
                     </div>
@@ -1043,9 +985,6 @@ function RoomCalendarPage() {
                 </div>
               </div>
             )}
-            </TooltipProvider>
-
-
 
             <div className="flex flex-wrap gap-3 text-xs text-muted-foreground pt-2">
               <LegendDot className="bg-primary/30" label="Confirmată" />
@@ -1791,30 +1730,30 @@ function BlockDetails({
   onClose: () => void;
   onChanged: () => void;
 }) {
-  const [date, setDate] = useState<Date>(parseISODate(entry.booking_date));
-  const [datePickerOpen, setDatePickerOpen] = useState(false);
-  const initialStart = (entry.start_time ?? "09:00").slice(0, 5);
-  const initialEnd = (entry.end_time ?? "10:00").slice(0, 5);
-  const [start, setStart] = useState(initialStart);
-  const [end, setEnd] = useState(initialEnd);
-  const [reason, setReason] = useState<string>(entry.renter_notes ?? entry.reason ?? "");
+  const [busy, setBusy] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [unblocking, setUnblocking] = useState(false);
+  const [reason, setReason] = useState<string>(entry.renter_notes ?? entry.reason ?? "");
+  const [recurrenceInfo, setRecurrenceInfo] = useState<RecurrenceInfo | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleteScope, setDeleteScope] = useState<"single" | "future" | "all">("single");
 
-  const startOptions = TIME_OPTIONS.slice(0, -1);
-  const endOptions = TIME_OPTIONS.slice(1);
+  const isRecurrent = !!entry.recurrence_id;
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const { data, error } = await supabase
         .from("bookings")
-        .select("renter_notes")
+        .select("id, room_id, booking_date, start_time, end_time, renter_notes, status")
         .eq("id", entry.id)
         .eq("status", "blocată")
         .maybeSingle();
-      if (cancelled || error || !data) return;
+      if (cancelled) return;
+      if (error) {
+        console.error("load block reason error", error);
+        return;
+      }
+      if (!data) return;
       setReason((data as { renter_notes?: string | null }).renter_notes ?? "");
     })();
     return () => {
@@ -1822,152 +1761,240 @@ function BlockDetails({
     };
   }, [entry.id]);
 
-  async function handleSave() {
-    if (timeToMinutes(end) <= timeToMinutes(start)) {
-      toast.error("Ora de sfârșit trebuie să fie după ora de început.");
+  useEffect(() => {
+    if (!entry.recurrence_id) {
+      setRecurrenceInfo(null);
       return;
     }
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("recurrences")
+        .select("id, frequency, is_active, total_bookings, first_date, last_date")
+        .eq("id", entry.recurrence_id!)
+        .maybeSingle();
+      if (cancelled || error || !data) return;
+      setRecurrenceInfo(data as RecurrenceInfo);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [entry.recurrence_id]);
+
+  const frequencyLabel = recurrenceInfo?.frequency
+    ? (FREQUENCY_LABEL_RO[recurrenceInfo.frequency] ?? recurrenceInfo.frequency)
+    : "săptămânală";
+
+  async function saveReason() {
     setSaving(true);
-    const { data, error } = await supabase.rpc("edit_blocked_slot", {
-      p_booking_id: entry.id,
-      p_date: format(date, "yyyy-MM-dd"),
-      p_start_time: `${start}:00`,
-      p_end_time: `${end}:00`,
-      p_reason: reason.trim() || null,
-    } as never);
+    const { error } = await supabase
+      .from("bookings")
+      .update({ renter_notes: reason.trim() || null })
+      .eq("id", entry.id)
+      .eq("status", "blocată");
     setSaving(false);
     if (error) {
-      toast.error(error.message);
+      toast.error(error.message || "Eroare la salvarea motivului");
       return;
     }
-    toast.success(typeof data === "string" && data ? data : "Slot actualizat");
+    toast.success("Motiv salvat");
     onChanged();
-    onClose();
   }
 
-  async function handleUnblock() {
-    setUnblocking(true);
-    const { error } = await supabase.rpc("unblock_slot", {
-      p_booking_id: entry.id,
-    } as never);
-    setUnblocking(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+  async function deleteSingle() {
+    const { error } = await supabase.from("bookings").delete().eq("id", entry.id);
+    if (error) throw error;
+
+    // If part of a series, decrement counter
+    if (entry.recurrence_id) {
+      const { count } = await supabase
+        .from("bookings")
+        .select("id", { count: "exact", head: true })
+        .eq("recurrence_id", entry.recurrence_id);
+      await supabase
+        .from("recurrences")
+        .update({ total_bookings: count ?? 0 })
+        .eq("id", entry.recurrence_id);
     }
-    toast.success("Slot deblocat");
-    setConfirmOpen(false);
-    onChanged();
-    onClose();
   }
 
-  const busy = saving || unblocking;
+  async function deleteFuture() {
+    if (!entry.recurrence_id) return;
+    const { error } = await supabase
+      .from("bookings")
+      .delete()
+      .eq("recurrence_id", entry.recurrence_id)
+      .gte("booking_date", entry.booking_date);
+    if (error) throw error;
+
+    // Recompute last_date and total_bookings from remaining rows
+    const { data: remaining } = await supabase
+      .from("bookings")
+      .select("booking_date")
+      .eq("recurrence_id", entry.recurrence_id)
+      .order("booking_date", { ascending: false })
+      .limit(1);
+
+    const { count } = await supabase
+      .from("bookings")
+      .select("id", { count: "exact", head: true })
+      .eq("recurrence_id", entry.recurrence_id);
+
+    const newLast = remaining?.[0]?.booking_date ?? null;
+    await supabase
+      .from("recurrences")
+      .update({
+        last_date: newLast,
+        total_bookings: count ?? 0,
+        is_active: (count ?? 0) > 0,
+      })
+      .eq("id", entry.recurrence_id);
+  }
+
+  async function deleteAll() {
+    if (!entry.recurrence_id) return;
+    const { error } = await supabase
+      .from("bookings")
+      .delete()
+      .eq("recurrence_id", entry.recurrence_id);
+    if (error) throw error;
+    await supabase
+      .from("recurrences")
+      .update({ is_active: false, total_bookings: 0 })
+      .eq("id", entry.recurrence_id);
+  }
+
+  async function performDelete() {
+    setBusy(true);
+    try {
+      if (!isRecurrent || deleteScope === "single") {
+        await deleteSingle();
+        toast.success("Slot deblocat");
+      } else if (deleteScope === "future") {
+        await deleteFuture();
+        toast.success("Acest slot și toate viitoarele au fost șterse");
+      } else {
+        await deleteAll();
+        toast.success("Toată seria a fost ștearsă");
+      }
+      setConfirmOpen(false);
+      onChanged();
+      onClose();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Eroare la ștergere";
+      toast.error(msg);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function openDelete() {
+    if (isRecurrent) {
+      setDeleteScope("single");
+      setConfirmOpen(true);
+    } else {
+      void performDelete();
+    }
+  }
 
   return (
     <>
       <DialogHeader>
-        <DialogTitle>Slot blocat</DialogTitle>
+        <DialogTitle className="flex items-center gap-2">
+          Interval blocat
+          {isRecurrent && (
+            <span
+              className="inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded bg-sky-200 text-sky-900 dark:bg-sky-800 dark:text-sky-50"
+              title={`Blocare recurentă (${frequencyLabel})`}
+            >
+              <Repeat className="h-3 w-3" />
+              recurent
+            </span>
+          )}
+        </DialogTitle>
         <DialogDescription>
-          {formatDateRO(parseISODate(entry.booking_date))} · {initialStart}–{initialEnd}
-          {(entry.renter_notes ?? entry.reason) ? ` · ${entry.renter_notes ?? entry.reason}` : ""}
+          {entry.booking_date} · {entry.start_time?.slice(0, 5)}–{entry.end_time?.slice(0, 5)}
+          {isRecurrent && (
+            <>
+              {" · "}
+              <span>Serie {frequencyLabel}</span>
+              {recurrenceInfo?.total_bookings ? ` · ${recurrenceInfo.total_bookings} blocări` : ""}
+            </>
+          )}
         </DialogDescription>
       </DialogHeader>
-      <div className="space-y-3 py-2">
-        <div className="space-y-1">
-          <Label>Dată</Label>
-          <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn("w-full justify-start text-left font-normal", !date && "text-muted-foreground")}
-                disabled={busy}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {format(date, "yyyy-MM-dd")}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={(d) => {
-                  if (d) {
-                    setDate(d);
-                    setDatePickerOpen(false);
-                  }
-                }}
-                initialFocus
-                className={cn("p-3 pointer-events-auto")}
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <Label htmlFor="block-edit-start">Ora start</Label>
-            <select
-              id="block-edit-start"
-              value={start}
-              onChange={(e) => setStart(e.target.value)}
-              disabled={busy}
-              className="w-full border rounded-md h-9 px-2 text-sm bg-background"
-            >
-              {startOptions.map((v) => (
-                <option key={v} value={v}>{v}</option>
-              ))}
-            </select>
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="block-edit-end">Ora final</Label>
-            <select
-              id="block-edit-end"
-              value={end}
-              onChange={(e) => setEnd(e.target.value)}
-              disabled={busy}
-              className="w-full border rounded-md h-9 px-2 text-sm bg-background"
-            >
-              {endOptions.map((v) => (
-                <option key={v} value={v}>{v}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="block-edit-reason">Motiv (opțional)</Label>
-          <Input
-            id="block-edit-reason"
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            placeholder="ex: Curs privat"
-            disabled={busy}
-          />
+      <AttachedClientDisplay bookingId={entry.id} />
+      <div className="space-y-2 text-sm">
+        <Label htmlFor="block-reason">Motiv blocare</Label>
+        <Textarea
+          id="block-reason"
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder="Ex: Curs privat, mentenanță..."
+          rows={3}
+        />
+        <div className="flex justify-end">
+          <Button size="sm" variant="secondary" onClick={saveReason} disabled={saving}>
+            {saving ? "Se salvează..." : "Salvează motiv"}
+          </Button>
         </div>
       </div>
-      <DialogFooter className="gap-2 sm:justify-between">
-        <Button variant="destructive" onClick={() => setConfirmOpen(true)} disabled={busy}>
-          {unblocking ? "Se deblochează..." : "Deblochează"}
+      <DialogFooter className="gap-2">
+        <Button onClick={openDelete} disabled={busy} variant="destructive">
+          {isRecurrent ? "Șterge..." : "Deblochează"}
         </Button>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={onClose} disabled={busy}>
-            Închide
-          </Button>
-          <Button onClick={handleSave} disabled={busy}>
-            {saving ? "Se salvează..." : "Salvează"}
-          </Button>
-        </div>
+        <Button variant="outline" onClick={onClose}>
+          Închide
+        </Button>
       </DialogFooter>
 
       <Dialog open={confirmOpen} onOpenChange={(o) => !busy && setConfirmOpen(o)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Sigur vrei să deblochezi acest slot?</DialogTitle>
+            <DialogTitle>Șterge blocare recurentă?</DialogTitle>
+            <DialogDescription>
+              Această blocare face parte dintr-o serie {frequencyLabel}. Alege ce vrei să ștergi:
+            </DialogDescription>
           </DialogHeader>
+          <RadioGroup
+            value={deleteScope}
+            onValueChange={(v) => setDeleteScope(v as "single" | "future" | "all")}
+            className="gap-3 py-2"
+          >
+            <label className="flex items-start gap-2 cursor-pointer">
+              <RadioGroupItem value="single" id="scope-single" className="mt-0.5" />
+              <div>
+                <div className="text-sm font-medium">Doar acest slot</div>
+                <div className="text-xs text-muted-foreground">
+                  Șterge doar blocarea din {entry.booking_date}, restul seriei rămâne.
+                </div>
+              </div>
+            </label>
+            <label className="flex items-start gap-2 cursor-pointer">
+              <RadioGroupItem value="future" id="scope-future" className="mt-0.5" />
+              <div>
+                <div className="text-sm font-medium">Acesta și toate viitoarele</div>
+                <div className="text-xs text-muted-foreground">
+                  Șterge această blocare și toate cele de după.
+                </div>
+              </div>
+            </label>
+            <label className="flex items-start gap-2 cursor-pointer">
+              <RadioGroupItem value="all" id="scope-all" className="mt-0.5" />
+              <div>
+                <div className="text-sm font-medium">Toată seria</div>
+                <div className="text-xs text-muted-foreground">
+                  Șterge TOATE blocările din serie (inclusiv trecutul) și dezactivează seria.
+                </div>
+              </div>
+            </label>
+          </RadioGroup>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setConfirmOpen(false)} disabled={busy}>
-              Înapoi
+              Anulează
             </Button>
-            <Button variant="destructive" onClick={handleUnblock} disabled={busy}>
-              {unblocking ? "Se deblochează..." : "Da, deblochează"}
+            <Button variant="destructive" onClick={performDelete} disabled={busy}>
+              {busy ? "Se șterge..." : "Confirmă"}
             </Button>
           </DialogFooter>
         </DialogContent>
