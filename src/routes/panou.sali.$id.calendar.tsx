@@ -999,6 +999,7 @@ function RoomCalendarPage() {
                     </div>
                   ))}
                 </div>
+                <TooltipProvider delayDuration={150}>
                 <div className="grid grid-cols-7">
                   {monthCells.map((d) => {
                     const dateISO = formatDateISO(d);
@@ -1007,6 +1008,10 @@ function RoomCalendarPage() {
                     const stats = dayStats.get(dateISO);
                     const hasBookings = (stats?.bookings ?? 0) > 0;
                     const hasBlocks = (stats?.blocks ?? 0) > 0;
+                    const dayEntries = entriesByDay.get(dateISO) ?? [];
+                    const MAX_CHIPS = 3;
+                    const visibleEntries = dayEntries.slice(0, MAX_CHIPS);
+                    const extraCount = dayEntries.length - visibleEntries.length;
                     return (
                       <button
                         type="button"
@@ -1026,28 +1031,63 @@ function RoomCalendarPage() {
                           "min-h-[72px] border-l border-t -ml-px -mt-px text-left p-2 text-xs transition-colors " +
                           (inMonth ? "" : "bg-muted/30 text-muted-foreground ") +
                           (hasBookings ? "bg-primary/15 hover:bg-primary/25 " : "hover:bg-muted/60 ") +
-                          (hasBlocks ? "ring-2 ring-orange-300 ring-inset " : "") +
+                          (hasBlocks && !hasBookings ? "ring-2 ring-orange-300 ring-inset " : "") +
                           (isToday ? "outline outline-2 outline-primary " : "")
                         }
                       >
                         <div className="flex items-start justify-between">
                           <span className="font-semibold">{d.getDate()}</span>
                         </div>
-                        {hasBookings && (
-                          <div className="mt-1 text-[11px]">
-                            {stats!.bookings}{" "}
-                            {stats!.bookings === 1 ? "rezervare" : "rezervări"}
-                          </div>
-                        )}
-                        {hasBlocks && (
-                          <div className="text-[11px] text-orange-700">
-                            {stats!.blocks} blocat
+                        {visibleEntries.length > 0 && (
+                          <div className="mt-1 space-y-0.5">
+                            {visibleEntries.map((e) => {
+                              const isBlock = e.entry_type === "blocat";
+                              const label = isBlock
+                                ? "Blocat"
+                                : (e.renter_name ?? e.reference ?? "Rezervare");
+                              const chipClass = isBlock
+                                ? "bg-muted text-foreground"
+                                : e.status === "confirmată"
+                                  ? "bg-primary/30 text-foreground"
+                                  : e.status === "în așteptare"
+                                    ? "bg-orange-200/80 text-orange-950"
+                                    : e.status === "anulată" || e.status === "refuzată"
+                                      ? "bg-destructive/15 text-destructive"
+                                      : "bg-secondary text-secondary-foreground";
+                              return (
+                                <Tooltip key={e.id}>
+                                  <TooltipTrigger asChild>
+                                    <span
+                                      tabIndex={0}
+                                      className={
+                                        "block truncate rounded px-1 py-px text-[10px] leading-tight " +
+                                        chipClass
+                                      }
+                                    >
+                                      <span className="opacity-70 mr-1">
+                                        {e.start_time.slice(0, 5)}
+                                      </span>
+                                      {label}
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="p-2">
+                                    <EntryTooltipCard e={e} />
+                                  </TooltipContent>
+                                </Tooltip>
+                              );
+                            })}
+                            {extraCount > 0 && (
+                              <div className="text-[10px] text-muted-foreground pl-1">
+                                +{extraCount} încă
+                              </div>
+                            )}
                           </div>
                         )}
                       </button>
                     );
                   })}
                 </div>
+                </TooltipProvider>
               </div>
             )}
 
