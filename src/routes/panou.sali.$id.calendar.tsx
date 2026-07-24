@@ -2154,15 +2154,9 @@ function BlockSlotForm({
   const [busy, setBusy] = useState(false);
   const [blockError, setBlockError] = useState<string | null>(null);
   const [isRecurrent, setIsRecurrent] = useState(false);
-  const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
 
   const startOptions = TIME_OPTIONS.slice(0, -1); // exclude HOUR_END as start
   const endOptions = TIME_OPTIONS.slice(1); // exclude HOUR_START as end
-
-  const recurrenceDates =
-    isRecurrent && recurrenceEndDate
-      ? generateWeeklyDates(date, recurrenceEndDate)
-      : [];
 
   async function submit() {
     setBlockError(null);
@@ -2170,13 +2164,8 @@ function BlockSlotForm({
       setBlockError("Ora de sfârșit trebuie să fie după ora de început.");
       return;
     }
-    if (isRecurrent && !recurrenceEndDate) {
-      setBlockError("Selectează data de sfârșit pentru recurență.");
-      return;
-    }
 
-    const allDates =
-      isRecurrent && recurrenceEndDate ? generateWeeklyDates(date, recurrenceEndDate) : [date];
+    const allDates = isRecurrent ? generateWeeklyDatesHorizonISO(date) : [date];
 
     setBusy(true);
     const skipped: string[] = [];
@@ -2328,27 +2317,15 @@ function BlockSlotForm({
                 checked={isRecurrent}
                 onChange={(e) => {
                   setIsRecurrent(e.target.checked);
-                  setRecurrenceEndDate("");
                 }}
                 className="accent-primary h-4 w-4"
               />
               Repetă săptămânal
             </label>
             {isRecurrent && (
-              <div className="space-y-1 pl-6">
-                <Label className="text-xs">Până la:</Label>
-                <Input
-                  type="date"
-                  value={recurrenceEndDate}
-                  min={date}
-                  onChange={(e) => setRecurrenceEndDate(e.target.value)}
-                />
-                {recurrenceDates.length > 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    {recurrenceDates.length} blocări săptămânale
-                  </p>
-                )}
-              </div>
+              <p className="text-xs text-muted-foreground pl-6">
+                Blocarea se reînnoiește automat lunar.
+              </p>
             )}
           </div>
           {blockError && (
@@ -2357,10 +2334,7 @@ function BlockSlotForm({
             </div>
           )}
           {(() => {
-            const allDates =
-              isRecurrent && recurrenceEndDate
-                ? generateWeeklyDates(date, recurrenceEndDate)
-                : [date];
+            const allDates = isRecurrent ? generateWeeklyDatesHorizonISO(date) : [date];
             const past = pastDates(allDates, start);
             if (past.length === 0) return null;
             const list = past.slice(0, 5).map(formatShortRO).join(", ");
