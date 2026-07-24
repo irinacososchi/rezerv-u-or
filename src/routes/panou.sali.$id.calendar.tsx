@@ -948,9 +948,10 @@ function RoomCalendarPage() {
                         const e = cellMap.get(`${dateISO}|${slotStart}`);
                         const showLabel = e && e.start_time.slice(0, 5) === slotStart;
                         return (
+                          <Tooltip key={dateISO + slotStart}>
+                          <TooltipTrigger asChild>
                           <button
                             type="button"
-                            key={dateISO + slotStart}
                             onClick={() => onCellClick(dateISO, slotStart)}
                             className={
                               "h-7 border-l text-left text-xs px-1.5 py-0.5 transition-colors " +
@@ -972,9 +973,7 @@ function RoomCalendarPage() {
                                     />
                                   )}
                                   {e!.recurrence_id && e!.entry_type !== "blocat" && (
-                                    <span className="text-[9px] leading-none" title="Rezervare recurentă">
-                                      ↻
-                                    </span>
+                                    <span className="text-[9px] leading-none">↻</span>
                                   )}
                                 </div>
                                 {e!.entry_type === "blocat" && blockNotePreview(e!.renter_notes) && (
@@ -985,6 +984,13 @@ function RoomCalendarPage() {
                               </>
                             )}
                           </button>
+                          </TooltipTrigger>
+                          {e && showLabel && (
+                            <TooltipContent side="top" className="p-2">
+                              <EntryTooltipCard e={e} />
+                            </TooltipContent>
+                          )}
+                          </Tooltip>
                         );
                       })}
                     </div>
