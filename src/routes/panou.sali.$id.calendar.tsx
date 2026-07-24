@@ -2334,10 +2334,7 @@ function BlockSlotForm({
             </div>
           )}
           {(() => {
-            const allDates =
-              isRecurrent && recurrenceEndDate
-                ? generateWeeklyDates(date, recurrenceEndDate)
-                : [date];
+            const allDates = isRecurrent ? generateWeeklyDatesHorizonISO(date) : [date];
             const past = pastDates(allDates, start);
             if (past.length === 0) return null;
             const list = past.slice(0, 5).map(formatShortRO).join(", ");
