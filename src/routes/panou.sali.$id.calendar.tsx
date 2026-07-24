@@ -1011,7 +1011,6 @@ function RoomCalendarPage() {
                     </div>
                   ))}
                 </div>
-                <TooltipProvider delayDuration={150}>
                 <div className="grid grid-cols-7">
                   {monthCells.map((d) => {
                     const dateISO = formatDateISO(d);
@@ -1024,23 +1023,31 @@ function RoomCalendarPage() {
                     const MAX_CHIPS = 3;
                     const visibleEntries = dayEntries.slice(0, MAX_CHIPS);
                     const extraCount = dayEntries.length - visibleEntries.length;
+                    const navigateToDay = () => {
+                      if (typeof window !== "undefined" && window.innerWidth < 1024) {
+                        const day = new Date(d);
+                        day.setHours(0, 0, 0, 0);
+                        setSelectedDay(day);
+                        setView("day");
+                      } else {
+                        setView("week");
+                        setWeekStart(startOfWeek(d));
+                      }
+                    };
                     return (
-                      <button
-                        type="button"
+                      <div
                         key={dateISO}
-                        onClick={() => {
-                          if (typeof window !== "undefined" && window.innerWidth < 1024) {
-                            const day = new Date(d);
-                            day.setHours(0, 0, 0, 0);
-                            setSelectedDay(day);
-                            setView("day");
-                          } else {
-                            setView("week");
-                            setWeekStart(startOfWeek(d));
+                        onClick={navigateToDay}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(ev) => {
+                          if (ev.key === "Enter" || ev.key === " ") {
+                            ev.preventDefault();
+                            navigateToDay();
                           }
                         }}
                         className={
-                          "min-h-[72px] border-l border-t -ml-px -mt-px text-left p-2 text-xs transition-colors " +
+                          "min-h-[72px] border-l border-t -ml-px -mt-px text-left p-2 text-xs transition-colors cursor-pointer " +
                           (inMonth ? "" : "bg-muted/30 text-muted-foreground ") +
                           (hasBookings ? "bg-primary/15 hover:bg-primary/25 " : "hover:bg-muted/60 ") +
                           (hasBlocks && !hasBookings ? "ring-2 ring-orange-300 ring-inset " : "") +
@@ -1071,6 +1078,7 @@ function RoomCalendarPage() {
                                   <TooltipTrigger asChild>
                                     <span
                                       tabIndex={0}
+                                      onClick={(ev) => ev.stopPropagation()}
                                       className={
                                         "block truncate rounded px-1 py-px text-[10px] leading-tight " +
                                         chipClass
@@ -1095,13 +1103,13 @@ function RoomCalendarPage() {
                             )}
                           </div>
                         )}
-                      </button>
+                      </div>
                     );
                   })}
                 </div>
-                </TooltipProvider>
               </div>
             )}
+            </TooltipProvider>
 
             <div className="flex flex-wrap gap-3 text-xs text-muted-foreground pt-2">
               <LegendDot className="bg-primary/30" label="Confirmată" />
