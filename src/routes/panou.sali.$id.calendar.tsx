@@ -2154,15 +2154,9 @@ function BlockSlotForm({
   const [busy, setBusy] = useState(false);
   const [blockError, setBlockError] = useState<string | null>(null);
   const [isRecurrent, setIsRecurrent] = useState(false);
-  const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
 
   const startOptions = TIME_OPTIONS.slice(0, -1); // exclude HOUR_END as start
   const endOptions = TIME_OPTIONS.slice(1); // exclude HOUR_START as end
-
-  const recurrenceDates =
-    isRecurrent && recurrenceEndDate
-      ? generateWeeklyDates(date, recurrenceEndDate)
-      : [];
 
   async function submit() {
     setBlockError(null);
@@ -2170,13 +2164,8 @@ function BlockSlotForm({
       setBlockError("Ora de sfârșit trebuie să fie după ora de început.");
       return;
     }
-    if (isRecurrent && !recurrenceEndDate) {
-      setBlockError("Selectează data de sfârșit pentru recurență.");
-      return;
-    }
 
-    const allDates =
-      isRecurrent && recurrenceEndDate ? generateWeeklyDates(date, recurrenceEndDate) : [date];
+    const allDates = isRecurrent ? generateWeeklyDatesHorizonISO(date) : [date];
 
     setBusy(true);
     const skipped: string[] = [];
