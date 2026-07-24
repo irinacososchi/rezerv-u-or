@@ -2324,7 +2324,7 @@ function BlockSlotForm({
             </label>
             {isRecurrent && (
               <p className="text-xs text-muted-foreground pl-6">
-                Blocarea se reînnoiește automat lunar.
+                Blocarea se reînnoiește automat.
               </p>
             )}
           </div>
