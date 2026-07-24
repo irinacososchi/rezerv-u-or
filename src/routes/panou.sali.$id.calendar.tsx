@@ -2317,27 +2317,15 @@ function BlockSlotForm({
                 checked={isRecurrent}
                 onChange={(e) => {
                   setIsRecurrent(e.target.checked);
-                  setRecurrenceEndDate("");
                 }}
                 className="accent-primary h-4 w-4"
               />
               Repetă săptămânal
             </label>
             {isRecurrent && (
-              <div className="space-y-1 pl-6">
-                <Label className="text-xs">Până la:</Label>
-                <Input
-                  type="date"
-                  value={recurrenceEndDate}
-                  min={date}
-                  onChange={(e) => setRecurrenceEndDate(e.target.value)}
-                />
-                {recurrenceDates.length > 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    {recurrenceDates.length} blocări săptămânale
-                  </p>
-                )}
-              </div>
+              <p className="text-xs text-muted-foreground pl-6">
+                Blocarea se reînnoiește automat lunar.
+              </p>
             )}
           </div>
           {blockError && (
