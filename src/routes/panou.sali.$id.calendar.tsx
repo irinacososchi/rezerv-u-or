@@ -2468,7 +2468,45 @@ function ManualBookingForm({
     setManualSubmitting(true);
     setManualError(null);
 
+    // Conflict check for recurring bookings against existing recurring series/blocks
+    if (isRecurrent && allDates.length > 1) {
+      const dow = getDayOfWeek(parseISODate(date));
+      const { data: conflicts, error: conflictErr } = await supabase.rpc(
+        "check_recurring_conflict",
+        {
+          p_room_id: roomId,
+          p_day_of_week: dow,
+          p_start_time: startTime,
+          p_end_time: endTime,
+          p_first_date: allDates[0],
+          p_exclude_recurrence_id: null,
+        },
+      );
+      if (conflictErr) {
+        setManualError("Nu am putut verifica conflictele de recurență. Reîncearcă.");
+        setManualSubmitting(false);
+        return;
+      }
+      if (Array.isArray(conflicts) && conflicts.length > 0) {
+        const first = conflicts[0] as { conflict_date?: string };
+        const dateStr = first?.conflict_date
+          ? (() => {
+              const [y, m, d] = first.conflict_date!.split("-");
+              return `${d}.${m}.${y}`;
+            })()
+          : null;
+        const msg =
+          "Nu poți rezerva recurent acest interval: se suprapune cu o serie recurentă existentă în această sală." +
+          (dateStr ? ` Primul conflict: ${dateStr}.` : "");
+        setManualError(msg);
+        toast.error(msg);
+        setManualSubmitting(false);
+        return;
+      }
+    }
+
     // Create recurrence group if recurrent
+
     let recurrenceId: string | null = null;
     if (isRecurrent && allDates.length > 1) {
       const dayOfWeek = getDayOfWeek(parseISODate(date));
