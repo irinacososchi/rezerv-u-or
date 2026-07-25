@@ -82,16 +82,16 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-      <div className="container mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-        <Link to="/" className="flex items-center gap-2 font-semibold shrink-0">
+      <div className="container mx-auto flex max-w-6xl flex-col items-center gap-2 px-4 py-2 sm:h-16 sm:flex-row sm:justify-between sm:gap-4 sm:py-0">
+        <Link to="/" className="flex items-center justify-center gap-2 font-semibold shrink-0">
           <img
             src={logoUrl}
             alt="RZRV"
-            className="h-16 sm:h-20 md:h-24 w-auto object-contain shrink-0"
+            className="h-12 sm:h-20 md:h-24 w-auto object-contain shrink-0"
           />
         </Link>
 
-        <nav className="flex items-center gap-2 sm:gap-3">
+        <nav className="flex flex-wrap items-center justify-center gap-1 sm:gap-3">
           <Button variant="ghost" asChild className="text-foreground/80">
             <Link to="/">Acasă</Link>
           </Button>
