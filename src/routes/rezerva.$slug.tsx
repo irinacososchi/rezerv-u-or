@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/external-client";
+import { toast } from "sonner";
 import {
   formatDateRO,
   formatDateISO,
@@ -980,6 +981,44 @@ function CheckoutPage() {
       setSubmitting(false);
       setSubmitError("Nu am putut verifica disponibilitatea. Reîncearcă peste câteva secunde.");
       return;
+    }
+
+
+    // Conflict check for recurring bookings against existing recurring series/blocks
+    if (isRecurrent && !isMultiDay && parsedSlots.length === 1) {
+      const dow = getDayOfWeek(dateObj); // ISO 1=Mon..7=Sun
+      const { data: conflicts, error: conflictErr } = await supabase.rpc(
+        "check_recurring_conflict",
+        {
+          p_room_id: room.id,
+          p_day_of_week: dow,
+          p_start_time: `${parsedSlots[0].start}:00`,
+          p_end_time: `${parsedSlots[0].end}:00`,
+          p_first_date: allDateIntervals[0].date,
+          p_exclude_recurrence_id: null,
+        },
+      );
+      if (conflictErr) {
+        setSubmitting(false);
+        setSubmitError("Nu am putut verifica conflictele de recurență. Reîncearcă.");
+        return;
+      }
+      if (Array.isArray(conflicts) && conflicts.length > 0) {
+        const first = conflicts[0] as { conflict_date?: string };
+        const dateStr = first?.conflict_date
+          ? (() => {
+              const [y, m, d] = first.conflict_date!.split("-");
+              return `${d}.${m}.${y}`;
+            })()
+          : null;
+        setSubmitting(false);
+        const msg =
+          "Nu poți rezerva recurent acest interval: se suprapune cu o serie recurentă existentă în această sală." +
+          (dateStr ? ` Primul conflict: ${dateStr}.` : "");
+        setSubmitError(msg);
+        toast.error(msg);
+        return;
+      }
     }
 
 
