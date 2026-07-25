@@ -82,16 +82,18 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-      <div className="container mx-auto flex max-w-6xl flex-col items-center gap-2 px-4 py-2 sm:h-16 sm:flex-row sm:justify-between sm:gap-4 sm:py-0">
-        <Link to="/" className="flex items-center justify-center gap-2 font-semibold shrink-0">
+      <div className="container mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 py-3">
+        {/* Row 1: bigger logo */}
+        <Link to="/" className="flex items-center justify-center font-semibold shrink-0">
           <img
             src={logoUrl}
             alt="RZRV"
-            className="h-12 sm:h-20 md:h-24 w-auto object-contain shrink-0"
+            className="h-24 sm:h-32 md:h-40 w-auto object-contain shrink-0"
           />
         </Link>
 
-        <nav className="flex flex-wrap items-center justify-center gap-1 sm:gap-3">
+        {/* Row 2: main nav links */}
+        <nav className="flex items-center justify-center gap-1 sm:gap-3">
           <Button variant="ghost" asChild className="text-foreground/80">
             <Link to="/">Acasă</Link>
           </Button>
@@ -101,17 +103,10 @@ export function SiteHeader() {
           <Button variant="ghost" asChild className="text-foreground/80 hidden sm:inline-flex">
             <Link to="/rezervari">Rezervarea mea</Link>
           </Button>
+        </nav>
 
-          {showPanoulMeu && (
-            <a
-              href="/panou/dashboard"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-primary bg-primary/5 px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/10 transition"
-            >
-              <LayoutDashboard className="h-4 w-4" />
-              Panoul meu
-            </a>
-          )}
-
+        {/* Row 3: user actions */}
+        <div className="flex flex-wrap items-center justify-center gap-2">
           {!loading && !user && (
             <>
               <Button variant="outline" asChild className="hidden sm:inline-flex">
@@ -121,6 +116,16 @@ export function SiteHeader() {
                 <Link to="/signup">Creează cont</Link>
               </Button>
             </>
+          )}
+
+          {showPanoulMeu && (
+            <a
+              href="/panou/dashboard"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-primary bg-primary/5 px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/10 transition"
+            >
+              <LayoutDashboard className="h-4 w-4" />
+              Panoul meu
+            </a>
           )}
 
           {user && <NotificationBell />}
@@ -238,7 +243,7 @@ export function SiteHeader() {
               )}
             </div>
           )}
-        </nav>
+        </div>
       </div>
     </header>
   );
