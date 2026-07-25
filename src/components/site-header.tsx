@@ -338,6 +338,7 @@ export function SiteHeader() {
           <div className="sm:hidden flex w-full items-center justify-between">
             {logoLink(true)}
             <Button
+              ref={mobileToggleRef}
               variant="ghost"
               size="icon"
               onClick={() => setMobileMenuOpen((open) => !open)}
