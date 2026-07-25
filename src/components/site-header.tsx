@@ -24,6 +24,7 @@ export function SiteHeader() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const mobileToggleRef = useRef<HTMLButtonElement>(null);
 
   async function loadUserData() {
     const { data: { user: u } } = await supabase.auth.getUser();
@@ -98,7 +99,9 @@ export function SiteHeader() {
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (mobileToggleRef.current && mobileToggleRef.current.contains(target)) return;
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(target)) {
         setMobileMenuOpen(false);
       }
     }
@@ -335,6 +338,7 @@ export function SiteHeader() {
           <div className="sm:hidden flex w-full items-center justify-between">
             {logoLink(true)}
             <Button
+              ref={mobileToggleRef}
               variant="ghost"
               size="icon"
               onClick={() => setMobileMenuOpen((open) => !open)}
