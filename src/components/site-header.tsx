@@ -99,7 +99,9 @@ export function SiteHeader() {
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (mobileToggleRef.current && mobileToggleRef.current.contains(target)) return;
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(target)) {
         setMobileMenuOpen(false);
       }
     }
