@@ -82,11 +82,10 @@ export function SiteHeader() {
   }, []);
 
   useEffect(() => {
-    // Hysteresis to avoid oscillation when the header height changes on toggle:
-    // collapse when scrolling past 80px, only expand back once near the top (<8px).
+    // Strong hysteresis: collapse past 80px, only re-expand once truly back at the top.
     const handleScroll = () => {
       const y = window.scrollY;
-      setIsScrolled((prev) => (prev ? y > 8 : y > 80));
+      setIsScrolled((prev) => (prev ? y > 2 : y > 80));
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
