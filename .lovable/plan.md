@@ -1,49 +1,35 @@
-Plan: Mobile header that collapses into a menu button on scroll
-
-Current state
-- `src/components/site-header.tsx` renders a sticky 3-row header on mobile: large logo, nav links (Acasă/Săli), user actions (Panoul meu, notifications, profile).
-- The header already uses `sticky top-0` and wraps everything in a container.
-
 Goal
-- On mobile viewports only, after the user scrolls down a small amount, collapse the header into a compact bar with just the logo and a menu button.
-- Tapping the menu button expands the full header again (same content as today).
-- Keep the desktop header unchanged.
+- On desktop (sm and up), restore the original single-row horizontal header: logo on the left, nav links in the middle, user actions on the right.
+- Keep the current mobile behavior: full header at top of page, compact bar with hamburger after scroll, expanded panel on hamburger click.
 
-Implementation
+Current problem
+- The header container is `flex-col items-center gap-3 px-4 py-3`.
+- The desktop branch uses `hidden sm:contents`, so its children (logo, nav, actions) flow into the parent's `flex-col` and stack vertically instead of sitting in one horizontal row.
 
-1. Scroll detection
-   - Add a small hook / `useEffect` that listens to `window.scrollY`.
-   - Track a boolean `isScrolled` (true when `scrollY > 48` or similar).
-   - Only activate the collapsed behavior on `sm:` and below; use Tailwind responsive classes or a CSS media query.
+Changes to `src/components/site-header.tsx`
 
-2. Mobile collapsed bar
-   - When `isScrolled` is true on mobile, render a single-row compact bar instead of the 3-row stack.
-   - Bar contains:
-     - Small logo (e.g., `h-10`) linking to `/`.
-     - A hamburger/menu button (Lucide `Menu` icon) on the right.
-   - Keep `sticky top-0` and the existing backdrop blur background.
+1. Container responsive layout
+   - Change the inner `<div>` to:
+     - Mobile (`default`): `flex flex-col items-center gap-3 px-4 py-3` (same as today).
+     - Desktop (`sm:`): `sm:flex sm:h-16 sm:flex-row sm:items-center sm:justify-between sm:gap-0 sm:py-0`.
+   - This restores the original horizontal desktop row.
 
-3. Mobile expanded menu
-   - Use local state `mobileMenuOpen` toggled by the hamburger button.
-   - When open, render a slide-down / overlay panel directly below the compact bar.
-   - The panel shows the existing content:
-     - Logo (full size)
-     - Nav links: Acasă, Săli, Rezervarea mea
-     - User actions: Panoul meu, NotificationBell, Profile dropdown (reused as-is)
-     - Auth buttons when not logged in
-   - Clicking outside or pressing the hamburger again closes the panel.
-   - On route change, close the panel.
+2. Desktop branch
+   - Replace `hidden sm:contents` wrapper with `hidden sm:flex sm:items-center sm:gap-6` (or similar) containing `logoLink()`, `navLinks()`, `userActions()`.
+   - Ensure `userActions()` stays right-aligned via the parent `justify-between`.
 
-4. Preserve desktop
-   - Keep the current layout for `sm:` and up.
-   - The collapsed/expanded logic only applies below the `sm` breakpoint.
+3. Mobile branches
+   - Keep the existing `!isScrolled` full-header block exactly as is.
+   - Keep the existing `isScrolled` compact bar and expanded menu exactly as is.
 
-5. Polish
-   - Add CSS transitions for height/opacity when switching between collapsed and expanded states.
-   - Ensure z-index stays above page content (`z-40` already set).
-   - Avoid horizontal scroll; the compact bar uses `justify-between`.
+4. Logo sizing
+   - Keep `logoLink()` sizes: `h-24 sm:h-32 md:h-40` for the full header, `h-10` for the compact scrolled mobile bar.
+   - On desktop the logo renders at `sm:h-32 md:h-40` inside the horizontal row, matching the original.
 
-Files to change
-- `src/components/site-header.tsx` only.
+5. No logic changes
+   - All hooks, state, click-outside handlers, scroll hysteresis, and dropdown code remain untouched.
+   - No backend, route, or schema changes.
 
-No backend, route, or schema changes required.
+Verification
+- Typecheck the project.
+- Visually verify desktop header is a single horizontal row and mobile header still collapses/expands correctly.
