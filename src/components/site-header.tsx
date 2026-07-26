@@ -115,22 +115,26 @@ export function SiteHeader() {
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
-  const logoLink = (compact = false) => (
-    <Link
-      to="/"
-      onClick={closeMobileMenu}
-      className="flex items-center justify-center font-semibold shrink-0"
-    >
-      <img
-        src={logoUrl}
-        alt="RZRV"
-        className={cn(
-          "w-auto object-contain shrink-0",
-          compact ? "h-10" : "h-24 sm:h-32 md:h-40"
-        )}
-      />
-    </Link>
-  );
+  const logoLink = (variant: "compact" | "mobile" | "desktop" = "desktop") => {
+    const heightClass = {
+      compact: "h-10",
+      mobile: "h-24",
+      desktop: "h-16 sm:h-20 md:h-24",
+    }[variant];
+    return (
+      <Link
+        to="/"
+        onClick={closeMobileMenu}
+        className="flex items-center justify-center font-semibold shrink-0"
+      >
+        <img
+          src={logoUrl}
+          alt="RZRV"
+          className={cn("w-auto object-contain shrink-0", heightClass)}
+        />
+      </Link>
+    );
+  };
 
   const navLinks = () => (
     <nav className="flex items-center justify-center gap-1 sm:gap-3">
@@ -316,10 +320,10 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-      <div className="container mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 py-3">
+      <div className="container mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 py-3 sm:gap-0 sm:py-0">
         {/* Desktop header */}
-        <div className="hidden sm:contents">
-          {logoLink()}
+        <div className="hidden sm:flex sm:h-16 sm:w-full sm:items-center sm:justify-between">
+          {logoLink("desktop")}
           {navLinks()}
           {userActions()}
         </div>
@@ -327,7 +331,7 @@ export function SiteHeader() {
         {/* Mobile header - not scrolled */}
         {!isScrolled && (
           <div className="sm:hidden flex flex-col items-center gap-3 w-full">
-            {logoLink()}
+            {logoLink("mobile")}
             {navLinks()}
             {userActions()}
           </div>
@@ -336,7 +340,7 @@ export function SiteHeader() {
         {/* Mobile header - scrolled */}
         {isScrolled && (
           <div className="sm:hidden flex w-full items-center justify-between">
-            {logoLink(true)}
+            {logoLink("compact")}
             <Button
               ref={mobileToggleRef}
               variant="ghost"
@@ -357,7 +361,7 @@ export function SiteHeader() {
           className="sm:hidden absolute top-full left-0 right-0 border-b border-border/60 bg-background/95 backdrop-blur shadow-lg"
         >
           <div className="container mx-auto max-w-6xl px-4 py-4 flex flex-col items-center gap-3">
-            {logoLink()}
+            {logoLink("mobile")}
             {mobileNavLinks()}
             {userActions()}
           </div>
