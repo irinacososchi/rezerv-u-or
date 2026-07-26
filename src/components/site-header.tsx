@@ -115,22 +115,26 @@ export function SiteHeader() {
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
-  const logoLink = (compact = false) => (
-    <Link
-      to="/"
-      onClick={closeMobileMenu}
-      className="flex items-center justify-center font-semibold shrink-0"
-    >
-      <img
-        src={logoUrl}
-        alt="RZRV"
-        className={cn(
-          "w-auto object-contain shrink-0",
-          compact ? "h-10" : "h-24 sm:h-32 md:h-40"
-        )}
-      />
-    </Link>
-  );
+  const logoLink = (variant: "compact" | "mobile" | "desktop" = "desktop") => {
+    const heightClass = {
+      compact: "h-10",
+      mobile: "h-24",
+      desktop: "h-16 sm:h-20 md:h-24",
+    }[variant];
+    return (
+      <Link
+        to="/"
+        onClick={closeMobileMenu}
+        className="flex items-center justify-center font-semibold shrink-0"
+      >
+        <img
+          src={logoUrl}
+          alt="RZRV"
+          className={cn("w-auto object-contain shrink-0", heightClass)}
+        />
+      </Link>
+    );
+  };
 
   const navLinks = () => (
     <nav className="flex items-center justify-center gap-1 sm:gap-3">
