@@ -340,7 +340,7 @@ export function SiteHeader() {
         {/* Mobile header - scrolled */}
         {isScrolled && (
           <div className="sm:hidden flex w-full items-center justify-between">
-            {logoLink(true)}
+            {logoLink("compact")}
             <Button
               ref={mobileToggleRef}
               variant="ghost"
