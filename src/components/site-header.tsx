@@ -320,10 +320,10 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-      <div className="container mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 py-3">
+      <div className="container mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 py-3 sm:gap-0 sm:py-0">
         {/* Desktop header */}
-        <div className="hidden sm:contents">
-          {logoLink()}
+        <div className="hidden sm:flex sm:h-16 sm:w-full sm:items-center sm:justify-between">
+          {logoLink("desktop")}
           {navLinks()}
           {userActions()}
         </div>
@@ -331,7 +331,7 @@ export function SiteHeader() {
         {/* Mobile header - not scrolled */}
         {!isScrolled && (
           <div className="sm:hidden flex flex-col items-center gap-3 w-full">
-            {logoLink()}
+            {logoLink("mobile")}
             {navLinks()}
             {userActions()}
           </div>
@@ -361,7 +361,7 @@ export function SiteHeader() {
           className="sm:hidden absolute top-full left-0 right-0 border-b border-border/60 bg-background/95 backdrop-blur shadow-lg"
         >
           <div className="container mx-auto max-w-6xl px-4 py-4 flex flex-col items-center gap-3">
-            {logoLink()}
+            {logoLink("mobile")}
             {mobileNavLinks()}
             {userActions()}
           </div>
