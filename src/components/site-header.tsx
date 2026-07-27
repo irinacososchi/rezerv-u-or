@@ -137,28 +137,28 @@ export function SiteHeader() {
   };
 
   const navLinks = () => (
-    <nav className="flex items-center justify-center gap-1 lg:gap-3">
-      <Button variant="ghost" asChild className="text-foreground/80">
+    <nav className="flex items-center justify-center gap-0 lg:gap-2">
+      <Button variant="ghost" size="sm" asChild className="text-foreground/80 h-auto py-1 px-2">
         <Link to="/" onClick={closeMobileMenu}>Acasă</Link>
       </Button>
-      <Button variant="ghost" asChild className="text-foreground/80">
+      <Button variant="ghost" size="sm" asChild className="text-foreground/80 h-auto py-1 px-2">
         <Link to="/sali" onClick={closeMobileMenu}>Săli</Link>
       </Button>
-      <Button variant="ghost" asChild className="text-foreground/80 hidden lg:inline-flex">
+      <Button variant="ghost" size="sm" asChild className="text-foreground/80 hidden lg:inline-flex h-auto py-1 px-2">
         <Link to="/rezervari" onClick={closeMobileMenu}>Rezervarea mea</Link>
       </Button>
     </nav>
   );
 
   const mobileNavLinks = () => (
-    <nav className="flex flex-col items-center gap-1">
-      <Button variant="ghost" asChild className="text-foreground/80">
+    <nav className="flex flex-col items-center gap-0">
+      <Button variant="ghost" size="sm" asChild className="text-foreground/80 h-auto py-1 px-2">
         <Link to="/" onClick={closeMobileMenu}>Acasă</Link>
       </Button>
-      <Button variant="ghost" asChild className="text-foreground/80">
+      <Button variant="ghost" size="sm" asChild className="text-foreground/80 h-auto py-1 px-2">
         <Link to="/sali" onClick={closeMobileMenu}>Săli</Link>
       </Button>
-      <Button variant="ghost" asChild className="text-foreground/80">
+      <Button variant="ghost" size="sm" asChild className="text-foreground/80 h-auto py-1 px-2">
         <Link to="/rezervari" onClick={closeMobileMenu}>Rezervarea mea</Link>
       </Button>
     </nav>
@@ -320,7 +320,7 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-      <div className="container mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 py-3 lg:gap-0 lg:py-0">
+      <div className="container mx-auto flex max-w-6xl flex-col items-center gap-1 px-4 py-1 lg:gap-0 lg:py-0">
         {/* Desktop header */}
         <div className="hidden lg:flex lg:h-16 lg:w-full lg:items-center lg:justify-between">
           {logoLink("desktop")}
@@ -330,7 +330,7 @@ export function SiteHeader() {
 
         {/* Mobile header - not scrolled */}
         {!isScrolled && (
-          <div className="lg:hidden flex flex-col items-center gap-1 w-full">
+          <div className="lg:hidden flex flex-col items-center gap-0 w-full">
             {logoLink("mobile")}
             {navLinks()}
             {userActions()}
@@ -360,7 +360,7 @@ export function SiteHeader() {
           ref={mobileMenuRef}
           className="lg:hidden absolute top-full left-0 right-0 border-b border-border/60 bg-background/95 backdrop-blur shadow-lg"
         >
-          <div className="container mx-auto max-w-6xl px-4 py-4 flex flex-col items-center gap-1">
+          <div className="container mx-auto max-w-6xl px-4 py-2 flex flex-col items-center gap-0">
             {logoLink("mobile")}
             {mobileNavLinks()}
             {userActions()}
