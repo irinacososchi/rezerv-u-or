@@ -119,7 +119,7 @@ export function SiteHeader() {
     const heightClass = {
       compact: "h-10",
       mobile: "h-24",
-      desktop: "h-16 sm:h-20 md:h-24",
+      desktop: "h-16 lg:h-20 xl:h-24",
     }[variant];
     return (
       <Link
@@ -137,14 +137,14 @@ export function SiteHeader() {
   };
 
   const navLinks = () => (
-    <nav className="flex items-center justify-center gap-1 sm:gap-3">
+    <nav className="flex items-center justify-center gap-1 lg:gap-3">
       <Button variant="ghost" asChild className="text-foreground/80">
         <Link to="/" onClick={closeMobileMenu}>Acasă</Link>
       </Button>
       <Button variant="ghost" asChild className="text-foreground/80">
         <Link to="/sali" onClick={closeMobileMenu}>Săli</Link>
       </Button>
-      <Button variant="ghost" asChild className="text-foreground/80 hidden sm:inline-flex">
+      <Button variant="ghost" asChild className="text-foreground/80 hidden lg:inline-flex">
         <Link to="/rezervari" onClick={closeMobileMenu}>Rezervarea mea</Link>
       </Button>
     </nav>
@@ -168,7 +168,7 @@ export function SiteHeader() {
     <div className="flex flex-wrap items-center justify-center gap-2">
       {!loading && !user && (
         <>
-          <Button variant="outline" asChild className="hidden sm:inline-flex">
+          <Button variant="outline" asChild className="hidden lg:inline-flex">
             <Link to="/login" onClick={closeMobileMenu}>Autentificare</Link>
           </Button>
           <Button asChild>
@@ -199,7 +199,7 @@ export function SiteHeader() {
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
               {profile?.full_name?.charAt(0).toUpperCase() ?? user.email?.charAt(0).toUpperCase() ?? "?"}
             </div>
-            <span className="hidden sm:block max-w-[120px] truncate">
+            <span className="hidden lg:block max-w-[120px] truncate">
               {profile?.full_name || user.email}
             </span>
             <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
@@ -320,9 +320,9 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-      <div className="container mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 py-3 sm:gap-0 sm:py-0">
+      <div className="container mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 py-3 lg:gap-0 lg:py-0">
         {/* Desktop header */}
-        <div className="hidden sm:flex sm:h-16 sm:w-full sm:items-center sm:justify-between">
+        <div className="hidden lg:flex lg:h-16 lg:w-full lg:items-center lg:justify-between">
           {logoLink("desktop")}
           {navLinks()}
           {userActions()}
@@ -330,7 +330,7 @@ export function SiteHeader() {
 
         {/* Mobile header - not scrolled */}
         {!isScrolled && (
-          <div className="sm:hidden flex flex-col items-center gap-3 w-full">
+          <div className="lg:hidden flex flex-col items-center gap-3 w-full">
             {logoLink("mobile")}
             {navLinks()}
             {userActions()}
@@ -339,7 +339,7 @@ export function SiteHeader() {
 
         {/* Mobile header - scrolled */}
         {isScrolled && (
-          <div className="sm:hidden flex w-full items-center justify-between">
+          <div className="lg:hidden flex w-full items-center justify-between">
             {logoLink("compact")}
             <Button
               ref={mobileToggleRef}
@@ -358,7 +358,7 @@ export function SiteHeader() {
       {isScrolled && mobileMenuOpen && (
         <div
           ref={mobileMenuRef}
-          className="sm:hidden absolute top-full left-0 right-0 border-b border-border/60 bg-background/95 backdrop-blur shadow-lg"
+          className="lg:hidden absolute top-full left-0 right-0 border-b border-border/60 bg-background/95 backdrop-blur shadow-lg"
         >
           <div className="container mx-auto max-w-6xl px-4 py-4 flex flex-col items-center gap-3">
             {logoLink("mobile")}
