@@ -1,35 +1,18 @@
 Goal
-- On desktop (sm and up), restore the original single-row horizontal header: logo on the left, nav links in the middle, user actions on the right.
-- Keep the current mobile behavior: full header at top of page, compact bar with hamburger after scroll, expanded panel on hamburger click.
+- Fix crowded header on tablets. Chosen approach: make tablet behave like mobile (collapsible / stacked header). Simpler, no content loss, keeps "Acasă" everywhere.
 
-Current problem
-- The header container is `flex-col items-center gap-3 px-4 py-3`.
-- The desktop branch uses `hidden sm:contents`, so its children (logo, nav, actions) flow into the parent's `flex-col` and stack vertically instead of sitting in one horizontal row.
+Change in `src/components/site-header.tsx`
+- Swap the header breakpoint from `sm:` (640px) to `lg:` (1024px) throughout. Result:
+  - <1024px (mobile + tablet): current mobile behavior — full stacked header at top, compact bar + hamburger on scroll, expanded panel on tap.
+  - ≥1024px (desktop): current horizontal single-row header.
+- Concretely, rename every `sm:` utility in this file to `lg:` (container flex direction/height/padding, desktop branch `hidden sm:flex` → `hidden lg:flex`, mobile branches `sm:hidden` → `lg:hidden`, and the logo variant heights `sm:h-20 md:h-24` → `lg:h-20 xl:h-24`).
+- Also update the two `hidden sm:inline-flex` / `hidden sm:block` occurrences inside `navLinks()` and the user dropdown label to `lg:` so they don't appear prematurely on tablet.
+- No logic changes: hooks, scroll hysteresis, click-outside, dropdown, and mobile expanded menu stay identical.
 
-Changes to `src/components/site-header.tsx`
-
-1. Container responsive layout
-   - Change the inner `<div>` to:
-     - Mobile (`default`): `flex flex-col items-center gap-3 px-4 py-3` (same as today).
-     - Desktop (`sm:`): `sm:flex sm:h-16 sm:flex-row sm:items-center sm:justify-between sm:gap-0 sm:py-0`.
-   - This restores the original horizontal desktop row.
-
-2. Desktop branch
-   - Replace `hidden sm:contents` wrapper with `hidden sm:flex sm:items-center sm:gap-6` (or similar) containing `logoLink()`, `navLinks()`, `userActions()`.
-   - Ensure `userActions()` stays right-aligned via the parent `justify-between`.
-
-3. Mobile branches
-   - Keep the existing `!isScrolled` full-header block exactly as is.
-   - Keep the existing `isScrolled` compact bar and expanded menu exactly as is.
-
-4. Logo sizing
-   - Keep `logoLink()` sizes: `h-24 sm:h-32 md:h-40` for the full header, `h-10` for the compact scrolled mobile bar.
-   - On desktop the logo renders at `sm:h-32 md:h-40` inside the horizontal row, matching the original.
-
-5. No logic changes
-   - All hooks, state, click-outside handlers, scroll hysteresis, and dropdown code remain untouched.
-   - No backend, route, or schema changes.
+Out of scope
+- No route, backend, or styling-token changes.
+- "Acasă" stays.
 
 Verification
-- Typecheck the project.
-- Visually verify desktop header is a single horizontal row and mobile header still collapses/expands correctly.
+- Typecheck.
+- Visually confirm at ~768px viewport the header collapses like mobile (large stacked header at top; hamburger after scroll) and at ≥1024px it's the horizontal desktop row.
