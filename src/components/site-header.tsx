@@ -119,7 +119,7 @@ export function SiteHeader() {
     const heightClass = {
       compact: "h-10",
       mobile: "h-24",
-      desktop: "h-16 lg:h-20 md:h-24",
+      desktop: "h-16 lg:h-20 xl:h-24",
     }[variant];
     return (
       <Link
