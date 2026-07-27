@@ -330,7 +330,7 @@ export function SiteHeader() {
 
         {/* Mobile header - not scrolled */}
         {!isScrolled && (
-          <div className="lg:hidden flex flex-col items-center gap-3 w-full">
+          <div className="lg:hidden flex flex-col items-center gap-1 w-full">
             {logoLink("mobile")}
             {navLinks()}
             {userActions()}
@@ -360,7 +360,7 @@ export function SiteHeader() {
           ref={mobileMenuRef}
           className="lg:hidden absolute top-full left-0 right-0 border-b border-border/60 bg-background/95 backdrop-blur shadow-lg"
         >
-          <div className="container mx-auto max-w-6xl px-4 py-4 flex flex-col items-center gap-3">
+          <div className="container mx-auto max-w-6xl px-4 py-4 flex flex-col items-center gap-1">
             {logoLink("mobile")}
             {mobileNavLinks()}
             {userActions()}
