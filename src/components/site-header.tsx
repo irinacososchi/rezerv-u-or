@@ -316,10 +316,10 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/70">
       <div className="container mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 py-3 lg:gap-0 lg:py-0">
         {/* Desktop header */}
-        <div className="hidden lg:flex lg:h-16 lg:w-full lg:items-center lg:justify-between">
+        <div className="hidden lg:flex lg:h-16 lg:w-full lg:items-center lg:justify-start lg:gap-4">
           {logoLink("desktop")}
           {navLinks()}
-          {userActions()}
+          <div className="ml-auto">{userActions()}</div>
         </div>
 
         {/* Mobile header - not scrolled */}
