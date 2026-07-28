@@ -358,8 +358,10 @@ export function SiteHeader() {
         >
           <div className="container mx-auto max-w-6xl px-4 py-4 flex flex-col items-center gap-1">
             {logoLink("mobile")}
-            {mobileNavLinks()}
-            {userActions()}
+            <div className="flex flex-nowrap items-center justify-center gap-1 w-full">
+              {mobileNavLinks()}
+              {userActions()}
+            </div>
           </div>
         </div>
       )}
