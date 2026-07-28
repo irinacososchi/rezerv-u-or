@@ -1,18 +1,29 @@
 Goal
-- Fix crowded header on tablets. Chosen approach: make tablet behave like mobile (collapsible / stacked header). Simpler, no content loss, keeps "Acasă" everywhere.
+- On desktop (≥1024 px), move the "Săli" and "Rezervarea mea" navigation links closer to the left side of the header, next to the logo.
+- Keep the existing responsive behavior unchanged: mobile/tablet stacked header with scroll collapse + hamburger, desktop horizontal single row.
 
-Change in `src/components/site-header.tsx`
-- Swap the header breakpoint from `sm:` (640px) to `lg:` (1024px) throughout. Result:
-  - <1024px (mobile + tablet): current mobile behavior — full stacked header at top, compact bar + hamburger on scroll, expanded panel on tap.
-  - ≥1024px (desktop): current horizontal single-row header.
-- Concretely, rename every `sm:` utility in this file to `lg:` (container flex direction/height/padding, desktop branch `hidden sm:flex` → `hidden lg:flex`, mobile branches `sm:hidden` → `lg:hidden`, and the logo variant heights `sm:h-20 md:h-24` → `lg:h-20 xl:h-24`).
-- Also update the two `hidden sm:inline-flex` / `hidden sm:block` occurrences inside `navLinks()` and the user dropdown label to `lg:` so they don't appear prematurely on tablet.
-- No logic changes: hooks, scroll hysteresis, click-outside, dropdown, and mobile expanded menu stay identical.
+Current state
+- `src/components/site-header.tsx` renders the desktop header as a single row with `lg:justify-between`, placing the logo on the left, nav links in the center, and user actions on the right.
+- The nav links are centered because they are the middle flex child of a `justify-between` container.
 
-Out of scope
-- No route, backend, or styling-token changes.
-- "Acasă" stays.
+Changes to `src/components/site-header.tsx`
+
+1. Desktop header layout
+   - Change the desktop header container from `lg:justify-between` to `lg:justify-start`.
+   - Add a left-side group that contains the logo and the nav links with a small gap (e.g., `lg:gap-4` or `lg:gap-6`).
+   - Push user actions to the far right using `lg:ml-auto` on the user actions wrapper.
+   - This keeps logo + nav together on the left and user actions on the right.
+
+2. Keep existing responsive behavior
+   - Do not change the mobile/tablet stacked header logic or the scroll-collapse hamburger behavior.
+   - Do not change the `lg:hidden` / `hidden lg:flex` breakpoints.
+
+3. Optional fine-tuning
+   - Reduce horizontal gap between nav buttons if needed so the links sit tighter to the logo.
+   - Keep "Rezervarea mea" hidden on smaller viewports where it currently hides (`hidden lg:inline-flex`).
 
 Verification
-- Typecheck.
-- Visually confirm at ~768px viewport the header collapses like mobile (large stacked header at top; hamburger after scroll) and at ≥1024px it's the horizontal desktop row.
+- Run TypeScript typecheck.
+- Take a desktop-width Playwright screenshot to confirm nav links are now positioned to the left of the header, near the logo.
+
+No backend, route, or schema changes.
