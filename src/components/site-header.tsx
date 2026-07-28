@@ -19,7 +19,9 @@ export function SiteHeader() {
   const [hasBookings, setHasBookings] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const desktopDropdownRef = useRef<HTMLDivElement>(null);
+  const mobileDropdownRef = useRef<HTMLDivElement>(null);
+  const expandedDropdownRef = useRef<HTMLDivElement>(null);
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -74,9 +76,13 @@ export function SiteHeader() {
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setDropdownOpen(false);
-      }
+      const target = e.target as Node;
+      const clickedInside = [
+        desktopDropdownRef.current,
+        mobileDropdownRef.current,
+        expandedDropdownRef.current,
+      ].some((element) => element?.contains(target));
+      if (!clickedInside) setDropdownOpen(false);
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -158,7 +164,7 @@ export function SiteHeader() {
     </nav>
   );
 
-  const userActions = () => (
+  const userActions = (menuRef: React.RefObject<HTMLDivElement | null>) => (
     <div className="flex flex-wrap items-center justify-center gap-2">
       {!loading && !user && (
         <>
@@ -185,7 +191,7 @@ export function SiteHeader() {
       {user && <NotificationBell />}
 
       {user && (
-        <div className="relative" ref={dropdownRef}>
+        <div className="relative" ref={menuRef}>
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
             className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-1.5 text-sm hover:bg-muted/40 transition"
@@ -319,7 +325,7 @@ export function SiteHeader() {
         <div className="hidden lg:flex lg:h-16 lg:w-full lg:items-center lg:justify-start lg:gap-4">
           {logoLink("desktop")}
           {navLinks()}
-          <div className="ml-auto">{userActions()}</div>
+          <div className="ml-auto">{userActions(desktopDropdownRef)}</div>
         </div>
 
         {/* Mobile header - not scrolled */}
@@ -328,7 +334,7 @@ export function SiteHeader() {
             {logoLink("mobile")}
             <div className="flex flex-nowrap items-center justify-center gap-1 w-full">
               {navLinks()}
-              {userActions()}
+              {userActions(mobileDropdownRef)}
             </div>
           </div>
         )}
@@ -360,7 +366,7 @@ export function SiteHeader() {
             {logoLink("mobile")}
             <div className="flex flex-nowrap items-center justify-center gap-1 w-full">
               {navLinks()}
-              {userActions()}
+              {userActions(expandedDropdownRef)}
             </div>
           </div>
         </div>
