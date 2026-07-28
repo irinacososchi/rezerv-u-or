@@ -16,7 +16,7 @@ import {
   ChevronDown,
   type LucideIcon,
 } from "lucide-react";
-import logoUrl from "@/assets/rzrv-logo.png";
+import logoUrl from "@/assets/rzrv-logo-2.png.asset.json";
 import { NotificationBell } from "@/components/notification-bell";
 import {
   Collapsible,
