@@ -128,7 +128,7 @@ export function SiteHeader() {
         className="flex items-center justify-center font-semibold shrink-0"
       >
         <img
-          src={logoUrl}
+          src={logoUrl.url}
           alt="RZRV"
           className={cn("w-auto object-contain shrink-0", heightClass)}
         />
