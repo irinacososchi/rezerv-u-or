@@ -7,7 +7,7 @@ import { NotificationBell } from "@/components/notification-bell";
 import { supabase } from "@/integrations/supabase/external-client";
 import { useUserRole } from "@/hooks/use-user-role";
 import { cn } from "@/lib/utils";
-import logoUrl from "@/assets/rzrv-logo.png";
+import logoUrl from "@/assets/rzrv-logo-2.png.asset.json";
 
 type Profile = { full_name: string | null; email: string | null };
 
@@ -128,7 +128,7 @@ export function SiteHeader() {
         className="flex items-center justify-center font-semibold shrink-0"
       >
         <img
-          src={logoUrl}
+          src={logoUrl.url}
           alt="RZRV"
           className={cn("w-auto object-contain shrink-0", heightClass)}
         />
