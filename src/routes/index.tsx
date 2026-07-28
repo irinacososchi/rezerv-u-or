@@ -1,11 +1,10 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Search, Sparkles, Calendar, CheckCircle2 } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { RoomCard, type Room } from "@/components/room-card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { fetchRooms } from "@/data/rooms";
 
 export const Route = createFileRoute("/")({
@@ -28,18 +27,11 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
-  const [query, setQuery] = useState("");
   const [rooms, setRooms] = useState<Room[]>([]);
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetchRooms(6).then(setRooms).catch((e) => console.error("fetchRooms", e));
   }, []);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    navigate({ to: "/sali", search: { city: query } as never });
-  };
 
   const steps = [
     { n: "1", title: "Caută o sală", icon: Search, desc: "După oraș sau cartier." },
@@ -71,23 +63,9 @@ function HomePage() {
                 completă în câteva minute.
               </p>
 
-              <form
-                onSubmit={handleSearch}
-                className="mx-auto mt-8 flex w-full max-w-xl flex-col gap-2 rounded-2xl border border-border bg-card p-2 shadow-[var(--shadow-soft)] sm:flex-row"
-              >
-                <div className="relative flex-1">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Oraș sau cartier (ex: București, Floreasca)"
-                    className="h-12 border-0 pl-9 shadow-none focus-visible:ring-0"
-                  />
-                </div>
-                <Button type="submit" size="lg" className="h-12 px-6">
-                  Caută
-                </Button>
-              </form>
+              <Button asChild size="lg" className="mt-8 h-12 px-8">
+                <Link to="/sali">Săli</Link>
+              </Button>
             </div>
           </div>
         </section>
