@@ -150,9 +150,6 @@ export function SiteHeader() {
   const mobileNavLinks = () => (
     <nav className="flex flex-col items-center gap-1">
       <Button variant="ghost" asChild className="text-foreground/80">
-        <Link to="/" onClick={closeMobileMenu}>Acasă</Link>
-      </Button>
-      <Button variant="ghost" asChild className="text-foreground/80">
         <Link to="/sali" onClick={closeMobileMenu}>Săli</Link>
       </Button>
       <Button variant="ghost" asChild className="text-foreground/80">
