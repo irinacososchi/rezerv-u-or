@@ -1,11 +1,10 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Search, Sparkles, Calendar, CheckCircle2 } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { RoomCard, type Room } from "@/components/room-card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { fetchRooms } from "@/data/rooms";
 
 export const Route = createFileRoute("/")({
@@ -28,18 +27,11 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
-  const [query, setQuery] = useState("");
   const [rooms, setRooms] = useState<Room[]>([]);
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetchRooms(6).then(setRooms).catch((e) => console.error("fetchRooms", e));
   }, []);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    navigate({ to: "/sali", search: { city: query } as never });
-  };
 
   const steps = [
     { n: "1", title: "Caută o sală", icon: Search, desc: "După oraș sau cartier." },
