@@ -326,8 +326,10 @@ export function SiteHeader() {
         {!isScrolled && (
           <div className="lg:hidden flex flex-col items-center gap-1 w-full">
             {logoLink("mobile")}
-            {navLinks()}
-            {userActions()}
+            <div className="flex flex-nowrap items-center justify-center gap-1 w-full">
+              {navLinks()}
+              {userActions()}
+            </div>
           </div>
         )}
 
@@ -356,8 +358,10 @@ export function SiteHeader() {
         >
           <div className="container mx-auto max-w-6xl px-4 py-4 flex flex-col items-center gap-1">
             {logoLink("mobile")}
-            {mobileNavLinks()}
-            {userActions()}
+            <div className="flex flex-nowrap items-center justify-center gap-1 w-full">
+              {navLinks()}
+              {userActions()}
+            </div>
           </div>
         </div>
       )}
