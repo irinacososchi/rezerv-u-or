@@ -117,9 +117,9 @@ export function SiteHeader() {
 
   const logoLink = (variant: "compact" | "mobile" | "desktop" = "desktop") => {
     const heightClass = {
-      compact: "h-10",
-      mobile: "h-24",
-      desktop: "h-16 lg:h-20 xl:h-24",
+      compact: "h-4",
+      mobile: "h-8",
+      desktop: "h-5 lg:h-7 xl:h-8",
     }[variant];
     return (
       <Link
