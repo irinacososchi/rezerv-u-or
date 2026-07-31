@@ -22,24 +22,7 @@ export interface Room {
   googleMapsUrl: string | null;
 }
 
-export interface RoomPriceFrom {
-  min: number;
-  currency: string;
-}
-
-function formatPrice(value: number): string {
-  return Number.isFinite(value)
-    ? String(Math.round(value * 100) / 100)
-    : "";
-}
-
-export function RoomCard({
-  room,
-  priceFrom,
-}: {
-  room: Room;
-  priceFrom?: RoomPriceFrom | null;
-}) {
+export function RoomCard({ room }: { room: Room }) {
   const navigate = useNavigate();
   const inactive = !room.isActive;
 
@@ -104,24 +87,12 @@ export function RoomCard({
           )}
         </div>
         <div className="mt-auto flex items-center justify-between pt-2">
-          {priceFrom === undefined ? (
-            <span className="text-sm">
-              <span className="font-semibold text-foreground">
-                {room.priceMin === room.priceMax ? `${room.priceMin} RON` : `${room.priceMin}–${room.priceMax} RON`}
-              </span>
-              <span className="text-muted-foreground">/oră</span>
+          <span className="text-sm">
+            <span className="font-semibold text-foreground">
+              {room.priceMin === room.priceMax ? `${room.priceMin} RON` : `${room.priceMin}–${room.priceMax} RON`}
             </span>
-          ) : priceFrom ? (
-            <span className="text-sm">
-              <span className="text-muted-foreground">de la </span>
-              <span className="font-semibold text-foreground">
-                {formatPrice(priceFrom.min)} {priceFrom.currency}
-              </span>
-              <span className="text-muted-foreground">/oră</span>
-            </span>
-          ) : (
-            <span className="text-sm font-semibold text-foreground">Preț la cerere</span>
-          )}
+            <span className="text-muted-foreground">/oră</span>
+          </span>
           <Button
             size="sm"
             variant="secondary"
