@@ -22,7 +22,24 @@ export interface Room {
   googleMapsUrl: string | null;
 }
 
-export function RoomCard({ room }: { room: Room }) {
+export interface RoomPriceFrom {
+  min: number;
+  currency: string;
+}
+
+function formatPrice(value: number): string {
+  return Number.isFinite(value)
+    ? String(Math.round(value * 100) / 100)
+    : "";
+}
+
+export function RoomCard({
+  room,
+  priceFrom,
+}: {
+  room: Room;
+  priceFrom?: RoomPriceFrom | null;
+}) {
   const navigate = useNavigate();
   const inactive = !room.isActive;
 
