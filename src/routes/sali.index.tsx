@@ -66,6 +66,7 @@ function SaliPage() {
   const [barre, setBarre] = useState(false);
   const [parking, setParking] = useState(false);
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [priceMap, setPriceMap] = useState<Record<string, RoomPriceFrom>>({});
 
   useEffect(() => {
     fetchRooms(100, { activeOnly: false })
@@ -73,6 +74,42 @@ function SaliPage() {
       .catch((e) => console.error("fetchRooms", e));
     fetchCounties().then(setCounties);
   }, []);
+
+  useEffect(() => {
+    const ids = rooms.map((r) => r.id).filter(Boolean);
+    if (ids.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("active_pricing_rules")
+          .select("room_id, price_per_hour, currency, is_active")
+          .in("room_id", ids);
+        if (error) throw error;
+        const map: Record<string, RoomPriceFrom> = {};
+        for (const row of (data ?? []) as {
+          room_id: string;
+          price_per_hour: number | string | null;
+          currency: string | null;
+          is_active: boolean | null;
+        }[]) {
+          if (row.is_active === false) continue;
+          const price = Number(row.price_per_hour);
+          if (!Number.isFinite(price)) continue;
+          const current = map[row.room_id];
+          if (!current || price < current.min) {
+            map[row.room_id] = { min: price, currency: row.currency || "RON" };
+          }
+        }
+        if (!cancelled) setPriceMap(map);
+      } catch (e) {
+        console.error("active_pricing_rules fetch failed", e);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [rooms]);
 
   useEffect(() => {
     if (countyId == null) {
