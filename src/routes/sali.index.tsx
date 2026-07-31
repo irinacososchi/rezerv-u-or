@@ -301,7 +301,7 @@ function SaliPage() {
               ) : (
                 <div className="grid gap-6 sm:grid-cols-2">
                   {filtered.map((r) => (
-                    <RoomCard key={r.id} room={r} />
+                    <RoomCard key={r.id} room={r} priceFrom={priceMap[r.id] ?? null} />
                   ))}
                 </div>
               )}
