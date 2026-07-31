@@ -99,7 +99,7 @@ export function RoomCard({ room }: { room: Room }) {
           ) : (
             <span className="text-sm text-muted-foreground">Preț la cerere</span>
           )}
-
+          <Button
             size="sm"
             variant="secondary"
             className="cursor-pointer"
