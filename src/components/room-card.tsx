@@ -13,7 +13,6 @@ export interface Room {
   countyId: number | null;
   priceMin: number;
   priceMax: number;
-  currency?: string | null;
   image: string;
   hasMirrors: boolean;
   hasSound: boolean;
@@ -88,17 +87,12 @@ export function RoomCard({ room }: { room: Room }) {
           )}
         </div>
         <div className="mt-auto flex items-center justify-between pt-2">
-          {room.priceMin > 0 ? (
-            <span className="text-sm">
-              <span className="text-muted-foreground">de la </span>
-              <span className="font-semibold text-foreground">
-                {`${Number(room.priceMin).toLocaleString("ro-RO", { maximumFractionDigits: 2 })} ${room.currency || "RON"}`}
-              </span>
-              <span className="text-muted-foreground">/oră</span>
+          <span className="text-sm">
+            <span className="font-semibold text-foreground">
+              {room.priceMin === room.priceMax ? `${room.priceMin} RON` : `${room.priceMin}–${room.priceMax} RON`}
             </span>
-          ) : (
-            <span className="text-sm font-semibold text-foreground">Preț la cerere</span>
-          )}
+            <span className="text-muted-foreground">/oră</span>
+          </span>
           <Button
             size="sm"
             variant="secondary"
