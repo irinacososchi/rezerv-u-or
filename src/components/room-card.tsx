@@ -104,12 +104,24 @@ export function RoomCard({
           )}
         </div>
         <div className="mt-auto flex items-center justify-between pt-2">
-          <span className="text-sm">
-            <span className="font-semibold text-foreground">
-              {room.priceMin === room.priceMax ? `${room.priceMin} RON` : `${room.priceMin}–${room.priceMax} RON`}
+          {priceFrom === undefined ? (
+            <span className="text-sm">
+              <span className="font-semibold text-foreground">
+                {room.priceMin === room.priceMax ? `${room.priceMin} RON` : `${room.priceMin}–${room.priceMax} RON`}
+              </span>
+              <span className="text-muted-foreground">/oră</span>
             </span>
-            <span className="text-muted-foreground">/oră</span>
-          </span>
+          ) : priceFrom ? (
+            <span className="text-sm">
+              <span className="text-muted-foreground">de la </span>
+              <span className="font-semibold text-foreground">
+                {formatPrice(priceFrom.min)} {priceFrom.currency}
+              </span>
+              <span className="text-muted-foreground">/oră</span>
+            </span>
+          ) : (
+            <span className="text-sm font-semibold text-foreground">Preț la cerere</span>
+          )}
           <Button
             size="sm"
             variant="secondary"
