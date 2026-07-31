@@ -13,6 +13,7 @@ export interface Room {
   countyId: number | null;
   priceMin: number;
   priceMax: number;
+  currency?: string | null;
   image: string;
   hasMirrors: boolean;
   hasSound: boolean;
