@@ -26,7 +26,7 @@ type RoomRow = {
     counties: { id: number; name: string } | null;
   } | null;
   room_photos: { storage_url: string; is_cover: boolean | null; sort_order: number | null }[] | null;
-  pricing_rules: { price_per_hour: number; is_active: boolean | null }[] | null;
+  pricing_rules: { price_per_hour: number; currency: string | null; is_active: boolean | null }[] | null;
 };
 
 function pickImage(row: RoomRow, idx: number): string {
@@ -59,7 +59,7 @@ export async function fetchRooms(
   let query = supabase
     .from("rooms")
     .select(
-      `id, name, slug, city, city_id, neighbourhood, google_maps_url, has_mirrors, has_sound_system, has_ballet_barre, has_parking, is_active, cities(id, name, county_id, counties(id, name)), room_photos(storage_url, is_cover, sort_order), pricing_rules(price_per_hour, is_active)`,
+      `id, name, slug, city, city_id, neighbourhood, google_maps_url, has_mirrors, has_sound_system, has_ballet_barre, has_parking, is_active, cities(id, name, county_id, counties(id, name)), room_photos(storage_url, is_cover, sort_order), pricing_rules(price_per_hour, currency, is_active)`,
     )
     .limit(limit);
 
@@ -94,6 +94,8 @@ export async function fetchRooms(
       neighbourhood: row.neighbourhood ?? "",
       priceMin: min,
       priceMax: max,
+      currency:
+        (row.pricing_rules ?? []).find((p) => p.is_active !== false)?.currency ?? "RON",
       image: pickImage(row, idx),
       hasMirrors: !!row.has_mirrors,
       hasSound: !!row.has_sound_system,
