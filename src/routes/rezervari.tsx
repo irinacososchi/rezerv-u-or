@@ -68,7 +68,7 @@ function RezervariPage() {
   const [user, setUser] = useState<{ id: string; email: string } | null>(null);
 
   // Guest search state
-  const [searchType, setSearchType] = useState<"email" | "telefon">("email");
+  
   const [searchValue, setSearchValue] = useState("");
   const [reference, setReference] = useState("");
   const [searched, setSearched] = useState(false);
@@ -452,7 +452,7 @@ function RezervariPage() {
           <p className="mt-2 text-muted-foreground">
             {isLogged
               ? "Toate rezervările făcute cu acest cont."
-              : "Introdu emailul sau telefonul folosit la rezervare."}
+              : "Introdu emailul și referința rezervării din emailul de confirmare."}
           </p>
 
           {/* SEARCH SECTION */}
@@ -599,7 +599,7 @@ function RezervariPage() {
                           : tab === "past"
                             ? "Nu ai rezervări trecute."
                             : "Nu ai nicio rezervare încă."
-                      : "Nicio rezervare găsită. Verifică datele introduse."}
+                      : "Nu am găsit nicio rezervare cu acest email și această referință. Verifică datele din emailul de confirmare."}
                   </p>
                   {isLogged && tab !== "past" && !reference.trim() && (
                     <Button asChild className="mt-5">
