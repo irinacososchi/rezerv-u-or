@@ -68,7 +68,7 @@ function RezervariPage() {
   const [user, setUser] = useState<{ id: string; email: string } | null>(null);
 
   // Guest search state
-  const [searchType, setSearchType] = useState<"email" | "telefon">("email");
+  
   const [searchValue, setSearchValue] = useState("");
   const [reference, setReference] = useState("");
   const [searched, setSearched] = useState(false);
@@ -166,35 +166,45 @@ function RezervariPage() {
     setBookings([]);
     setRecurrences(new Map());
 
-    if (!searchValue.trim()) {
-      setSearchError(`Completează ${searchType === "email" ? "emailul" : "telefonul"}.`);
+    const email = searchValue.trim();
+    const ref = reference.trim();
+    if (!email || !ref) {
+      setSearchError("Completează atât emailul, cât și referința rezervării.");
       return;
     }
     setSearchLoading(true);
-    let query = supabase
-      .from("bookings_full")
-      .select("*")
-      .not("status", "eq", "blocată")
-      .order("booking_date", { ascending: false });
-    if (searchType === "email") {
-      query = query.ilike("guest_email", searchValue.trim());
-    } else {
-      query = query.ilike("guest_phone", `%${searchValue.trim()}%`);
-    }
-    if (reference.trim()) {
-      query = query.ilike("reference", `%${reference.trim()}%`);
-    }
-    const { data, error: fetchError } = await query;
+    const { data, error: fetchError } = await supabase.rpc("search_guest_booking", {
+      p_email: email,
+      p_reference: ref,
+    });
     setSearchLoading(false);
     setSearched(true);
     if (fetchError) {
       setSearchError("A apărut o eroare. Încearcă din nou.");
       return;
     }
-    const list = (data ?? []) as Booking[];
+    const rows = (Array.isArray(data) ? data : []) as Array<Record<string, unknown>>;
+    const list: Booking[] = rows.map((r) => ({
+      id: String(r.id),
+      reference: String(r.reference ?? ""),
+      room_name: String(r.room_name ?? ""),
+      room_slug: null,
+      room_address: (r.room_address as string | null) ?? null,
+      booking_date: String(r.booking_date ?? ""),
+      start_time: String(r.start_time ?? ""),
+      end_time: String(r.end_time ?? ""),
+      duration_hours: Number(r.duration_hours ?? 0),
+      duration_minutes: null,
+      total_amount: Number(r.total_amount ?? 0),
+      status: String(r.status ?? ""),
+      payment_status: String(r.payment_status ?? ""),
+      guest_email: email,
+      recurrence_id: null,
+      is_recurring: (r.is_recurring as boolean | null) ?? null,
+    }));
     setBookings(list);
-    await loadRecurrences(list);
   }
+
 
   const todayISO = new Date().toISOString().split("T")[0];
 
@@ -442,7 +452,7 @@ function RezervariPage() {
           <p className="mt-2 text-muted-foreground">
             {isLogged
               ? "Toate rezervările făcute cu acest cont."
-              : "Introdu emailul sau telefonul folosit la rezervare."}
+              : "Introdu emailul și referința rezervării din emailul de confirmare."}
           </p>
 
           {/* SEARCH SECTION */}
@@ -479,57 +489,25 @@ function RezervariPage() {
             </form>
           ) : (
             <div className="mt-6 rounded-xl border border-border bg-card p-6 shadow-[var(--shadow-card)]">
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchType("email");
-                    setSearchValue("");
-                  }}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition ${
-                    searchType === "email"
-                      ? "border-primary bg-primary/5 text-primary"
-                      : "border-border text-muted-foreground"
-                  }`}
-                >
-                  Caută după email
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchType("telefon");
-                    setSearchValue("");
-                  }}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition ${
-                    searchType === "telefon"
-                      ? "border-primary bg-primary/5 text-primary"
-                      : "border-border text-muted-foreground"
-                  }`}
-                >
-                  Caută după telefon
-                </button>
-              </div>
               <form
-                className="mt-5 space-y-4"
+                className="space-y-4"
                 onSubmit={(e) => {
                   e.preventDefault();
                   handleGuestSearch();
                 }}
               >
                 <div>
-                  <label className="text-sm font-medium">
-                    {searchType === "email" ? "Adresa de email" : "Numărul de telefon"} *
-                  </label>
+                  <label className="text-sm font-medium">Adresa de email *</label>
                   <input
-                    type={searchType === "email" ? "email" : "tel"}
+                    type="email"
                     value={searchValue}
                     onChange={(e) => setSearchValue(e.target.value)}
-                    placeholder={searchType === "email" ? "email@exemplu.ro" : "07xxxxxxxx"}
+                    placeholder="email@exemplu.ro"
                     className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium">Referință rezervare (opțional)</label>
+                  <label className="text-sm font-medium">Referință rezervare *</label>
                   <input
                     type="text"
                     value={reference}
@@ -538,13 +516,20 @@ function RezervariPage() {
                     maxLength={8}
                     className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm font-mono placeholder:text-muted-foreground/60"
                   />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Găsești referința în emailul de confirmare al rezervării.
+                  </p>
                 </div>
                 {searchError && (
                   <div className="rounded-md bg-destructive/10 border border-destructive/30 p-3 text-sm text-destructive">
                     {searchError}
                   </div>
                 )}
-                <Button type="submit" disabled={searchLoading} className="w-full">
+                <Button
+                  type="submit"
+                  disabled={searchLoading || !searchValue.trim() || !reference.trim()}
+                  className="w-full"
+                >
                   {searchLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -566,6 +551,7 @@ function RezervariPage() {
                 </p>
               </form>
             </div>
+
           )}
 
           {/* TABS — visible only when there's a list to show */}
@@ -613,7 +599,7 @@ function RezervariPage() {
                           : tab === "past"
                             ? "Nu ai rezervări trecute."
                             : "Nu ai nicio rezervare încă."
-                      : "Nicio rezervare găsită. Verifică datele introduse."}
+                      : "Nu am găsit nicio rezervare cu acest email și această referință. Verifică datele din emailul de confirmare."}
                   </p>
                   {isLogged && tab !== "past" && !reference.trim() && (
                     <Button asChild className="mt-5">
