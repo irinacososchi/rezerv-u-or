@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, CalendarX, Calendar as CalendarIcon, Search } from "lucide-react";
+import { Loader2, CalendarX, Calendar as CalendarIcon } from "lucide-react";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -30,7 +30,7 @@ export const Route = createFileRoute("/rezervari")({
   head: () => ({
     meta: [
       { title: "Rezervările mele — RZRV" },
-      { name: "description", content: "Caută și gestionează rezervările tale." },
+      { name: "description", content: "Gestionează rezervările tale." },
     ],
   }),
   component: RezervariPage,
@@ -67,19 +67,12 @@ function RezervariPage() {
   const [authChecked, setAuthChecked] = useState(false);
   const [user, setUser] = useState<{ id: string; email: string } | null>(null);
 
-  // Guest search state
-  
-  const [searchValue, setSearchValue] = useState("");
-  const [reference, setReference] = useState("");
-  const [searched, setSearched] = useState(false);
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [searchError, setSearchError] = useState<string | null>(null);
-
   // Common state
   const [loading, setLoading] = useState(false);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [recurrences, setRecurrences] = useState<Map<string, RecurrenceInfo>>(new Map());
   const [tab, setTab] = useState<Tab>("upcoming");
+  const [reference, setReference] = useState("");
   const [cancelLoading, setCancelLoading] = useState<string | null>(null);
   const [cancelError, setCancelError] = useState<{ id: string; msg: string } | null>(null);
   const [seriesDialog, setSeriesDialog] = useState<
@@ -127,8 +120,6 @@ function RezervariPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deepLinkBookingId, loading, bookings]);
 
-
-
   async function loadRecurrences(list: Booking[]) {
     const recIds = Array.from(
       new Set(list.map((b) => b.recurrence_id).filter((x): x is string => !!x)),
@@ -160,61 +151,14 @@ function RezervariPage() {
     await loadRecurrences(list);
   }
 
-  async function handleGuestSearch() {
-    setSearchError(null);
-    setSearched(false);
-    setBookings([]);
-    setRecurrences(new Map());
-
-    const email = searchValue.trim();
-    const ref = reference.trim();
-    if (!email || !ref) {
-      setSearchError("Completează atât emailul, cât și referința rezervării.");
-      return;
-    }
-    setSearchLoading(true);
-    const { data, error: fetchError } = await supabase.rpc("search_guest_booking", {
-      p_email: email,
-      p_reference: ref,
-    });
-    setSearchLoading(false);
-    setSearched(true);
-    if (fetchError) {
-      setSearchError("A apărut o eroare. Încearcă din nou.");
-      return;
-    }
-    const rows = (Array.isArray(data) ? data : []) as Array<Record<string, unknown>>;
-    const list: Booking[] = rows.map((r) => ({
-      id: String(r.id),
-      reference: String(r.reference ?? ""),
-      room_name: String(r.room_name ?? ""),
-      room_slug: null,
-      room_address: (r.room_address as string | null) ?? null,
-      booking_date: String(r.booking_date ?? ""),
-      start_time: String(r.start_time ?? ""),
-      end_time: String(r.end_time ?? ""),
-      duration_hours: Number(r.duration_hours ?? 0),
-      duration_minutes: null,
-      total_amount: Number(r.total_amount ?? 0),
-      status: String(r.status ?? ""),
-      payment_status: String(r.payment_status ?? ""),
-      guest_email: email,
-      recurrence_id: null,
-      is_recurring: (r.is_recurring as boolean | null) ?? null,
-    }));
-    setBookings(list);
-  }
-
-
   const todayISO = new Date().toISOString().split("T")[0];
 
-  // For logged-in: client-side reference filter
+  // Client-side reference filter for logged-in users
   const visibleBookings = useMemo(() => {
-    if (!user) return bookings;
     const q = reference.trim().toUpperCase();
     if (!q) return bookings;
     return bookings.filter((b) => b.reference?.toUpperCase().includes(q));
-  }, [bookings, reference, user]);
+  }, [bookings, reference]);
 
   const { series: allSeries, singles: allSingles } = useMemo(
     () => groupByRecurrence(visibleBookings),
@@ -302,9 +246,6 @@ function RezervariPage() {
   async function refreshAfterCancel() {
     if (user) {
       await fetchUserBookings(user);
-    } else if (searched && searchValue.trim()) {
-      // Re-run the last guest search to refresh state
-      await handleGuestSearch();
     }
   }
 
@@ -440,74 +381,30 @@ function RezervariPage() {
   }
 
   const isLogged = !!user;
-  const showList = isLogged || (searched && !searchLoading);
 
   return (
     <Shell>
       <main className="flex-1">
         <div className="container mx-auto max-w-4xl px-4 py-10">
-          <h1 className="text-3xl font-bold tracking-tight">
-            {isLogged ? "Rezervările mele" : "Caută rezervarea ta"}
-          </h1>
+          <h1 className="text-3xl font-bold tracking-tight">Rezervările mele</h1>
           <p className="mt-2 text-muted-foreground">
             {isLogged
               ? "Toate rezervările făcute cu acest cont."
-              : "Introdu emailul și referința rezervării din emailul de confirmare."}
+              : "Autentifică-te pentru a-ți vedea rezervările. Dacă ai rezervat ca oaspete, detaliile sunt în emailul de confirmare primit."}
           </p>
 
-          {/* SEARCH SECTION */}
           {isLogged ? (
-            <form
-              className="mt-6 flex flex-col sm:flex-row gap-2 sm:items-end"
-              onSubmit={(e) => {
-                e.preventDefault();
-              }}
-            >
-              <div className="flex-1 sm:max-w-xs">
-                <label className="text-xs font-medium text-muted-foreground">
-                  Referință rezervare (opțional)
-                </label>
-                <input
-                  type="text"
-                  value={reference}
-                  onChange={(e) => setReference(e.target.value.toUpperCase())}
-                  placeholder="ex: A3F9..."
-                  maxLength={8}
-                  className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm font-mono placeholder:text-muted-foreground/60"
-                />
-              </div>
-              {reference && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setReference("")}
-                  className="sm:mb-0"
-                >
-                  Resetează
-                </Button>
-              )}
-            </form>
-          ) : (
-            <div className="mt-6 rounded-xl border border-border bg-card p-6 shadow-[var(--shadow-card)]">
+            <>
               <form
-                className="space-y-4"
+                className="mt-6 flex flex-col sm:flex-row gap-2 sm:items-end"
                 onSubmit={(e) => {
                   e.preventDefault();
-                  handleGuestSearch();
                 }}
               >
-                <div>
-                  <label className="text-sm font-medium">Adresa de email *</label>
-                  <input
-                    type="email"
-                    value={searchValue}
-                    onChange={(e) => setSearchValue(e.target.value)}
-                    placeholder="email@exemplu.ro"
-                    className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Referință rezervare *</label>
+                <div className="flex-1 sm:max-w-xs">
+                  <label className="text-xs font-medium text-muted-foreground">
+                    Referință rezervare (opțional)
+                  </label>
                   <input
                     type="text"
                     value={reference}
@@ -516,274 +413,254 @@ function RezervariPage() {
                     maxLength={8}
                     className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm font-mono placeholder:text-muted-foreground/60"
                   />
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Găsești referința în emailul de confirmare al rezervării.
-                  </p>
                 </div>
-                {searchError && (
-                  <div className="rounded-md bg-destructive/10 border border-destructive/30 p-3 text-sm text-destructive">
-                    {searchError}
-                  </div>
+                {reference && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setReference("")}
+                    className="sm:mb-0"
+                  >
+                    Resetează
+                  </Button>
                 )}
-                <Button
-                  type="submit"
-                  disabled={searchLoading || !searchValue.trim() || !reference.trim()}
-                  className="w-full"
-                >
-                  {searchLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Se caută...
-                    </>
-                  ) : (
-                    <>
-                      <Search className="mr-2 h-4 w-4" />
-                      Caută
-                    </>
-                  )}
-                </Button>
-                <p className="text-center text-xs text-muted-foreground">
-                  Ai deja cont?{" "}
-                  <Link to="/login" className="text-primary hover:underline">
-                    Autentifică-te
-                  </Link>{" "}
-                  pentru a-ți vedea direct toate rezervările.
-                </p>
               </form>
-            </div>
 
-          )}
+              <div className="mt-6 flex gap-2 border-b border-border">
+                {([
+                  { key: "upcoming", label: `Viitoare (${counts.upcoming})` },
+                  { key: "past", label: `Trecute (${counts.past})` },
+                  { key: "all", label: `Toate (${counts.all})` },
+                ] as { key: Tab; label: string }[]).map((t) => (
+                  <button
+                    key={t.key}
+                    onClick={() => setTab(t.key)}
+                    className={`relative px-4 py-2 text-sm font-medium transition ${
+                      tab === t.key
+                        ? "text-primary"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {t.label}
+                    {tab === t.key && (
+                      <span className="absolute inset-x-0 -bottom-px h-0.5 bg-primary" />
+                    )}
+                  </button>
+                ))}
+              </div>
 
-          {/* TABS — visible only when there's a list to show */}
-          {showList && (
-            <div className="mt-6 flex gap-2 border-b border-border">
-              {([
-                { key: "upcoming", label: `Viitoare (${counts.upcoming})` },
-                { key: "past", label: `Trecute (${counts.past})` },
-                { key: "all", label: `Toate (${counts.all})` },
-              ] as { key: Tab; label: string }[]).map((t) => (
-                <button
-                  key={t.key}
-                  onClick={() => setTab(t.key)}
-                  className={`relative px-4 py-2 text-sm font-medium transition ${
-                    tab === t.key
-                      ? "text-primary"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {t.label}
-                  {tab === t.key && (
-                    <span className="absolute inset-x-0 -bottom-px h-0.5 bg-primary" />
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* LIST */}
-          {showList && (
-            <div className="mt-6 space-y-4">
-              {loading ? (
-                <div className="py-12 text-center text-muted-foreground">
-                  <Loader2 className="mx-auto h-6 w-6 animate-spin" />
-                </div>
-              ) : items.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-border bg-card/50 p-12 text-center">
-                  <CalendarX className="mx-auto h-10 w-10 text-muted-foreground" />
-                  <p className="mt-4 text-sm text-muted-foreground">
-                    {isLogged
-                      ? reference.trim()
+              <div className="mt-6 space-y-4">
+                {loading ? (
+                  <div className="py-12 text-center text-muted-foreground">
+                    <Loader2 className="mx-auto h-6 w-6 animate-spin" />
+                  </div>
+                ) : items.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-border bg-card/50 p-12 text-center">
+                    <CalendarX className="mx-auto h-10 w-10 text-muted-foreground" />
+                    <p className="mt-4 text-sm text-muted-foreground">
+                      {reference.trim()
                         ? "Nu s-a găsit nicio rezervare cu această referință în contul tău."
                         : tab === "upcoming"
                           ? "Nu ai rezervări viitoare. Caută o sală!"
                           : tab === "past"
                             ? "Nu ai rezervări trecute."
-                            : "Nu ai nicio rezervare încă."
-                      : "Nu am găsit nicio rezervare cu acest email și această referință. Verifică datele din emailul de confirmare."}
-                  </p>
-                  {isLogged && tab !== "past" && !reference.trim() && (
-                    <Button asChild className="mt-5">
-                      <Link to="/sali">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        Caută o sală
-                      </Link>
-                    </Button>
-                  )}
-                </div>
-              ) : (
-                items.map((it) => {
-                  if (it.kind === "series") {
-                    const sampleEmail = it.bookings[0].guest_email;
-                    const slug = it.bookings[0].room_slug;
+                            : "Nu ai nicio rezervare încă."}
+                    </p>
+                    {tab !== "past" && !reference.trim() && (
+                      <Button asChild className="mt-5">
+                        <Link to="/sali">
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          Caută o sală
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  items.map((it) => {
+                    if (it.kind === "series") {
+                      const sampleEmail = it.bookings[0].guest_email;
+                      const slug = it.bookings[0].room_slug;
+                      return (
+                        <RecurringSeriesCard
+                          key={`series-${it.recurrenceId}`}
+                          bookings={it.bookings}
+                          recurrence={recurrences.get(it.recurrenceId)}
+                          todayISO={todayISO}
+                          onCancelSeries={() => {
+                            setSeriesDialog({
+                              mode: "series",
+                              recurrenceId: it.recurrenceId,
+                              guestEmail: sampleEmail,
+                            });
+                          }}
+                          roomLink={
+                            slug ? (
+                              <Button asChild variant="outline" size="sm">
+                                <Link to="/sali/$slug" params={{ slug }}>
+                                  Vezi sala
+                                </Link>
+                              </Button>
+                            ) : null
+                          }
+                        />
+                      );
+                    }
+                    const b = it.b;
                     return (
-                      <RecurringSeriesCard
-                        key={`series-${it.recurrenceId}`}
-                        bookings={it.bookings}
-                        recurrence={recurrences.get(it.recurrenceId)}
-                        todayISO={todayISO}
-                        onCancelSeries={() => {
-                          setSeriesDialog({
-                            mode: "series",
-                            recurrenceId: it.recurrenceId,
-                            guestEmail: sampleEmail,
-                          });
-                        }}
-                        roomLink={
-                          slug ? (
+                      <article
+                        key={b.id}
+                        id={`booking-row-${b.id}`}
+                        className={`rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-card)] transition ${
+                          highlightId === b.id ? "ring-2 ring-primary" : ""
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <div className="font-mono text-xs font-bold text-muted-foreground">
+                              #{b.reference}
+                            </div>
+                            {b.room_slug ? (
+                              <Link
+                                to="/sali/$slug"
+                                params={{ slug: b.room_slug }}
+                                className="block"
+                              >
+                                <h3 className="mt-1 font-semibold hover:underline">{b.room_name}</h3>
+                                {b.room_address && (
+                                  <p className="text-xs text-muted-foreground">{b.room_address}</p>
+                                )}
+                              </Link>
+                            ) : (
+                              <>
+                                <h3 className="mt-1 font-semibold">{b.room_name}</h3>
+                                {b.room_address && (
+                                  <p className="text-xs text-muted-foreground">{b.room_address}</p>
+                                )}
+                              </>
+                            )}
+                          </div>
+                          <div className="flex flex-col items-end gap-1">
+                            <span
+                              className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                b.status === "confirmată"
+                                  ? "bg-primary/10 text-primary"
+                                  : b.status === "anulată" || b.status === "refuzată" || b.status === "expirată"
+                                    ? "bg-destructive/10 text-destructive"
+                                    : b.status === "finalizată"
+                                      ? "bg-muted text-muted-foreground"
+                                      : "bg-orange-500/10 text-orange-600"
+                              }`}
+                            >
+                              {b.status}
+                            </span>
+                            <span
+                              className={`rounded-full px-2.5 py-0.5 text-xs ${
+                                b.payment_status === "platit"
+                                  ? "bg-primary/10 text-primary"
+                                  : b.payment_status === "rambursat"
+                                    ? "bg-muted text-muted-foreground"
+                                    : "bg-amber-500/10 text-amber-700"
+                              }`}
+                            >
+                              {b.payment_status === "platit"
+                                ? "Plătit"
+                                : b.payment_status === "rambursat"
+                                  ? "Rambursat"
+                                  : "Neplătit"}
+                            </span>
+                          </div>
+                        </div>
+
+                        <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-border pt-4 text-sm sm:grid-cols-4">
+                          <div>
+                            <dt className="text-xs text-muted-foreground">Data</dt>
+                            <dd>
+                              {new Date(b.booking_date).toLocaleDateString("ro-RO", {
+                                weekday: "long",
+                                day: "numeric",
+                                month: "long",
+                                year: "numeric",
+                              })}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt className="text-xs text-muted-foreground">Interval</dt>
+                            <dd>
+                              {b.start_time?.slice(0, 5)} – {b.end_time?.slice(0, 5)}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt className="text-xs text-muted-foreground">Durată</dt>
+                            <dd>
+                              {(() => {
+                                const m = b.duration_minutes ?? Math.round((b.duration_hours ?? 0) * 60);
+                                const h = m / 60;
+                                return `${h} ${h === 1 ? "oră" : "ore"}`;
+                              })()}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt className="text-xs text-muted-foreground">Total</dt>
+                            <dd className="font-semibold">{b.total_amount} RON</dd>
+                          </div>
+                        </dl>
+
+                        <BookingTimestamps
+                          createdAt={b.created_at}
+                          updatedAt={b.updated_at}
+                          className="mt-3"
+                        />
+
+                        {cancelError && cancelError.id === b.id && (
+                          <div className="mt-3 rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">
+                            {cancelError.msg}
+                          </div>
+                        )}
+
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {b.room_slug && (
                             <Button asChild variant="outline" size="sm">
-                              <Link to="/sali/$slug" params={{ slug }}>
+                              <Link to="/sali/$slug" params={{ slug: b.room_slug }}>
                                 Vezi sala
                               </Link>
                             </Button>
-                          ) : null
-                        }
-                      />
+                          )}
+                          {b.booking_date >= todayISO &&
+                            (b.status === "confirmată" || b.status === "în așteptare") && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleCancel(b)}
+                                disabled={cancelLoading === b.id}
+                                className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                              >
+                                {cancelLoading === b.id ? (
+                                  <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Se anulează...
+                                  </>
+                                ) : (
+                                  "Anulează"
+                                )}
+                              </Button>
+                            )}
+                        </div>
+                      </article>
                     );
-                  }
-                  const b = it.b;
-                  return (
-                    <article
-                      key={b.id}
-                      id={`booking-row-${b.id}`}
-                      className={`rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-card)] transition ${
-                        highlightId === b.id ? "ring-2 ring-primary" : ""
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="font-mono text-xs font-bold text-muted-foreground">
-                            #{b.reference}
-                          </div>
-                          {b.room_slug ? (
-                            <Link
-                              to="/sali/$slug"
-                              params={{ slug: b.room_slug }}
-                              className="block"
-                            >
-                              <h3 className="mt-1 font-semibold hover:underline">{b.room_name}</h3>
-                              {b.room_address && (
-                                <p className="text-xs text-muted-foreground">{b.room_address}</p>
-                              )}
-                            </Link>
-                          ) : (
-                            <>
-                              <h3 className="mt-1 font-semibold">{b.room_name}</h3>
-                              {b.room_address && (
-                                <p className="text-xs text-muted-foreground">{b.room_address}</p>
-                              )}
-                            </>
-                          )}
-                        </div>
-                        <div className="flex flex-col items-end gap-1">
-                          <span
-                            className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                              b.status === "confirmată"
-                                ? "bg-primary/10 text-primary"
-                                : b.status === "anulată" || b.status === "refuzată" || b.status === "expirată"
-                                  ? "bg-destructive/10 text-destructive"
-                                  : b.status === "finalizată"
-                                    ? "bg-muted text-muted-foreground"
-                                    : "bg-orange-500/10 text-orange-600"
-                            }`}
-                          >
-                            {b.status}
-                          </span>
-                          <span
-                            className={`rounded-full px-2.5 py-0.5 text-xs ${
-                              b.payment_status === "platit"
-                                ? "bg-primary/10 text-primary"
-                                : b.payment_status === "rambursat"
-                                  ? "bg-muted text-muted-foreground"
-                                  : "bg-amber-500/10 text-amber-700"
-                            }`}
-                          >
-                            {b.payment_status === "platit"
-                              ? "Plătit"
-                              : b.payment_status === "rambursat"
-                                ? "Rambursat"
-                                : "Neplătit"}
-                          </span>
-                        </div>
-                      </div>
-
-                      <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-border pt-4 text-sm sm:grid-cols-4">
-                        <div>
-                          <dt className="text-xs text-muted-foreground">Data</dt>
-                          <dd>
-                            {new Date(b.booking_date).toLocaleDateString("ro-RO", {
-                              weekday: "long",
-                              day: "numeric",
-                              month: "long",
-                              year: "numeric",
-                            })}
-                          </dd>
-                        </div>
-                        <div>
-                          <dt className="text-xs text-muted-foreground">Interval</dt>
-                          <dd>
-                            {b.start_time?.slice(0, 5)} – {b.end_time?.slice(0, 5)}
-                          </dd>
-                        </div>
-                        <div>
-                          <dt className="text-xs text-muted-foreground">Durată</dt>
-                          <dd>
-                            {(() => {
-                              const m = b.duration_minutes ?? Math.round((b.duration_hours ?? 0) * 60);
-                              const h = m / 60;
-                              return `${h} ${h === 1 ? "oră" : "ore"}`;
-                            })()}
-                          </dd>
-                        </div>
-                        <div>
-                          <dt className="text-xs text-muted-foreground">Total</dt>
-                          <dd className="font-semibold">{b.total_amount} RON</dd>
-                        </div>
-                      </dl>
-
-                      <BookingTimestamps
-                        createdAt={b.created_at}
-                        updatedAt={b.updated_at}
-                        className="mt-3"
-                      />
-
-                      {cancelError && cancelError.id === b.id && (
-                        <div className="mt-3 rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">
-                          {cancelError.msg}
-                        </div>
-                      )}
-
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {b.room_slug && (
-                          <Button asChild variant="outline" size="sm">
-                            <Link to="/sali/$slug" params={{ slug: b.room_slug }}>
-                              Vezi sala
-                            </Link>
-                          </Button>
-                        )}
-                        {b.booking_date >= todayISO &&
-                          (b.status === "confirmată" || b.status === "în așteptare") && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleCancel(b)}
-                              disabled={cancelLoading === b.id}
-                              className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                            >
-                              {cancelLoading === b.id ? (
-                                <>
-                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                  Se anulează...
-                                </>
-                              ) : (
-                                "Anulează"
-                              )}
-                            </Button>
-                          )}
-                      </div>
-                    </article>
-                  );
-                })
-              )}
+                  })
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="mt-8 rounded-xl border border-dashed border-border bg-card/50 p-12 text-center">
+              <CalendarX className="mx-auto h-10 w-10 text-muted-foreground" />
+              <p className="mt-4 text-sm text-muted-foreground">
+                Autentifică-te pentru a-ți vedea rezervările. Dacă ai rezervat ca oaspete,
+                detaliile sunt în emailul de confirmare primit.
+              </p>
+              <Button asChild className="mt-5">
+                <Link to="/login">Autentifică-te</Link>
+              </Button>
             </div>
           )}
         </div>
