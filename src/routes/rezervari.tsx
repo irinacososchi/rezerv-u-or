@@ -166,35 +166,45 @@ function RezervariPage() {
     setBookings([]);
     setRecurrences(new Map());
 
-    if (!searchValue.trim()) {
-      setSearchError(`Completează ${searchType === "email" ? "emailul" : "telefonul"}.`);
+    const email = searchValue.trim();
+    const ref = reference.trim();
+    if (!email || !ref) {
+      setSearchError("Completează atât emailul, cât și referința rezervării.");
       return;
     }
     setSearchLoading(true);
-    let query = supabase
-      .from("bookings_full")
-      .select("*")
-      .not("status", "eq", "blocată")
-      .order("booking_date", { ascending: false });
-    if (searchType === "email") {
-      query = query.ilike("guest_email", searchValue.trim());
-    } else {
-      query = query.ilike("guest_phone", `%${searchValue.trim()}%`);
-    }
-    if (reference.trim()) {
-      query = query.ilike("reference", `%${reference.trim()}%`);
-    }
-    const { data, error: fetchError } = await query;
+    const { data, error: fetchError } = await supabase.rpc("search_guest_booking", {
+      p_email: email,
+      p_reference: ref,
+    });
     setSearchLoading(false);
     setSearched(true);
     if (fetchError) {
       setSearchError("A apărut o eroare. Încearcă din nou.");
       return;
     }
-    const list = (data ?? []) as Booking[];
+    const rows = (Array.isArray(data) ? data : []) as Array<Record<string, unknown>>;
+    const list: Booking[] = rows.map((r) => ({
+      id: String(r.id),
+      reference: String(r.reference ?? ""),
+      room_name: String(r.room_name ?? ""),
+      room_slug: null,
+      room_address: (r.room_address as string | null) ?? null,
+      booking_date: String(r.booking_date ?? ""),
+      start_time: String(r.start_time ?? ""),
+      end_time: String(r.end_time ?? ""),
+      duration_hours: Number(r.duration_hours ?? 0),
+      duration_minutes: null,
+      total_amount: Number(r.total_amount ?? 0),
+      status: String(r.status ?? ""),
+      payment_status: String(r.payment_status ?? ""),
+      guest_email: email,
+      recurrence_id: null,
+      is_recurring: (r.is_recurring as boolean | null) ?? null,
+    }));
     setBookings(list);
-    await loadRecurrences(list);
   }
+
 
   const todayISO = new Date().toISOString().split("T")[0];
 
