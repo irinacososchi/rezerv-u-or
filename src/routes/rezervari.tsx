@@ -489,57 +489,25 @@ function RezervariPage() {
             </form>
           ) : (
             <div className="mt-6 rounded-xl border border-border bg-card p-6 shadow-[var(--shadow-card)]">
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchType("email");
-                    setSearchValue("");
-                  }}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition ${
-                    searchType === "email"
-                      ? "border-primary bg-primary/5 text-primary"
-                      : "border-border text-muted-foreground"
-                  }`}
-                >
-                  Caută după email
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchType("telefon");
-                    setSearchValue("");
-                  }}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition ${
-                    searchType === "telefon"
-                      ? "border-primary bg-primary/5 text-primary"
-                      : "border-border text-muted-foreground"
-                  }`}
-                >
-                  Caută după telefon
-                </button>
-              </div>
               <form
-                className="mt-5 space-y-4"
+                className="space-y-4"
                 onSubmit={(e) => {
                   e.preventDefault();
                   handleGuestSearch();
                 }}
               >
                 <div>
-                  <label className="text-sm font-medium">
-                    {searchType === "email" ? "Adresa de email" : "Numărul de telefon"} *
-                  </label>
+                  <label className="text-sm font-medium">Adresa de email *</label>
                   <input
-                    type={searchType === "email" ? "email" : "tel"}
+                    type="email"
                     value={searchValue}
                     onChange={(e) => setSearchValue(e.target.value)}
-                    placeholder={searchType === "email" ? "email@exemplu.ro" : "07xxxxxxxx"}
+                    placeholder="email@exemplu.ro"
                     className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium">Referință rezervare (opțional)</label>
+                  <label className="text-sm font-medium">Referință rezervare *</label>
                   <input
                     type="text"
                     value={reference}
@@ -548,13 +516,20 @@ function RezervariPage() {
                     maxLength={8}
                     className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm font-mono placeholder:text-muted-foreground/60"
                   />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Găsești referința în emailul de confirmare al rezervării.
+                  </p>
                 </div>
                 {searchError && (
                   <div className="rounded-md bg-destructive/10 border border-destructive/30 p-3 text-sm text-destructive">
                     {searchError}
                   </div>
                 )}
-                <Button type="submit" disabled={searchLoading} className="w-full">
+                <Button
+                  type="submit"
+                  disabled={searchLoading || !searchValue.trim() || !reference.trim()}
+                  className="w-full"
+                >
                   {searchLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -576,6 +551,7 @@ function RezervariPage() {
                 </p>
               </form>
             </div>
+
           )}
 
           {/* TABS — visible only when there's a list to show */}
