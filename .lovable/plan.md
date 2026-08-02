@@ -35,5 +35,9 @@ Other pre-navigation exits are the validation/interval limits, a `check_recurrin
 
 - Add `console.log("RECURRING BRANCH ENTERED");` as the first statement inside the `create_recurring_booking` branch.
 - Add `console.log("RECURRING RPC RESULT", rpcErr, recResult);` immediately after `recResult` is derived, which is the first point where both requested variables exist.
+- In `checkSlotAvailability`, inside the `if (error)` block of the availability query, add `console.log("PRECHECK QUERY ERROR", error);` before the existing error handling and the `throw`.
+- In `handleSubmit`, give the `precheck_threw` catch a bound error variable and add `console.log("PRECHECK THREW - aborting", err);` before the existing warning and return.
 - Keep all existing debug logs and make no business-logic changes.
 - Verify the project build after adding the logs.
+
+With these in place, a recurring submit prints either `PRECHECK THREW - aborting` with the real backend error, or `RECURRING BRANCH ENTERED` followed by `RECURRING RPC RESULT`.
