@@ -1024,7 +1024,6 @@ function CheckoutPage() {
 
     // ---------- RECURRING, single-day, single interval: secure server-side RPC ----------
     if (isRecurrent && !isMultiDay && parsedSlots.length === 1) {
-      console.log("RECURRING BRANCH ENTERED");
       const { data: rpcData, error: rpcErr } = await supabase.rpc(
         "create_recurring_booking",
         {
@@ -1042,8 +1041,6 @@ function CheckoutPage() {
       const recResult = (Array.isArray(rpcData) ? rpcData[0] : rpcData) as
         | { recurrence_id?: string; sessions_created?: number; first_date?: string }
         | null;
-
-      console.log("RECURRING RPC RESULT", rpcErr, recResult);
 
       if (rpcErr || !recResult?.recurrence_id) {
         setSubmitting(false);
