@@ -1081,12 +1081,73 @@ function CheckoutPage() {
 
     const isRecurrenceCheckout = isRecurrent && search.recurrenceCount > 1;
 
+    // ---------- SINGLE, non-recurring, single-interval: secure server-side RPC ----------
+    if (!isRecurrent && !recurrenceId && allDateIntervals.length === 1) {
+      const slot = allDateIntervals[0];
+      const { data: rpcData, error: rpcErr } = await supabase.rpc("create_booking", {
+        p_room_id: room.id,
+        p_date: slot.date,
+        p_start_time: `${slot.start}:00`,
+        p_end_time: `${slot.end}:00`,
+        p_guest_name: name.trim(),
+        p_guest_email: email.trim(),
+        p_guest_phone: phone.trim(),
+        p_voucher_code: voucher?.code ?? null,
+        p_renter_notes: null,
+      } as never);
+
+      if (rpcErr) {
+        setSubmitting(false);
+        const msg = rpcErr.message || "Nu am putut crea rezervarea. Reîncearcă.";
+        setSubmitError(msg);
+        toast.error(msg);
+        return;
+      }
+
+      const result = (Array.isArray(rpcData) ? rpcData[0] : rpcData) as
+        | { booking_id?: string; reference?: string; total?: number; status?: string }
+        | null;
+
+      if (!result?.booking_id) {
+        setSubmitting(false);
+        const msg = "Nu am putut crea rezervarea. Reîncearcă.";
+        setSubmitError(msg);
+        toast.error(msg);
+        return;
+      }
+
+      // Non-price metadata not handled by the RPC (best-effort).
+      await supabase
+        .from("bookings")
+        .update({
+          payment_method: paymentMethod,
+          needs_invoice: needsInvoice,
+          invoice_name: needsInvoice ? invoiceName.trim() : null,
+          invoice_vat: needsInvoice ? invoiceVat.trim() || null : null,
+          invoice_address: needsInvoice ? invoiceAddress.trim() : null,
+        })
+        .eq("id", result.booking_id);
+
+      setSubmitting(false);
+      navigate({
+        to: "/confirmare",
+        search: {
+          reference: result.reference ?? "",
+          group: "",
+          recurrent: "false",
+          recurrenceCount: 0,
+        } as never,
+      });
+      return;
+    }
+
     const results: {
       slot: { date: string; start: string; end: string };
       success: boolean;
       reference?: string;
       error?: string;
     }[] = [];
+
 
     for (let idx = 0; idx < allDateIntervals.length; idx++) {
       const slot = allDateIntervals[idx];
