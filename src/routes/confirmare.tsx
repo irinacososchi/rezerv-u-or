@@ -127,6 +127,7 @@ function RecurringSuccess({ recurrenceCount }: { recurrenceCount: number }) {
 
 function ConfirmarePage() {
   const search = Route.useSearch();
+  console.log("CONFIRMARE SEARCH DEBUG", JSON.stringify(search), "recurrent=", search.recurrent, "typeof=", typeof search.recurrent);
   const reference = search.reference;
   const group = search.group;
   const isRecurringFromSearch = search.recurrent;
