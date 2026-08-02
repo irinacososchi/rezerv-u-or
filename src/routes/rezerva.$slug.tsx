@@ -703,7 +703,6 @@ function CheckoutPage() {
       .not("status", "in", '("refuzată","anulată","expirată")');
 
     if (error) {
-      console.log("PRECHECK QUERY ERROR", error);
       console.error("availability check error:", error);
       throw error;
     }
