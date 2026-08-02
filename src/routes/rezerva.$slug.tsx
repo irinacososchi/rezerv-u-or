@@ -1141,6 +1141,88 @@ function CheckoutPage() {
       return;
     }
 
+    // ---------- MULTI-SLOT, non-recurring: secure server-side RPC per interval ----------
+    if (!isRecurrent && !recurrenceId && allDateIntervals.length > 1) {
+      const ok: { id: string; reference?: string }[] = [];
+      const bad: { slot: { date: string; start: string; end: string }; error: string }[] = [];
+
+      for (const slot of allDateIntervals) {
+        const { data: rpcData, error: rpcErr } = await supabase.rpc("create_booking", {
+          p_room_id: room.id,
+          p_date: slot.date,
+          p_start_time: `${slot.start}:00`,
+          p_end_time: `${slot.end}:00`,
+          p_guest_name: name.trim(),
+          p_guest_email: email.trim(),
+          p_guest_phone: phone.trim(),
+          p_voucher_code: null,
+          p_renter_notes: null,
+        } as never);
+
+        const res = (Array.isArray(rpcData) ? rpcData[0] : rpcData) as
+          | { booking_id?: string; reference?: string }
+          | null;
+
+        if (rpcErr || !res?.booking_id) {
+          bad.push({
+            slot,
+            error: rpcErr?.message || "Nu am putut crea rezervarea.",
+          });
+          continue;
+        }
+        ok.push({ id: res.booking_id, reference: res.reference });
+      }
+
+      setSubmitting(false);
+
+      if (ok.length === 0) {
+        const msg =
+          "Niciuna dintre rezervări nu s-a putut crea. " +
+          (bad[0]?.error ? `Detalii: ${bad[0].error}` : "");
+        setSubmitError(msg);
+        toast.error(msg);
+        return;
+      }
+
+      // Shared group id + non-price metadata (RPC doesn't set these).
+      const groupId = bookingGroupId ?? crypto.randomUUID();
+      await supabase
+        .from("bookings")
+        .update({
+          booking_group_id: groupId,
+          payment_method: paymentMethod,
+          needs_invoice: needsInvoice,
+          invoice_name: needsInvoice ? invoiceName.trim() : null,
+          invoice_vat: needsInvoice ? invoiceVat.trim() || null : null,
+          invoice_address: needsInvoice ? invoiceAddress.trim() : null,
+        })
+        .in("id", ok.map((b) => b.id));
+
+      if (bad.length > 0) {
+        toast.warning(
+          `${ok.length} rezervări create. ${bad.length} eșuate:\n` +
+            bad
+              .map(
+                (f) =>
+                  `${f.slot.date} ${f.slot.start}–${f.slot.end}: ${f.error}`,
+              )
+              .join("\n"),
+        );
+      }
+
+      navigate({
+        to: "/confirmare",
+        search: {
+          reference: ok[0].reference ?? "",
+          group: groupId,
+          recurrent: "false",
+          recurrenceCount: 0,
+        } as never,
+      });
+      return;
+    }
+
+
     const results: {
       slot: { date: string; start: string; end: string };
       success: boolean;
