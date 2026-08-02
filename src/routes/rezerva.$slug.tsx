@@ -1074,7 +1074,6 @@ function CheckoutPage() {
         });
 
       setSubmitting(false);
-      console.log("RECURRING NAV DEBUG - about to navigate recurrent=true, recurrenceId=", newRecurrenceId);
       navigate({
         to: "/confirmare",
         search: {
