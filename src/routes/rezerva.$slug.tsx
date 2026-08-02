@@ -1389,7 +1389,6 @@ function CheckoutPage() {
 
 
 
-    console.log("LEGACY NAV DEBUG - isRecurrent=", isRecurrent);
     navigate({
       to: "/confirmare",
       search: {
