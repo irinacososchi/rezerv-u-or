@@ -109,7 +109,7 @@ function RecurringSuccess({ recurrenceCount }: { recurrenceCount: number }) {
           Rezervarea ta recurentă ({recurrenceCount} ședințe) a fost trimisă proprietarului spre aprobare. Vei primi un email când seria va fi confirmată. Detaliile sunt și în emailul primit.
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row justify-center">
-          <Link to="/rezervari" className="flex-1 sm:flex-initial">
+          <Link to="/rezervari" search={{ bookingId: "" }} className="flex-1 sm:flex-initial">
             <Button variant="outline" size="lg" className="w-full sm:w-auto">
               Rezervările mele
             </Button>
@@ -472,7 +472,7 @@ function ConfirmarePage() {
               Înapoi la săli
             </Button>
           </Link>
-          <Link to="/rezervari" className="flex-1">
+          <Link to="/rezervari" search={{ bookingId: "" }} className="flex-1">
             <Button variant="outline" size="lg" className="w-full">
               Rezervarea mea
             </Button>
