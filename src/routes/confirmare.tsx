@@ -12,7 +12,7 @@ export const Route = createFileRoute("/confirmare")({
   validateSearch: (raw: Record<string, unknown>) => ({
     reference: typeof raw.reference === "string" ? raw.reference : "",
     group: typeof raw.group === "string" ? raw.group : "",
-    recurrent: raw.recurrent === "true",
+    recurrent: raw.recurrent === true || raw.recurrent === "true",
     recurrenceCount: Number(raw.recurrenceCount) || 0,
   }),
   head: () => ({
