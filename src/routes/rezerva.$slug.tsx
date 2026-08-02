@@ -977,7 +977,6 @@ function CheckoutPage() {
       }
 
     } catch (err) {
-      console.log("PRECHECK THREW - aborting", err);
       console.warn("=== EARLY RETURN ===", { reason: "precheck_threw" });
       setSubmitting(false);
       setSubmitError("Nu am putut verifica disponibilitatea. Reîncearcă peste câteva secunde.");
