@@ -1231,6 +1231,7 @@ function CheckoutPage() {
         );
       }
 
+      console.log("MULTI NAV DEBUG");
       navigate({
         to: "/confirmare",
         search: {
