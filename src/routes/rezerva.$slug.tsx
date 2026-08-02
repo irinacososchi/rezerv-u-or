@@ -1074,6 +1074,7 @@ function CheckoutPage() {
         });
 
       setSubmitting(false);
+      console.log("RECURRING NAV DEBUG - about to navigate recurrent=true, recurrenceId=", newRecurrenceId);
       navigate({
         to: "/confirmare",
         search: {
@@ -1150,6 +1151,7 @@ function CheckoutPage() {
         .eq("id", result.booking_id);
 
       setSubmitting(false);
+      console.log("SINGLE NAV DEBUG");
       navigate({
         to: "/confirmare",
         search: {
@@ -1231,6 +1233,7 @@ function CheckoutPage() {
         );
       }
 
+      console.log("MULTI NAV DEBUG");
       navigate({
         to: "/confirmare",
         search: {
@@ -1389,6 +1392,7 @@ function CheckoutPage() {
 
 
 
+    console.log("LEGACY NAV DEBUG - isRecurrent=", isRecurrent);
     navigate({
       to: "/confirmare",
       search: {
