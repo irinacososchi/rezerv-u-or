@@ -1022,52 +1022,72 @@ function CheckoutPage() {
     }
 
 
-    // Recurrence record (only when recurrence active, single-day, single interval)
-    let recurrenceId: string | null = null;
-    const recurrenceDateCount = isMultiDay
-      ? 0
-      : isRecurrent
-        ? search.recurrenceCount
-        : 1;
-    if (isRecurrent && !isMultiDay && parsedSlots.length === 1 && recurrenceDateCount > 1) {
-      const dayOfWeek = getDayOfWeek(dateObj);
-      console.warn("=== INSERT RECURRENCES START ===", {
-        isRecurrenceCheckout: isRecurrent && search.recurrenceCount > 1,
-        room_id: room.id,
-        day_of_week: dayOfWeek,
-        total_bookings: recurrenceDateCount,
-        first_date: allDateIntervals[0].date,
-        last_date: allDateIntervals[allDateIntervals.length - 1].date,
-      });
-      const { data: rec, error: recError } = await supabase
-        .from("recurrences")
-        .insert({
-          room_id: room.id,
-          created_by_email: email.trim(),
-          frequency: "saptamanal",
-          day_of_week: dayOfWeek,
-          start_time: `${parsedSlots[0].start}:00`,
-          end_time: `${parsedSlots[0].end}:00`,
-          first_date: allDateIntervals[0].date,
-          last_date: allDateIntervals[allDateIntervals.length - 1].date,
-          total_bookings: recurrenceDateCount,
-        })
-        .select()
-        .single();
-      console.warn("=== INSERT RECURRENCES RESULT ===", {
-        data: rec,
-        error: recError,
-        errorMessage: recError?.message,
-        errorCode: (recError as { code?: string } | null)?.code,
-      });
-      if (recError || !rec) {
-        console.warn("=== EARLY RETURN ===", { reason: "recurrences_insert_failed", error: recError?.message });
+    // ---------- RECURRING, single-day, single interval: secure server-side RPC ----------
+    if (isRecurrent && !isMultiDay && parsedSlots.length === 1) {
+      const { data: rpcData, error: rpcErr } = await supabase.rpc(
+        "create_recurring_booking",
+        {
+          p_room_id: room.id,
+          p_start_time: `${parsedSlots[0].start}:00`,
+          p_end_time: `${parsedSlots[0].end}:00`,
+          p_first_date: allDateIntervals[0].date,
+          p_guest_name: name.trim(),
+          p_guest_email: email.trim(),
+          p_guest_phone: phone.trim(),
+          p_renter_notes: null,
+        } as never,
+      );
+
+      const recResult = (Array.isArray(rpcData) ? rpcData[0] : rpcData) as
+        | { recurrence_id?: string; sessions_created?: number; first_date?: string }
+        | null;
+
+      if (rpcErr || !recResult?.recurrence_id) {
         setSubmitting(false);
-        setSubmitError("Eroare la crearea rezervării recurente.");
+        const msg =
+          rpcErr?.message || "Nu am putut crea rezervarea recurentă. Reîncearcă.";
+        setSubmitError(msg);
+        toast.error(msg);
         return;
       }
-      recurrenceId = (rec as { id: string }).id;
+
+      const newRecurrenceId = recResult.recurrence_id;
+
+      // Non-price metadata not handled by the RPC (best-effort).
+      await supabase
+        .from("bookings")
+        .update({
+          payment_method: paymentMethod,
+          needs_invoice: needsInvoice,
+          invoice_name: needsInvoice ? invoiceName.trim() : null,
+          invoice_vat: needsInvoice ? invoiceVat.trim() || null : null,
+          invoice_address: needsInvoice ? invoiceAddress.trim() : null,
+        })
+        .eq("recurrence_id", newRecurrenceId);
+
+      void supabase.functions
+        .invoke("send-booking-email", {
+          body: { type: "recurring-created", recurrenceId: newRecurrenceId },
+        })
+        .catch((err) => {
+          console.warn("send-booking-email (recurring-created) failed", err);
+        });
+
+      setSubmitting(false);
+      navigate({
+        to: "/confirmare",
+        search: {
+          reference: "",
+          group: "",
+          recurrent: "true",
+          recurrenceCount: recResult.sessions_created ?? 0,
+        } as never,
+      });
+      return;
     }
+
+    const recurrenceId: string | null = null;
+    const recurrenceDateCount = isMultiDay ? 0 : 1;
 
     const bookingGroupId =
       allDateIntervals.length > 1 ? crypto.randomUUID() : null;
@@ -1079,7 +1099,8 @@ function CheckoutPage() {
     const applyVoucher =
       allDateIntervals.length === 1 && !!voucher && discountAmount > 0;
 
-    const isRecurrenceCheckout = isRecurrent && search.recurrenceCount > 1;
+    const isRecurrenceCheckout = false;
+
 
     // ---------- SINGLE, non-recurring, single-interval: secure server-side RPC ----------
     if (!isRecurrent && !recurrenceId && allDateIntervals.length === 1) {
