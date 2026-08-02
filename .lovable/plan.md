@@ -7,7 +7,25 @@
   ```
 - Keep the log in place so its output can be inspected in the browser console.
 - Do not change any condition, search parsing, navigation, creation flow, or other route.
-- Verify the project build after the one-line change.
+- Verify the project build after the change.
+
+## Branch-tracing logs in `rezerva.$slug.tsx`
+Add these temporary logs, each immediately before its `navigate()` call, with no other changes:
+- Recurring branch (after `create_recurring_booking` succeeds):
+  ```tsx
+  console.log("RECURRING NAV DEBUG - about to navigate recurrent=true, recurrenceId=", newRecurrenceId);
+  ```
+- Single-booking branch:
+  ```tsx
+  console.log("SINGLE NAV DEBUG");
+  ```
+- Multi-slot branch:
+  ```tsx
+  console.log("MULTI NAV DEBUG");
+  ```
+All logs stay in place so the console shows which branch actually runs.
+
+
 
 ## Confirmed current code
 
