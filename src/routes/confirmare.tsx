@@ -97,15 +97,49 @@ function downloadICS(b: BookingFull) {
   URL.revokeObjectURL(url);
 }
 
+function RecurringSuccess({ recurrenceCount }: { recurrenceCount: number }) {
+  return (
+    <Shell>
+      <div className="container mx-auto max-w-xl px-4 py-20 text-center">
+        <div className="mx-auto inline-flex h-20 w-20 items-center justify-center rounded-full bg-primary">
+          <CheckCircle2 className="h-11 w-11 text-primary-foreground" strokeWidth={2.5} />
+        </div>
+        <h1 className="mt-6 text-3xl font-bold tracking-tight">Cerere recurentă trimisă</h1>
+        <p className="mt-3 text-muted-foreground">
+          Rezervarea ta recurentă ({recurrenceCount} ședințe) a fost trimisă proprietarului spre aprobare. Vei primi un email când seria va fi confirmată. Detaliile sunt și în emailul primit.
+        </p>
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row justify-center">
+          <Link to="/rezervari" className="flex-1 sm:flex-initial">
+            <Button variant="outline" size="lg" className="w-full sm:w-auto">
+              Rezervările mele
+            </Button>
+          </Link>
+          <Link to="/sali" className="flex-1 sm:flex-initial">
+            <Button size="lg" className="w-full sm:w-auto">
+              Înapoi la săli
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </Shell>
+  );
+}
+
 function ConfirmarePage() {
   const search = Route.useSearch();
   const reference = search.reference;
   const group = search.group;
+  const isRecurringFromSearch = search.recurrent;
   const [bookings, setBookings] = useState<BookingFull[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
+    if (isRecurringFromSearch) {
+      // Recurring series has no single reference; skip the by-reference lookup.
+      setLoading(false);
+      return;
+    }
     if (!reference && !group) {
       setNotFound(true);
       setLoading(false);
@@ -131,7 +165,7 @@ function ConfirmarePage() {
     return () => {
       cancelled = true;
     };
-  }, [reference, group]);
+  }, [reference, group, isRecurringFromSearch]);
 
   const booking = bookings[0] ?? null;
   const isRecurringFromData =
@@ -179,6 +213,10 @@ function ConfirmarePage() {
         </div>
       </Shell>
     );
+  }
+
+  if (isRecurringFromSearch) {
+    return <RecurringSuccess recurrenceCount={search.recurrenceCount} />;
   }
 
   if (notFound || !booking) {
