@@ -703,7 +703,6 @@ function CheckoutPage() {
       .not("status", "in", '("refuzată","anulată","expirată")');
 
     if (error) {
-      console.log("PRECHECK QUERY ERROR", error);
       console.error("availability check error:", error);
       throw error;
     }
@@ -978,7 +977,6 @@ function CheckoutPage() {
       }
 
     } catch (err) {
-      console.log("PRECHECK THREW - aborting", err);
       console.warn("=== EARLY RETURN ===", { reason: "precheck_threw" });
       setSubmitting(false);
       setSubmitError("Nu am putut verifica disponibilitatea. Reîncearcă peste câteva secunde.");
@@ -1026,7 +1024,6 @@ function CheckoutPage() {
 
     // ---------- RECURRING, single-day, single interval: secure server-side RPC ----------
     if (isRecurrent && !isMultiDay && parsedSlots.length === 1) {
-      console.log("RECURRING BRANCH ENTERED");
       const { data: rpcData, error: rpcErr } = await supabase.rpc(
         "create_recurring_booking",
         {
@@ -1044,8 +1041,6 @@ function CheckoutPage() {
       const recResult = (Array.isArray(rpcData) ? rpcData[0] : rpcData) as
         | { recurrence_id?: string; sessions_created?: number; first_date?: string }
         | null;
-
-      console.log("RECURRING RPC RESULT", rpcErr, recResult);
 
       if (rpcErr || !recResult?.recurrence_id) {
         setSubmitting(false);
@@ -1079,7 +1074,6 @@ function CheckoutPage() {
         });
 
       setSubmitting(false);
-      console.log("RECURRING NAV DEBUG - about to navigate recurrent=true, recurrenceId=", newRecurrenceId);
       navigate({
         to: "/confirmare",
         search: {
@@ -1156,7 +1150,6 @@ function CheckoutPage() {
         .eq("id", result.booking_id);
 
       setSubmitting(false);
-      console.log("SINGLE NAV DEBUG");
       navigate({
         to: "/confirmare",
         search: {
@@ -1238,7 +1231,6 @@ function CheckoutPage() {
         );
       }
 
-      console.log("MULTI NAV DEBUG");
       navigate({
         to: "/confirmare",
         search: {
@@ -1397,7 +1389,6 @@ function CheckoutPage() {
 
 
 
-    console.log("LEGACY NAV DEBUG - isRecurrent=", isRecurrent);
     navigate({
       to: "/confirmare",
       search: {

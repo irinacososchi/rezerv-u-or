@@ -106,7 +106,7 @@ function RecurringSuccess({ recurrenceCount }: { recurrenceCount: number }) {
         </div>
         <h1 className="mt-6 text-3xl font-bold tracking-tight">Cerere recurentă trimisă</h1>
         <p className="mt-3 text-muted-foreground">
-          Rezervarea ta recurentă ({recurrenceCount} ședințe) a fost trimisă proprietarului spre aprobare. Vei primi un email când seria va fi confirmată. Detaliile sunt și în emailul primit.
+          Rezervarea ta recurentă a fost trimisă proprietarului spre aprobare. Vei primi un email când seria va fi confirmată. Detaliile sunt și în emailul primit.
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row justify-center">
           <Link to="/rezervari" search={{ bookingId: "" }} className="flex-1 sm:flex-initial">
@@ -127,7 +127,6 @@ function RecurringSuccess({ recurrenceCount }: { recurrenceCount: number }) {
 
 function ConfirmarePage() {
   const search = Route.useSearch();
-  console.log("CONFIRMARE SEARCH DEBUG", JSON.stringify(search), "recurrent=", search.recurrent, "typeof=", typeof search.recurrent);
   const reference = search.reference;
   const group = search.group;
   const isRecurringFromSearch = search.recurrent;
