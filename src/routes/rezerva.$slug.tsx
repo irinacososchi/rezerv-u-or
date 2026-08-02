@@ -1150,6 +1150,7 @@ function CheckoutPage() {
         .eq("id", result.booking_id);
 
       setSubmitting(false);
+      console.log("SINGLE NAV DEBUG");
       navigate({
         to: "/confirmare",
         search: {
