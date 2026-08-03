@@ -1500,6 +1500,14 @@ function RoomDetailsPage() {
                   </p>
                 )}
 
+                {summary && !summary.isMultiDay && summary.totalIntervals > 1 && (
+                  <p className="mt-3 text-xs text-muted-foreground italic">
+                    Recurența săptămânală e disponibilă doar pentru un singur interval.
+                    Pentru mai multe intervale, fă câte o rezervare recurentă separată
+                    pentru fiecare.
+                  </p>
+                )}
+
                 <Button
                   className="mt-5 w-full cursor-pointer"
                   size="lg"
@@ -1507,7 +1515,11 @@ function RoomDetailsPage() {
                   onClick={() => {
                     if (!room?.is_active || !summary || !room || summary.exceedsLimit) return;
                     const recurrentActive =
-                      !summary.isMultiDay && isRecurrent && recurrenceDates.length > 0;
+                      !summary.isMultiDay &&
+                      summary.totalIntervals === 1 &&
+                      isRecurrent &&
+                      recurrenceDates.length > 0;
+
 
                     // New format: "DATE:HH:MM-HH:MM,DATE:HH:MM-HH:MM,..."
                     const slotsParam = summary.days
