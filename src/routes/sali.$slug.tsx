@@ -396,13 +396,15 @@ function RoomDetailsPage() {
     return result;
   }, [activeDay, scheduleByDay, bookings, pricing]);
 
-  // Reset recurrence if user transitions to multi-day (recurrence ambiguous)
+  // Reset recurrence if the selection is no longer a single interval on a
+  // single day (recurrence supports exactly one interval per series).
   useEffect(() => {
     if (daySelections.length > 1 && isRecurrent) {
       setIsRecurrent(false);
       setRecurrenceDates([]);
     }
   }, [daySelections.length, isRecurrent]);
+
 
   // Auto-populate recurrence dates from the selected start date through end of
   // (start month + 3 full months). No user-provided end date.
