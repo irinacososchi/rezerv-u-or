@@ -323,8 +323,23 @@ function DashboardPage() {
                       key={`pgrp-${item.groupId}`}
                       groupId={item.groupId}
                       bookings={item.bookings}
-                      onApproveAll={(gid) => bulkUpdateStatus({ groupId: gid }, "confirmată")}
-                      onRefuseAll={(gid) => bulkUpdateStatus({ groupId: gid }, "refuzată")}
+                      onApproveAll={async (gid) => {
+                        console.log("onApproveAll PROP CALLED", gid);
+                        try {
+                          await bulkUpdateStatus(
+                            { groupId: gid, groupedBy: item.groupedBy, recurrenceId: item.recurrenceId },
+                            "confirmată",
+                          );
+                        } catch (err) {
+                          console.log("onApproveAll THREW", err);
+                        }
+                      }}
+                      onRefuseAll={(gid) =>
+                        bulkUpdateStatus(
+                          { groupId: gid, groupedBy: item.groupedBy, recurrenceId: item.recurrenceId },
+                          "refuzată",
+                        )
+                      }
                       onApproveSelected={(ids) => bulkUpdateStatus({ ids }, "confirmată")}
                       onRefuseSelected={(ids) => bulkUpdateStatus({ ids }, "refuzată")}
                       showManageButton={false}
