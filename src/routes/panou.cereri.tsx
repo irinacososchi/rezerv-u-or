@@ -527,8 +527,8 @@ function CereriPage() {
                             <RecurringGroupCard
                               groupId={item.groupId}
                               bookings={item.bookings}
-                              onApproveAll={(gid) => bulkUpdateStatus({ groupId: gid }, "confirmată")}
-                              onRefuseAll={(gid) => bulkUpdateStatus({ groupId: gid }, "refuzată")}
+                              onApproveAll={(gid) => bulkUpdateStatus({ groupId: gid, groupedBy: item.groupedBy, recurrenceId: item.recurrenceId }, "confirmată")}
+                              onRefuseAll={(gid) => bulkUpdateStatus({ groupId: gid, groupedBy: item.groupedBy, recurrenceId: item.recurrenceId }, "refuzată")}
                               onApproveSelected={(ids) => bulkUpdateStatus({ ids }, "confirmată")}
                               onRefuseSelected={(ids) => bulkUpdateStatus({ ids }, "refuzată")}
                             />
