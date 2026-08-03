@@ -897,22 +897,11 @@ function CheckoutPage() {
     e.preventDefault();
     setSubmitError(null);
 
-    const _isRecurrentEarly = search.recurrent === "true" && search.recurrenceCount > 1;
-    console.warn("=== HANDLE SUBMIT START ===", {
-      parsedSlotsCount: parsedSlots?.length,
-      finalSlotsToCreateCount: finalSlotsToCreate?.length,
-      isRecurrent: _isRecurrentEarly,
-      isRecurrenceCheckout: _isRecurrentEarly && search.recurrenceCount > 1,
-      recurrenceCount: search.recurrenceCount,
-    });
-
     if (!room || !paramsValid || !dateObj) {
-      console.warn("=== EARLY RETURN ===", { reason: "missing_room_or_params" });
       setSubmitError("Date de rezervare incomplete.");
       return;
     }
     if (!name.trim()) {
-      console.warn("=== EARLY RETURN ===", { reason: "validation_failed_name" });
       return setSubmitError(
         isLoggedIn
           ? "Numele lipsește din contul tău. Te rugăm să-l completezi în Cont înainte de a continua."
@@ -920,7 +909,6 @@ function CheckoutPage() {
       );
     }
     if (!isValidEmail(email)) {
-      console.warn("=== EARLY RETURN ===", { reason: "validation_failed_email" });
       return setSubmitError(
         isLoggedIn
           ? "Emailul lipsește din contul tău. Te rugăm să-l completezi în Cont înainte de a continua."
@@ -928,7 +916,6 @@ function CheckoutPage() {
       );
     }
     if (!isValidPhone(phone)) {
-      console.warn("=== EARLY RETURN ===", { reason: "validation_failed_phone" });
       return setSubmitError(
         isLoggedIn
           ? "Telefonul lipsește din contul tău. Te rugăm să-l completezi în Cont înainte de a continua."
@@ -943,12 +930,10 @@ function CheckoutPage() {
       finalSlotsToCreate.map((s) => ({ date: s.date, start: s.start, end: s.end }));
 
     if (allDateIntervals.length === 0) {
-      console.warn("=== EARLY RETURN ===", { reason: "no_final_slots" });
       setSubmitError("Niciun interval selectat.");
       return;
     }
     if (allDateIntervals.length > 50) {
-      console.warn("=== EARLY RETURN ===", { reason: "too_many_slots", count: allDateIntervals.length });
       setSubmitError(
         `Prea multe rezervări (${allDateIntervals.length}). Limita e 50. Reduce numărul de intervale sau perioada de recurență.`,
       );
@@ -961,7 +946,6 @@ function CheckoutPage() {
     try {
       const freshBusy = await checkSlotAvailability(finalSlotsToCreate);
       if (freshBusy.size > 0 && !isRecurrent) {
-        console.warn("=== EARLY RETURN ===", { reason: "precheck_busy", count: freshBusy.size });
         setBusySlotKeys((prev) => {
           const merged = new Set(prev);
           freshBusy.forEach((k) => merged.add(k));
@@ -977,7 +961,6 @@ function CheckoutPage() {
       }
 
     } catch (err) {
-      console.warn("=== EARLY RETURN ===", { reason: "precheck_threw" });
       setSubmitting(false);
       setSubmitError("Nu am putut verifica disponibilitatea. Reîncearcă peste câteva secunde.");
       return;
