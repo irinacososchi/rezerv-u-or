@@ -300,9 +300,20 @@ function CereriPage() {
     if (userId) await fetchBookings(userId);
   }
 
-  async function bulkUpdateStatus(filter: { groupId?: string; ids?: string[] }, newStatus: string) {
+  async function bulkUpdateStatus(
+    filter: {
+      groupId?: string;
+      groupedBy?: "recurrence_id" | "booking_group_id";
+      recurrenceId?: string | null;
+      ids?: string[];
+    },
+    newStatus: string,
+  ) {
     let q = supabase.from("bookings").update({ status: newStatus }).eq("status", "în așteptare");
-    if (filter.groupId) q = q.eq("booking_group_id", filter.groupId);
+    if (filter.groupId) {
+      const column = filter.groupedBy === "recurrence_id" ? "recurrence_id" : "booking_group_id";
+      q = q.eq(column, filter.groupId);
+    }
     if (filter.ids) q = q.in("id", filter.ids);
     const { error } = await q;
     if (error) {
@@ -310,15 +321,27 @@ function CereriPage() {
       return;
     }
 
-    // Send a single approval email for recurring series approved via "Aprobă tot".
-    if (newStatus === "confirmată" && filter.groupId) {
-      const groupBooking = bookings.find(
-        (b) => b.booking_group_id === filter.groupId && b.recurrence_id,
-      );
-      if (groupBooking?.recurrence_id) {
+    // Un singur email de aprobare per serie recurentă.
+    if (newStatus === "confirmată") {
+      let recurrenceId: string | null = filter.recurrenceId ?? null;
+      if (!recurrenceId && filter.groupId) {
+        recurrenceId =
+          (bookings.find(
+            (b) =>
+              (b.recurrence_id === filter.groupId ||
+                b.booking_group_id === filter.groupId) &&
+              b.recurrence_id,
+          )?.recurrence_id as string | undefined) ?? null;
+      }
+      if (!recurrenceId && filter.ids) {
+        recurrenceId =
+          (bookings.find((b) => filter.ids!.includes(b.id) && b.recurrence_id)
+            ?.recurrence_id as string | undefined) ?? null;
+      }
+      if (recurrenceId) {
         void supabase.functions
           .invoke("send-booking-email", {
-            body: { type: "recurring-approved", recurrenceId: groupBooking.recurrence_id },
+            body: { type: "recurring-approved", recurrenceId },
           })
           .catch((err) => console.warn("recurring-approved email failed", err));
       }
@@ -326,6 +349,7 @@ function CereriPage() {
 
     await refetch();
   }
+
 
   const sortedGroupedItems = useMemo(() => {
     const items = groupRecurringBookings(filtered as any);
@@ -503,8 +527,8 @@ function CereriPage() {
                             <RecurringGroupCard
                               groupId={item.groupId}
                               bookings={item.bookings}
-                              onApproveAll={(gid) => bulkUpdateStatus({ groupId: gid }, "confirmată")}
-                              onRefuseAll={(gid) => bulkUpdateStatus({ groupId: gid }, "refuzată")}
+                              onApproveAll={(gid) => bulkUpdateStatus({ groupId: gid, groupedBy: item.groupedBy, recurrenceId: item.recurrenceId }, "confirmată")}
+                              onRefuseAll={(gid) => bulkUpdateStatus({ groupId: gid, groupedBy: item.groupedBy, recurrenceId: item.recurrenceId }, "refuzată")}
                               onApproveSelected={(ids) => bulkUpdateStatus({ ids }, "confirmată")}
                               onRefuseSelected={(ids) => bulkUpdateStatus({ ids }, "refuzată")}
                             />
@@ -578,8 +602,8 @@ function CereriPage() {
                       key={`grp-${item.groupId}`}
                       groupId={item.groupId}
                       bookings={item.bookings}
-                      onApproveAll={(gid) => bulkUpdateStatus({ groupId: gid }, "confirmată")}
-                      onRefuseAll={(gid) => bulkUpdateStatus({ groupId: gid }, "refuzată")}
+                      onApproveAll={(gid) => bulkUpdateStatus({ groupId: gid, groupedBy: item.groupedBy, recurrenceId: item.recurrenceId }, "confirmată")}
+                      onRefuseAll={(gid) => bulkUpdateStatus({ groupId: gid, groupedBy: item.groupedBy, recurrenceId: item.recurrenceId }, "refuzată")}
                       onApproveSelected={(ids) => bulkUpdateStatus({ ids }, "confirmată")}
                       onRefuseSelected={(ids) => bulkUpdateStatus({ ids }, "refuzată")}
                     />

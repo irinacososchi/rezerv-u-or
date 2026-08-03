@@ -20,7 +20,13 @@ export type Booking = {
 
 export type BookingItem =
   | { kind: "single"; booking: Booking }
-  | { kind: "recurring_group"; groupId: string; bookings: Booking[] };
+  | {
+      kind: "recurring_group";
+      groupId: string;
+      groupedBy: "recurrence_id" | "booking_group_id";
+      recurrenceId: string | null;
+      bookings: Booking[];
+    };
 
 export type GroupStatusSummary = {
   pending: number;
@@ -32,18 +38,20 @@ export type GroupStatusSummary = {
 };
 
 /**
- * Grupează rezervări: cele cu is_recurring=true și același booking_group_id
- * devin un singur item de tip "recurring_group". Restul rămân "single".
+ * Grupează rezervări: cele recurente cu aceeași cheie (recurrence_id, sau
+ * booking_group_id pentru seriile vechi) devin un singur item de tip
+ * "recurring_group". Restul rămân "single".
  */
 export function groupRecurringBookings(bookings: Booking[]): BookingItem[] {
   const recurringMap = new Map<string, Booking[]>();
   const singles: Booking[] = [];
 
   for (const b of bookings) {
-    if (b.is_recurring && b.booking_group_id) {
-      const arr = recurringMap.get(b.booking_group_id) ?? [];
+    const key = (b.recurrence_id as string | null | undefined) ?? b.booking_group_id ?? null;
+    if (b.is_recurring && key) {
+      const arr = recurringMap.get(key) ?? [];
       arr.push(b);
-      recurringMap.set(b.booking_group_id, arr);
+      recurringMap.set(key, arr);
     } else {
       singles.push(b);
     }
@@ -57,7 +65,15 @@ export function groupRecurringBookings(bookings: Booking[]): BookingItem[] {
         a.booking_date.localeCompare(b.booking_date) ||
         a.start_time.localeCompare(b.start_time),
     );
-    items.push({ kind: "recurring_group", groupId, bookings: gBookings });
+    const recurrenceId =
+      (gBookings.find((b) => b.recurrence_id)?.recurrence_id as string | undefined) ?? null;
+    items.push({
+      kind: "recurring_group",
+      groupId,
+      groupedBy: recurrenceId === groupId ? "recurrence_id" : "booking_group_id",
+      recurrenceId,
+      bookings: gBookings,
+    });
   }
 
   for (const s of singles) {
@@ -73,6 +89,7 @@ export function groupRecurringBookings(bookings: Booking[]): BookingItem[] {
 
   return items;
 }
+
 
 export function getGroupStatusSummary(bookings: Booking[]): GroupStatusSummary {
   let pending = 0,
