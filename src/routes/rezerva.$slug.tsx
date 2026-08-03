@@ -1086,24 +1086,12 @@ function CheckoutPage() {
       return;
     }
 
-    const recurrenceId: string | null = null;
-    const recurrenceDateCount = isMultiDay ? 0 : 1;
-
     const bookingGroupId =
       allDateIntervals.length > 1 ? crypto.randomUUID() : null;
 
-    const { data: { user: currentUser } } = await supabase.auth.getUser();
-    const renterId = currentUser?.id ?? null;
-
-    // Voucher applies only for single booking (1 interval, no recurrence)
-    const applyVoucher =
-      allDateIntervals.length === 1 && !!voucher && discountAmount > 0;
-
-    const isRecurrenceCheckout = false;
-
-
     // ---------- SINGLE, non-recurring, single-interval: secure server-side RPC ----------
-    if (!isRecurrent && !recurrenceId && allDateIntervals.length === 1) {
+    if (!isRecurrent && allDateIntervals.length === 1) {
+
       const slot = allDateIntervals[0];
       const { data: rpcData, error: rpcErr } = await supabase.rpc("create_booking", {
         p_room_id: room.id,
