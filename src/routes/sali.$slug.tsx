@@ -725,6 +725,18 @@ function RoomDetailsPage() {
     };
   }, [daySelections, pricing, isRecurrent, recurrenceDates.length]);
 
+  // Recurrence supports exactly one interval: turn it off if the day gained
+  // a second (non-contiguous) interval.
+  const summaryTotalIntervals = summary?.totalIntervals ?? 0;
+  useEffect(() => {
+    if (isRecurrent && summaryTotalIntervals > 1) {
+      setIsRecurrent(false);
+      setRecurrenceDates([]);
+    }
+  }, [isRecurrent, summaryTotalIntervals]);
+
+
+
   // ---------- Render ----------
   if (loading) {
     return (
