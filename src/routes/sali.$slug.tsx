@@ -1153,7 +1153,7 @@ function RoomDetailsPage() {
                             const title = !enabled
                               ? "Indisponibil"
                               : slotPricing?.label
-                                ? `${slotPricing.price} ${currency} · ${slotPricing.label}`
+                                ? `${slotPricing.hourlyRate} ${currency}/oră · ${slotPricing.label}`
                                 : undefined;
 
                             // Chip behavior: shown if isStart or isEnd.
