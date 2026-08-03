@@ -1437,8 +1437,9 @@ function RoomDetailsPage() {
                   </div>
                 )}
 
-                {/* Recurrence — only single-day */}
-                {summary && !summary.isMultiDay && (
+                {/* Recurrence — only a single interval on a single day */}
+                {summary && !summary.isMultiDay && summary.totalIntervals === 1 && (
+
                   <div className="mt-4 border-t border-border pt-4">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
