@@ -194,7 +194,6 @@ function RoomDetailsPage() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [schedule, setSchedule] = useState<ScheduleRow[]>([]);
   const [pricing, setPricing] = useState<PricingRule[]>([]);
-  const [blockedDates, setBlockedDates] = useState<Set<string>>(new Set());
   const [bookings, setBookings] = useState<Booking[]>([]);
 
   const [activePhoto, setActivePhoto] = useState<string | null>(null);
@@ -261,7 +260,7 @@ function RoomDetailsPage() {
 
 
 
-      const [photosRes, schedRes, priceRes, blockRes, bookRes] =
+      const [photosRes, schedRes, priceRes, bookRes] =
         await Promise.all([
           supabase
             .from("room_photos")
@@ -280,12 +279,6 @@ function RoomDetailsPage() {
             .eq("room_id", roomData.id)
             .eq("is_active", true)
             .order("priority", { ascending: false }),
-          supabase
-            .from("blocked_dates")
-            .select("blocked_date")
-            .eq("room_id", roomData.id)
-            .gte("blocked_date", todayISO)
-            .lte("blocked_date", sixtyISO),
           supabase
             .from("bookings")
             .select("booking_date, start_time, end_time, status")
@@ -309,13 +302,6 @@ function RoomDetailsPage() {
       setSchedule((schedRes.data ?? []) as ScheduleRow[]);
       const pricingData = (priceRes.data ?? []) as PricingRule[];
       setPricing(pricingData);
-      setBlockedDates(
-        new Set(
-          ((blockRes.data ?? []) as { blocked_date: string }[]).map(
-            (b) => b.blocked_date,
-          ),
-        ),
-      );
       setBookings((bookRes.data ?? []) as Booking[]);
 
       if (pricingData.length === 0) {
@@ -358,8 +344,6 @@ function RoomDetailsPage() {
     const dayStart = new Date(date);
     dayStart.setHours(0, 0, 0, 0);
     if (dayStart < minBookingDate) return true;
-    const iso = formatDateISO(date);
-    if (blockedDates.has(iso)) return true;
     const dow = getDayOfWeek(date);
     if (!scheduleByDay.has(dow)) return true;
     return false;
