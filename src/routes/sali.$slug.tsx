@@ -396,13 +396,15 @@ function RoomDetailsPage() {
     return result;
   }, [activeDay, scheduleByDay, bookings, pricing]);
 
-  // Reset recurrence if user transitions to multi-day (recurrence ambiguous)
+  // Reset recurrence if the selection is no longer a single interval on a
+  // single day (recurrence supports exactly one interval per series).
   useEffect(() => {
     if (daySelections.length > 1 && isRecurrent) {
       setIsRecurrent(false);
       setRecurrenceDates([]);
     }
   }, [daySelections.length, isRecurrent]);
+
 
   // Auto-populate recurrence dates from the selected start date through end of
   // (start month + 3 full months). No user-provided end date.
@@ -722,6 +724,18 @@ function RoomDetailsPage() {
       exceedsLimit,
     };
   }, [daySelections, pricing, isRecurrent, recurrenceDates.length]);
+
+  // Recurrence supports exactly one interval: turn it off if the day gained
+  // a second (non-contiguous) interval.
+  const summaryTotalIntervals = summary?.totalIntervals ?? 0;
+  useEffect(() => {
+    if (isRecurrent && summaryTotalIntervals > 1) {
+      setIsRecurrent(false);
+      setRecurrenceDates([]);
+    }
+  }, [isRecurrent, summaryTotalIntervals]);
+
+
 
   // ---------- Render ----------
   if (loading) {
@@ -1423,8 +1437,9 @@ function RoomDetailsPage() {
                   </div>
                 )}
 
-                {/* Recurrence — only single-day */}
-                {summary && !summary.isMultiDay && (
+                {/* Recurrence — only a single interval on a single day */}
+                {summary && !summary.isMultiDay && summary.totalIntervals === 1 && (
+
                   <div className="mt-4 border-t border-border pt-4">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -1485,6 +1500,14 @@ function RoomDetailsPage() {
                   </p>
                 )}
 
+                {summary && !summary.isMultiDay && summary.totalIntervals > 1 && (
+                  <p className="mt-3 text-xs text-muted-foreground italic">
+                    Recurența săptămânală e disponibilă doar pentru un singur interval.
+                    Pentru mai multe intervale, fă câte o rezervare recurentă separată
+                    pentru fiecare.
+                  </p>
+                )}
+
                 <Button
                   className="mt-5 w-full cursor-pointer"
                   size="lg"
@@ -1492,7 +1515,11 @@ function RoomDetailsPage() {
                   onClick={() => {
                     if (!room?.is_active || !summary || !room || summary.exceedsLimit) return;
                     const recurrentActive =
-                      !summary.isMultiDay && isRecurrent && recurrenceDates.length > 0;
+                      !summary.isMultiDay &&
+                      summary.totalIntervals === 1 &&
+                      isRecurrent &&
+                      recurrenceDates.length > 0;
+
 
                     // New format: "DATE:HH:MM-HH:MM,DATE:HH:MM-HH:MM,..."
                     const slotsParam = summary.days

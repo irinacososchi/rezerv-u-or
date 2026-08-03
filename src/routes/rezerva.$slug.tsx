@@ -897,22 +897,11 @@ function CheckoutPage() {
     e.preventDefault();
     setSubmitError(null);
 
-    const _isRecurrentEarly = search.recurrent === "true" && search.recurrenceCount > 1;
-    console.warn("=== HANDLE SUBMIT START ===", {
-      parsedSlotsCount: parsedSlots?.length,
-      finalSlotsToCreateCount: finalSlotsToCreate?.length,
-      isRecurrent: _isRecurrentEarly,
-      isRecurrenceCheckout: _isRecurrentEarly && search.recurrenceCount > 1,
-      recurrenceCount: search.recurrenceCount,
-    });
-
     if (!room || !paramsValid || !dateObj) {
-      console.warn("=== EARLY RETURN ===", { reason: "missing_room_or_params" });
       setSubmitError("Date de rezervare incomplete.");
       return;
     }
     if (!name.trim()) {
-      console.warn("=== EARLY RETURN ===", { reason: "validation_failed_name" });
       return setSubmitError(
         isLoggedIn
           ? "Numele lipsește din contul tău. Te rugăm să-l completezi în Cont înainte de a continua."
@@ -920,7 +909,6 @@ function CheckoutPage() {
       );
     }
     if (!isValidEmail(email)) {
-      console.warn("=== EARLY RETURN ===", { reason: "validation_failed_email" });
       return setSubmitError(
         isLoggedIn
           ? "Emailul lipsește din contul tău. Te rugăm să-l completezi în Cont înainte de a continua."
@@ -928,7 +916,6 @@ function CheckoutPage() {
       );
     }
     if (!isValidPhone(phone)) {
-      console.warn("=== EARLY RETURN ===", { reason: "validation_failed_phone" });
       return setSubmitError(
         isLoggedIn
           ? "Telefonul lipsește din contul tău. Te rugăm să-l completezi în Cont înainte de a continua."
@@ -943,12 +930,10 @@ function CheckoutPage() {
       finalSlotsToCreate.map((s) => ({ date: s.date, start: s.start, end: s.end }));
 
     if (allDateIntervals.length === 0) {
-      console.warn("=== EARLY RETURN ===", { reason: "no_final_slots" });
       setSubmitError("Niciun interval selectat.");
       return;
     }
     if (allDateIntervals.length > 50) {
-      console.warn("=== EARLY RETURN ===", { reason: "too_many_slots", count: allDateIntervals.length });
       setSubmitError(
         `Prea multe rezervări (${allDateIntervals.length}). Limita e 50. Reduce numărul de intervale sau perioada de recurență.`,
       );
@@ -961,7 +946,6 @@ function CheckoutPage() {
     try {
       const freshBusy = await checkSlotAvailability(finalSlotsToCreate);
       if (freshBusy.size > 0 && !isRecurrent) {
-        console.warn("=== EARLY RETURN ===", { reason: "precheck_busy", count: freshBusy.size });
         setBusySlotKeys((prev) => {
           const merged = new Set(prev);
           freshBusy.forEach((k) => merged.add(k));
@@ -977,7 +961,6 @@ function CheckoutPage() {
       }
 
     } catch (err) {
-      console.warn("=== EARLY RETURN ===", { reason: "precheck_threw" });
       setSubmitting(false);
       setSubmitError("Nu am putut verifica disponibilitatea. Reîncearcă peste câteva secunde.");
       return;
@@ -1086,24 +1069,12 @@ function CheckoutPage() {
       return;
     }
 
-    const recurrenceId: string | null = null;
-    const recurrenceDateCount = isMultiDay ? 0 : 1;
-
     const bookingGroupId =
       allDateIntervals.length > 1 ? crypto.randomUUID() : null;
 
-    const { data: { user: currentUser } } = await supabase.auth.getUser();
-    const renterId = currentUser?.id ?? null;
-
-    // Voucher applies only for single booking (1 interval, no recurrence)
-    const applyVoucher =
-      allDateIntervals.length === 1 && !!voucher && discountAmount > 0;
-
-    const isRecurrenceCheckout = false;
-
-
     // ---------- SINGLE, non-recurring, single-interval: secure server-side RPC ----------
-    if (!isRecurrent && !recurrenceId && allDateIntervals.length === 1) {
+    if (!isRecurrent && allDateIntervals.length === 1) {
+
       const slot = allDateIntervals[0];
       const { data: rpcData, error: rpcErr } = await supabase.rpc("create_booking", {
         p_room_id: room.id,
@@ -1163,7 +1134,7 @@ function CheckoutPage() {
     }
 
     // ---------- MULTI-SLOT, non-recurring: secure server-side RPC per interval ----------
-    if (!isRecurrent && !recurrenceId && allDateIntervals.length > 1) {
+    if (!isRecurrent && allDateIntervals.length > 1) {
       const ok: { id: string; reference?: string }[] = [];
       const bad: { slot: { date: string; start: string; end: string }; error: string }[] = [];
 
@@ -1244,161 +1215,24 @@ function CheckoutPage() {
     }
 
 
-    const results: {
-      slot: { date: string; start: string; end: string };
-      success: boolean;
-      reference?: string;
-      error?: string;
-    }[] = [];
-
-
-    for (let idx = 0; idx < allDateIntervals.length; idx++) {
-      const slot = allDateIntervals[idx];
-      const slotDateObj = parseISODate(slot.date);
-      const startMin = timeToMinutes(slot.start);
-      const endMin = timeToMinutes(slot.end);
-      const intervalMinutes = endMin - startMin;
-      const intervalHours = intervalMinutes / 60;
-
-      // Compute subtotal for this interval by summing per-slot prices.
-      let intervalSubtotal = 0;
-      let firstRule = null as PricingRule | null;
-      for (let m = startMin; m < endMin; m += SLOT_GRANULARITY_MINUTES) {
-        const slotStartStr = minutesToTime(m);
-        const r = pickActivePricing(slotDateObj, slotStartStr, pricing);
-        if (!firstRule) firstRule = r;
-        intervalSubtotal += r
-          ? (Number(r.price_per_hour) * SLOT_GRANULARITY_MINUTES) / 60
-          : 0;
-      }
-      const intervalDiscount = applyVoucher ? discountAmount : 0;
-      const intervalTotal = Math.max(0, intervalSubtotal - intervalDiscount);
-      const intervalPricePerHour =
-        intervalHours > 0 ? intervalSubtotal / intervalHours : 0;
-
-      const payload = {
-        room_id: room.id,
-        renter_id: renterId,
-        recurrence_id: recurrenceId,
-        recurrence_index: recurrenceId ? idx + 1 : null,
-        booking_group_id: bookingGroupId,
-        is_recurring: isRecurrenceCheckout,
-        guest_name: name.trim(),
-        guest_email: email.trim(),
-        guest_phone: phone.trim(),
-        booking_date: slot.date,
-        start_time: `${slot.start}:00`,
-        end_time: `${slot.end}:00`,
-        duration_hours: intervalHours,
-        duration_minutes: intervalMinutes,
-        price_per_hour: intervalPricePerHour,
-        pricing_rule_label: firstRule?.label ?? null,
-        subtotal: intervalSubtotal,
-        discount_amount: intervalDiscount,
-        voucher_code_id: applyVoucher ? voucher?.id ?? null : null,
-        voucher_code_used: applyVoucher ? voucher?.code ?? null : null,
-        total_amount: intervalTotal,
-        status: recurrenceId ? "în așteptare" : (room.booking_type === "instant" ? "confirmată" : "în așteptare"),
-        payment_method: paymentMethod,
-        payment_status: "neplatit",
-        needs_invoice: needsInvoice,
-        invoice_name: needsInvoice ? invoiceName.trim() : null,
-        invoice_vat: needsInvoice ? invoiceVat.trim() || null : null,
-        invoice_address: needsInvoice ? invoiceAddress.trim() : null,
-      };
-
-      console.warn("=== DEBUG SUBMIT ===", {
-        is_recurring: payload.is_recurring,
-        booking_group_id: payload.booking_group_id,
-        isRecurrent: isRecurrent,
-        isRecurrenceCheckout: isRecurrenceCheckout,
-        recurrenceCount: search.recurrenceCount,
-        searchRecurrent: search.recurrent,
-      });
-
-      console.warn("=== PAYLOAD CHEI ===", Object.keys(payload));
-
-      const { data: insertData, error: insErr } = await supabase
-        .from("bookings")
-        .insert(payload)
-        .select()
-        .single();
-
-      console.warn("=== INSERT BOOKING RESULT ===", {
-        bookingId: (insertData as { id?: string } | null)?.id,
-        is_recurring_returned: (insertData as { is_recurring?: boolean } | null)?.is_recurring,
-        booking_group_id_returned: (insertData as { booking_group_id?: string } | null)?.booking_group_id,
-        error: insErr?.message,
-      });
-
-      if (insErr) {
-        console.warn("=== EARLY RETURN (per-slot) ===", { reason: "booking_insert_failed", slot, error: insErr.message });
-        results.push({ slot, success: false, error: insErr.message });
-        continue;
-      }
-
-      // Fetch reference best-effort
-      const { data: refRow } = await supabase
-        .from("bookings")
-        .select("reference")
-        .eq("guest_email", email.trim().toLowerCase())
-        .eq("booking_date", slot.date)
-        .eq("start_time", `${slot.start}:00`)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      results.push({
-        slot,
-        success: true,
-        reference: refRow?.reference ?? undefined,
-      });
-    }
-
-    setSubmitting(false);
-
-    const succeeded = results.filter((r) => r.success);
-    const failed = results.filter((r) => !r.success);
-
-    if (succeeded.length === 0) {
-      setSubmitError(
-        "Niciuna dintre rezervări nu s-a putut crea. " +
-          "Posibil ca intervalele să fie ocupate între timp. " +
-          (failed[0]?.error ? `Detalii: ${failed[0].error}` : ""),
-      );
+    // ---------- RECURRING with more than one interval: not supported ----------
+    if (isRecurrent) {
+      setSubmitting(false);
+      const msg =
+        "Recurența săptămânală se poate face doar pentru un singur interval. " +
+        "Pentru mai multe intervale, fă câte o rezervare recurentă separată pentru fiecare interval.";
+      setSubmitError(msg);
+      toast.error(msg);
       return;
     }
 
-    if (failed.length > 0) {
-      alert(
-        "Unele intervale din serie nu s-au putut crea (probabil ocupate între timp). Vei vedea în confirmare ce s-a rezervat.",
-      );
-    }
-
-    // Trigger recurring confirmation emails (best-effort, non-blocking).
-    // Single bookings are handled by an existing DB webhook.
-    if (isRecurrent && recurrenceId) {
-      void supabase.functions
-        .invoke("send-booking-email", {
-          body: { type: "recurring-created", recurrenceId },
-        })
-        .catch((err) => {
-          console.warn("send-booking-email (recurring-created) failed", err);
-        });
-    }
-
-
-
-    navigate({
-      to: "/confirmare",
-      search: {
-        reference: succeeded[0].reference ?? "",
-        group: bookingGroupId ?? "",
-        recurrent: isRecurrent ? "true" : "false",
-        recurrenceCount: isRecurrent ? recurrenceDateCount : 0,
-      } as never,
-    });
+    // ---------- Safety net: no other creation path exists ----------
+    setSubmitting(false);
+    setSubmitError(
+      "Nu am putut procesa această combinație de intervale. Reia selecția de pe pagina sălii.",
+    );
   }
+
 
   // ---------- Render ----------
   if (loading) {
