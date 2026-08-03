@@ -309,6 +309,7 @@ function CereriPage() {
     },
     newStatus: string,
   ) {
+    console.log("BULK UPDATE running", filter, newStatus);
     let q = supabase.from("bookings").update({ status: newStatus }).eq("status", "în așteptare");
     if (filter.groupId) {
       const column = filter.groupedBy === "recurrence_id" ? "recurrence_id" : "booking_group_id";
