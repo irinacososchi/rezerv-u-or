@@ -92,7 +92,9 @@ export function RecurringGroupCard({
     setSelectedIds(new Set());
   }
 
-  async function handleApproveAll() {
+  async function handleApproveAll(e?: React.MouseEvent) {
+    e?.preventDefault();
+    console.log("APROBA TOT CLICKED", groupId);
     setProcessing(true);
     try {
       await onApproveAll(groupId);
@@ -101,7 +103,8 @@ export function RecurringGroupCard({
     }
   }
 
-  async function handleRefuseAll() {
+  async function handleRefuseAll(e?: React.MouseEvent) {
+    e?.preventDefault();
     setProcessing(true);
     try {
       await onRefuseAll(groupId);
@@ -110,7 +113,8 @@ export function RecurringGroupCard({
     }
   }
 
-  async function handleApproveSelected() {
+  async function handleApproveSelected(e?: React.MouseEvent) {
+    e?.preventDefault();
     if (selectedIds.size === 0) return;
     setProcessing(true);
     try {
@@ -122,7 +126,8 @@ export function RecurringGroupCard({
     }
   }
 
-  async function handleRefuseSelected() {
+  async function handleRefuseSelected(e?: React.MouseEvent) {
+    e?.preventDefault();
     if (selectedIds.size === 0) return;
     setProcessing(true);
     try {
