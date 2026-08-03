@@ -184,15 +184,55 @@ function DashboardPage() {
     await loadDashboard();
   }
 
-  async function bulkUpdateStatus(filter: { groupId?: string; ids?: string[] }, newStatus: string) {
+  async function bulkUpdateStatus(
+    filter: {
+      groupId?: string;
+      groupedBy?: "recurrence_id" | "booking_group_id";
+      recurrenceId?: string | null;
+      ids?: string[];
+    },
+    newStatus: string,
+  ) {
+    console.log("BULK UPDATE running (dashboard)", filter, newStatus);
     let q = supabase.from("bookings").update({ status: newStatus }).eq("status", "în așteptare");
-    if (filter.groupId) q = q.eq("booking_group_id", filter.groupId);
+    if (filter.groupId) {
+      const column = filter.groupedBy === "recurrence_id" ? "recurrence_id" : "booking_group_id";
+      q = q.eq(column, filter.groupId);
+    }
     if (filter.ids) q = q.in("id", filter.ids);
     const { error } = await q;
     if (error) {
       alert("Eroare: " + error.message);
       return;
     }
+
+    // Un singur email de aprobare per serie recurentă.
+    if (newStatus === "confirmată") {
+      let recurrenceId: string | null = filter.recurrenceId ?? null;
+      if (!recurrenceId && filter.groupId) {
+        recurrenceId =
+          ((pendingList as any[]).find(
+            (b) =>
+              (b.recurrence_id === filter.groupId ||
+                b.booking_group_id === filter.groupId) &&
+              b.recurrence_id,
+          )?.recurrence_id as string | undefined) ?? null;
+      }
+      if (!recurrenceId && filter.ids) {
+        recurrenceId =
+          ((pendingList as any[]).find(
+            (b) => filter.ids!.includes(b.id) && b.recurrence_id,
+          )?.recurrence_id as string | undefined) ?? null;
+      }
+      if (recurrenceId) {
+        void supabase.functions
+          .invoke("send-booking-email", {
+            body: { type: "recurring-approved", recurrenceId },
+          })
+          .catch((err) => console.warn("recurring-approved email failed", err));
+      }
+    }
+
     await loadDashboard();
   }
 
@@ -283,8 +323,23 @@ function DashboardPage() {
                       key={`pgrp-${item.groupId}`}
                       groupId={item.groupId}
                       bookings={item.bookings}
-                      onApproveAll={(gid) => bulkUpdateStatus({ groupId: gid }, "confirmată")}
-                      onRefuseAll={(gid) => bulkUpdateStatus({ groupId: gid }, "refuzată")}
+                      onApproveAll={async (gid) => {
+                        console.log("onApproveAll PROP CALLED", gid);
+                        try {
+                          await bulkUpdateStatus(
+                            { groupId: gid, groupedBy: item.groupedBy, recurrenceId: item.recurrenceId },
+                            "confirmată",
+                          );
+                        } catch (err) {
+                          console.log("onApproveAll THREW", err);
+                        }
+                      }}
+                      onRefuseAll={(gid) =>
+                        bulkUpdateStatus(
+                          { groupId: gid, groupedBy: item.groupedBy, recurrenceId: item.recurrenceId },
+                          "refuzată",
+                        )
+                      }
                       onApproveSelected={(ids) => bulkUpdateStatus({ ids }, "confirmată")}
                       onRefuseSelected={(ids) => bulkUpdateStatus({ ids }, "refuzată")}
                       showManageButton={false}
