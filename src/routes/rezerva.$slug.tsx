@@ -1151,7 +1151,7 @@ function CheckoutPage() {
     }
 
     // ---------- MULTI-SLOT, non-recurring: secure server-side RPC per interval ----------
-    if (!isRecurrent && !recurrenceId && allDateIntervals.length > 1) {
+    if (!isRecurrent && allDateIntervals.length > 1) {
       const ok: { id: string; reference?: string }[] = [];
       const bad: { slot: { date: string; start: string; end: string }; error: string }[] = [];
 
