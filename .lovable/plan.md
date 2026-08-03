@@ -1,65 +1,35 @@
-# Emailul de aprobare serie recurentă — raport + instrumentare
+# Fix aprobare serii recurente: grupare și update după `recurrence_id`
 
-## 1. Cum grupează ACUM pagina Cereri (src/lib/group-recurring-bookings.ts)
+Seriile noi create prin `create_recurring_booking` au `recurrence_id`, dar nu și `booking_group_id`. Gruparea în card, aprobarea în masă și emailul de aprobare depind toate de `booking_group_id`, deci se rup: sesiunile apar ca rânduri individuale, iar update-ul în masă nu ar atinge nicio linie.
 
-Exclusiv după `booking_group_id`, cu condiția suplimentară `is_recurring === true`. `recurrence_id` nu e folosit deloc la grupare:
+## Modificări
 
-```ts
-export function groupRecurringBookings(bookings: Booking[]): BookingItem[] {
-  const recurringMap = new Map<string, Booking[]>();
-  const singles: Booking[] = [];
+### 1. `src/lib/group-recurring-bookings.ts`
+- Cheie de grupare stabilă: `recurrence_id ?? booking_group_id`.
+- Un rând intră în grup dacă `is_recurring === true` ȘI există cel puțin una dintre cele două coloane. Restul rămân `singles` (nemodificat).
+- `BookingItem` de tip `recurring_group` primește două câmpuri noi: `recurrenceId: string | null` și `groupedBy: "recurrence_id" | "booking_group_id"`, ca fluxul de aprobare să știe pe ce coloană să filtreze.
+- Seriile vechi (doar `booking_group_id`) continuă să se grupeze prin fallback.
 
-  for (const b of bookings) {
-    if (b.is_recurring && b.booking_group_id) {
-      const arr = recurringMap.get(b.booking_group_id) ?? [];
-      arr.push(b);
-      recurringMap.set(b.booking_group_id, arr);
-    } else {
-      singles.push(b);
-    }
-  }
+### 2. `src/routes/panou.cereri.tsx` — `bulkUpdateStatus`
+- Semnătura filtrului devine `{ groupId?: string; groupedBy?: "recurrence_id" | "booking_group_id"; recurrenceId?: string | null; ids?: string[] }`.
+- Update-ul filtrează pe `recurrence_id` când grupul e nou, altfel pe `booking_group_id`. Se păstrează garda `.eq("status", "în așteptare")`.
+- Callback-urile `onApproveAll` / `onRefuseAll` din ambele randări (tabel desktop + listă mobil) transmit `groupedBy` și `recurrenceId` din item.
 
-  const items: BookingItem[] = [];
-  for (const [groupId, gBookings] of recurringMap.entries()) {
-    gBookings.sort((a, b) =>
-      a.booking_date.localeCompare(b.booking_date) || a.start_time.localeCompare(b.start_time));
-    items.push({ kind: "recurring_group", groupId, bookings: gBookings });
-  }
-  for (const s of singles) items.push({ kind: "single", booking: s });
+### 3. Email de aprobare
+- După update reușit cu `newStatus === "confirmată"` pe un grup recurent, `recurrenceId` se ia din item (sau, ca fallback, din primul booking al grupului cu `recurrence_id`).
+- `supabase.functions.invoke("send-booking-email", { body: { type: "recurring-approved", recurrenceId } })`, fire-and-forget cu `.catch` care loghează.
+- Funcționează identic pentru serii noi și vechi (ambele au `recurrence_id` pe rânduri).
 
-  items.sort((a, b) => {
-    const dateA = a.kind === "single" ? a.booking.booking_date : a.bookings[0].booking_date;
-    const dateB = b.kind === "single" ? b.booking.booking_date : b.bookings[0].booking_date;
-    return dateB.localeCompare(dateA);
-  });
-  return items;
-}
-```
+### 4. Ramura de refuz
+- În codul actual nu există niciun apel de email pe refuz (`newStatus === "refuzată"`), deci nu e nimic de reparat acolo; nu adaug email nou. Rezolvarea coloanei de filtrare (punctul 2) se aplică însă și refuzului, ca „Refuză seria” să funcționeze pentru seriile noi.
 
-## 2. Mai funcționează „Aprobă tot” pentru seriile noi (recurrence_id, fără booking_group_id)?
+### 5. Loguri temporare
+- Logurile `APPROVE RECURRING …` nu au ajuns niciodată în fișier (aplicarea a fost întreruptă), deci nu e nimic de șters. Confirm asta după modificare.
 
-Nu. Lanțul se rupe în trei puncte:
+### 6. „Aprobă selecția” (`filter.ids`)
+- Adaug rezolvarea seriei și pe această ramură: din id-urile selectate se caută în state primul rând cu `recurrence_id` și, dacă statusul nou e `confirmată`, se trimite exact un email pentru serie. Deci da, aprobarea prin selecție va trimite emailul o singură dată.
 
-1. **Nu se formează cardul.** Fără `booking_group_id`, fiecare sesiune cade pe ramura `singles` — se randează ca N rânduri individuale, deci butonul „Aprobă seria / Aprobă tot” nici nu apare. (În lista de rânduri individuale există doar indicatorul `↻` pentru `recurrence_id`.)
-2. **Dacă totuși s-ar apela**, `bulkUpdateStatus({ groupId })` filtrează `.eq("booking_group_id", gid)` — pe rânduri cu `booking_group_id = null` update-ul nu atinge nicio linie. PostgREST întoarce succes cu 0 rânduri afectate, deci **aprobare silențioasă fără efect** și fără eroare.
-3. **Emailul** depinde de `bookings.find(b => b.booking_group_id === filter.groupId && b.recurrence_id)` — aceeași coloană lipsă, deci `groupBooking` e `undefined` și `invoke` nu se apelează niciodată. Asta explică lipsa emailului chiar și în scenariile în care sesiunile ajung „confirmată” pe altă cale (aprobare individuală per rând, care nu are niciun apel de email).
-
-Funcția edge `send-booking-email` există pe proiectul extern — nu ea e problema; problema e că `invoke` nu ajunge să fie apelat.
-
-Nu am putut confirma prin query dacă rândurile create de `create_recurring_booking` primesc `is_recurring = true` sau `booking_group_id`; RPC-ul nu primește niciun parametru de grup din client (`p_room_id`, `p_start_time`, `p_end_time`, `p_first_date`, date invitat, note), deci gruparea depinde integral de ce setează funcția în DB. Logurile de mai jos confirmă asta la runtime.
-
-## 3. Instrumentare temporară (singura modificare de cod din acest pas)
-
-În `src/routes/panou.cereri.tsx`, în `bulkUpdateStatus`:
-- înainte de `invoke`: `console.log("APPROVE RECURRING - recurrenceId=", groupBooking.recurrence_id, "invoking email");`
-- apelul devine `await` doar cât să putem citi rezultatul, urmat de `console.log("APPROVE RECURRING - email result", result, emailError);`
-- pe ramura `else`: `console.log("APPROVE RECURRING - no recurrence_id found for group", filter.groupId);`
-
-Logurile rămân active. Nicio altă schimbare de logică în acest pas.
-
-## Pasul următor propus (după citirea consolei)
-
-Trecerea grupării și a aprobării în masă de pe `booking_group_id` pe `recurrence_id`:
-- `groupRecurringBookings`: grupează după `recurrence_id ?? booking_group_id` (păstrând compatibilitatea cu seriile vechi).
-- `bulkUpdateStatus`: filtru pe `recurrence_id` când cheia grupului e o serie recurentă, altfel pe `booking_group_id`.
-- emailul: `recurrenceId` luat direct din cheia grupului, plus trimitere și pe ramura „Aprobă selecția”.
+## Verificare
+- Typecheck + build.
+- Verific că `RecurringGroupCard` și ceilalți consumatori ai `groupRecurringBookings` (dashboard, rezervări) compilează cu noul tip — câmpurile adăugate sunt aditive, nu se schimbă `groupId`/`bookings`.
+- Aprobarea rezervărilor simple și comportamentul existent al refuzului rămân neatinse.
