@@ -94,7 +94,6 @@ export function RecurringGroupCard({
 
   async function handleApproveAll(e?: React.MouseEvent) {
     e?.preventDefault();
-    console.log("APROBA TOT CLICKED", groupId);
     setProcessing(true);
     try {
       await onApproveAll(groupId);

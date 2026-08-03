@@ -309,7 +309,6 @@ function CereriPage() {
     },
     newStatus: string,
   ) {
-    console.log("BULK UPDATE running", filter, newStatus);
     let q = supabase.from("bookings").update({ status: newStatus }).eq("status", "în așteptare");
     if (filter.groupId) {
       const column = filter.groupedBy === "recurrence_id" ? "recurrence_id" : "booking_group_id";
@@ -529,12 +528,7 @@ function CereriPage() {
                               groupId={item.groupId}
                               bookings={item.bookings}
                               onApproveAll={async (gid) => {
-                                console.log("onApproveAll PROP CALLED", gid);
-                                try {
-                                  await bulkUpdateStatus({ groupId: gid, groupedBy: item.groupedBy, recurrenceId: item.recurrenceId }, "confirmată");
-                                } catch (err) {
-                                  console.log("onApproveAll THREW", err);
-                                }
+                                await bulkUpdateStatus({ groupId: gid, groupedBy: item.groupedBy, recurrenceId: item.recurrenceId }, "confirmată");
                               }}
                               onRefuseAll={(gid) => bulkUpdateStatus({ groupId: gid, groupedBy: item.groupedBy, recurrenceId: item.recurrenceId }, "refuzată")}
                               onApproveSelected={(ids) => bulkUpdateStatus({ ids }, "confirmată")}
@@ -611,12 +605,7 @@ function CereriPage() {
                       groupId={item.groupId}
                       bookings={item.bookings}
                       onApproveAll={async (gid) => {
-                        console.log("onApproveAll PROP CALLED", gid);
-                        try {
-                          await bulkUpdateStatus({ groupId: gid, groupedBy: item.groupedBy, recurrenceId: item.recurrenceId }, "confirmată");
-                        } catch (err) {
-                          console.log("onApproveAll THREW", err);
-                        }
+                        await bulkUpdateStatus({ groupId: gid, groupedBy: item.groupedBy, recurrenceId: item.recurrenceId }, "confirmată");
                       }}
                       onRefuseAll={(gid) => bulkUpdateStatus({ groupId: gid, groupedBy: item.groupedBy, recurrenceId: item.recurrenceId }, "refuzată")}
                       onApproveSelected={(ids) => bulkUpdateStatus({ ids }, "confirmată")}
