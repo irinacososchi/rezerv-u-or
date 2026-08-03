@@ -103,6 +103,7 @@ type PricingRule = {
 
 type SlotPricing = {
   price: number;
+  hourlyRate: number;
   label: string | null;
 };
 
@@ -127,8 +128,10 @@ function getPriceForSlotDetailed(
     .sort((a, b) => b.priority - a.priority);
 
   const winner = matching[0];
+  const hourlyRate = Number(winner?.price_per_hour ?? 0);
   return {
-    price: Number(winner?.price_per_hour ?? 0),
+    price: winner ? (hourlyRate * SLOT_GRANULARITY_MINUTES) / 60 : 0,
+    hourlyRate,
     label: winner?.label ?? null,
   };
 }
