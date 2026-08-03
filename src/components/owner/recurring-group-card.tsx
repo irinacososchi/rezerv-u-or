@@ -180,6 +180,7 @@ export function RecurringGroupCard({
           <>
             {canApprove && (
               <button
+                type="button"
                 onClick={handleApproveAll}
                 disabled={processing}
                 className="inline-flex items-center gap-1 rounded-md bg-primary text-primary-foreground px-3 py-1.5 text-xs font-medium hover:bg-primary/90 disabled:opacity-50"
@@ -192,6 +193,7 @@ export function RecurringGroupCard({
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <button
+                    type="button"
                     disabled={processing}
                     className="inline-flex items-center gap-1 rounded-md border border-red-200 text-red-700 px-3 py-1.5 text-xs font-medium hover:bg-red-50 disabled:opacity-50"
                   >
@@ -217,6 +219,7 @@ export function RecurringGroupCard({
             )}
             {canApprove && showManageButton && (
               <button
+                type="button"
                 onClick={() => setSelectionMode(true)}
                 disabled={processing}
                 className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted/40 disabled:opacity-50"
@@ -228,6 +231,7 @@ export function RecurringGroupCard({
         ) : (
           <>
             <button
+              type="button"
               onClick={handleApproveSelected}
               disabled={processing || selectedIds.size === 0}
               className="inline-flex items-center gap-1 rounded-md bg-primary text-primary-foreground px-3 py-1.5 text-xs font-medium hover:bg-primary/90 disabled:opacity-50"
@@ -236,6 +240,7 @@ export function RecurringGroupCard({
               Aprobă selecția ({selectedIds.size})
             </button>
             <button
+              type="button"
               onClick={handleRefuseSelected}
               disabled={processing || selectedIds.size === 0}
               className="inline-flex items-center gap-1 rounded-md border border-red-200 text-red-700 px-3 py-1.5 text-xs font-medium hover:bg-red-50 disabled:opacity-50"
@@ -244,6 +249,7 @@ export function RecurringGroupCard({
               Refuză selecția ({selectedIds.size})
             </button>
             <button
+              type="button"
               onClick={() => {
                 setSelectionMode(false);
                 clearSelection();
