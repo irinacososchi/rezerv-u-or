@@ -654,7 +654,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
                     }}
                     onBlur={() => checkSlugAvailability(form.slug)}
                     placeholder="studio-dans-floreasca"
-                    className="flex-1 bg-background px-3 py-2.5 text-sm outline-none"
+                    className="flex-1 min-w-0 bg-background px-3 py-2.5 text-sm outline-none"
                     maxLength={80}
                   />
 
