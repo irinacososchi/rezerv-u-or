@@ -6,6 +6,9 @@ import { SiteFooter } from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/external-client";
+import { useRateBreakdown, type RateInterval } from "@/lib/rate-breakdown";
+import { RateBreakdown } from "@/components/rate-breakdown";
+
 import { formatDateRO, parseISODate, getDayOfWeek, DAY_NAMES_RO } from "@/lib/date-utils";
 
 export const Route = createFileRoute("/confirmare")({
