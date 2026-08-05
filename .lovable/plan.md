@@ -50,7 +50,8 @@ Concluzie: în starea curentă nu mai există scroll orizontal la nivel de pagin
 
 ## Ce nu s-a putut verifica
 
-Paginile `/panou/*` (dashboard, sali, calendar, cereri, vouchere, clienti, cont, orarul-meu) nu au putut fi măsurate în browser pentru că sesiunea de preview e delogată. Dacă te autentifici în preview, pot relua măsurătoarea live pe toate și pot confirma care dintre punctele 1-5 produc efectiv scroll de pagină, înainte de a schimba ceva.
+Paginile `/panou/*` nu pot fi măsurate de browserul automat: backendul e un proiect Supabase extern, deci sesiunea din preview nu poate fi preluată în sandbox (toate rutele de panou redirecționează către `/login`). Măsurătoarea live o rulezi tu cu snippetul de consolă trimis în chat, pe: dashboard, sali, calendar sală, cereri, vouchere, clienti-proprietar, cont, orarul-meu și formularul de editare sală cu slug lung. Rezultatele confirmă sau infirmă punctele 1-5 de mai sus.
+
 
 ## Plan de remediere propus (când aprobi trecerea la implementare)
 
