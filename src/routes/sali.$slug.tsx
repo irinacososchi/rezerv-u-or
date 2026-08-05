@@ -263,7 +263,7 @@ function RoomDetailsPage() {
 
       const today = new Date();
       const todayISO = formatDateISO(today);
-      const sixtyISO = formatDateISO(addDays(today, 60));
+      const horizonISO = formatDateISO(addDays(today, CALENDAR_WINDOW_DAYS));
 
 
 
