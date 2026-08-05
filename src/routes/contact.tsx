@@ -92,10 +92,10 @@ function ContactPage() {
               Contact
             </h1>
             <p className="mt-4 text-base md:text-lg text-muted-foreground leading-relaxed">
-              Ai găsit ceva ce nu funcționează, sau poate ai idei noi pe care
-              am putea să le implementăm?
+              Ai găsit ceva ce nu funcționează, vrei sa colaborezi cu noi sau
+              poate ai idei noi pe care am putea să le implementăm?
               <br />
-              Trimite formularul cu o descriere amănunțită și te contactăm noi pentru detalii.
+              Trimite formularul cu o descriere amănunțită și te contactăm noi pentru detalii.{"\u00a0"}
             </p>
           </div>
 
