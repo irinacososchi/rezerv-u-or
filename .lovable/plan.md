@@ -12,6 +12,11 @@
 
 5. **Long unbroken strings** — add `break-words` to email/reference text in `src/components/clients/ClientList.tsx` and `src/routes/panou.cereri.tsx`, and cap the notification popover in `src/components/notification-bell.tsx` with `max-w-[calc(100vw-2rem)]`.
 
+## Calendar pages — no change needed
+
+The live measurement at 360px showed `/panou/sali/{id}/calendar` and `/panou/orarul-meu` at `scrollWidth === 360` (no page-level scroll). The `min-w-[760px]` week grid is correctly contained by its `overflow-x-auto` wrapper and scrolls internally, so those files stay untouched.
+
 ## Verification
 
-Re-run the mobile measurement (logged in, 360px and 393px) on all panel pages and the room edit form, confirming `scrollWidth === clientWidth` everywhere.
+Re-run the mobile measurement (logged in, 360px and 393px) on all panel pages and the room edit form, confirming `scrollWidth === clientWidth` everywhere and that calendar/voucher tables scroll internally.
+
