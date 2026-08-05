@@ -168,10 +168,10 @@ export function SiteHeader() {
     <div className="flex flex-wrap items-center justify-center gap-2">
       {!loading && !user && (
         <>
-          <Button variant="outline" asChild className="hidden lg:inline-flex">
+          <Button variant="outline" asChild className="px-2.5 text-xs lg:px-4 lg:text-sm">
             <Link to="/login" onClick={closeMobileMenu}>Autentificare</Link>
           </Button>
-          <Button asChild>
+          <Button asChild className="px-2.5 text-xs lg:px-4 lg:text-sm">
             <Link to="/signup" onClick={closeMobileMenu}>Creează cont</Link>
           </Button>
         </>
