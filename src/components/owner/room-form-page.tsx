@@ -996,7 +996,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
                     {DAY_NAMES_RO[row.day_of_week]}
                   </span>
                   {row.is_available ? (
-                    <div className="flex min-w-0 flex-1 items-center gap-2">
+                    <div className="flex min-w-0 basis-full sm:basis-auto sm:flex-1 items-center gap-2">
                       <Input
                         type="time"
                         value={row.open_time}
