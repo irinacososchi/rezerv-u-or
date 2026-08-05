@@ -15,7 +15,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Tag } from "lucide-react";
+import { Tag, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export const Route = createFileRoute("/panou/vouchere")({
   component: VouchersPage,
@@ -52,6 +69,8 @@ function VouchersPage() {
   const [validUntil, setValidUntil] = useState("");
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Voucher | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -149,15 +168,38 @@ function VouchersPage() {
     await refreshVouchers(userId);
   }
 
-  async function toggleVoucher(voucherId: string, currentStatus: boolean) {
-    await supabase
+  async function toggleVoucher(e: React.MouseEvent, voucherId: string, currentStatus: boolean) {
+    e.preventDefault();
+    const { error } = await supabase
       .from("voucher_codes")
       .update({ is_active: !currentStatus })
       .eq("id", voucherId);
 
-    setVouchers((prev) =>
-      prev.map((v) => (v.id === voucherId ? { ...v, is_active: !currentStatus } : v)),
-    );
+    if (error) {
+      toast.error("Nu am putut actualiza voucherul. Reîncearcă.");
+      return;
+    }
+
+    await refreshVouchers(userId);
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const { error } = await supabase
+      .from("voucher_codes")
+      .delete()
+      .eq("id", deleteTarget.id);
+    setDeleting(false);
+    setDeleteTarget(null);
+
+    if (error) {
+      toast.error("Voucherul nu poate fi șters (a fost folosit). Îl poți dezactiva.");
+      return;
+    }
+
+    toast.success("Voucher șters.");
+    await refreshVouchers(userId);
   }
 
   function formatDiscount(v: Voucher) {
@@ -421,13 +463,52 @@ function VouchersPage() {
                           )}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => toggleVoucher(v.id, v.is_active)}
-                          >
-                            {v.is_active ? "Dezactivează" : "Activează"}
-                          </Button>
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => toggleVoucher(e, v.id, v.is_active)}
+                            >
+                              {v.is_active ? "Dezactivează" : "Activează"}
+                            </Button>
+                            {(v.times_used ?? 0) > 0 ? (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="inline-flex">
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        disabled
+                                        aria-label="Șterge voucher"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    Voucherele folosite nu pot fi șterse. Le poți dezactiva.
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            ) : (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                aria-label="Șterge voucher"
+                                className="text-destructive hover:text-destructive"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setDeleteTarget(v);
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -437,6 +518,36 @@ function VouchersPage() {
             )}
           </CardContent>
         </Card>
+
+        <AlertDialog
+          open={deleteTarget !== null}
+          onOpenChange={(open) => {
+            if (!open) setDeleteTarget(null);
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Ștergi voucherul?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Ești sigur că vrei să ștergi voucherul {deleteTarget?.code}? Această acțiune nu
+                poate fi anulată.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>Anulează</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={deleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleDelete();
+                }}
+              >
+                {deleting ? "Se șterge..." : "Șterge"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </OwnerLayout>
   )
