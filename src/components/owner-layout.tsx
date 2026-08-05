@@ -325,52 +325,83 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Mobile header */}
-        <header className="md:hidden flex items-center justify-between px-4 py-3 border-b bg-card sticky top-0 z-10">
-          <Link to="/">
+        <header className="md:hidden flex items-center justify-between gap-2 px-4 py-3 border-b bg-card sticky top-0 z-10">
+          <Link to="/" className="min-w-0 flex items-center">
             <img src={logoUrl.url} alt="RZRV" className="h-4 w-auto object-contain shrink-0" />
           </Link>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 shrink-0">
             <NotificationBell />
-            <button
-              onClick={handleLogout}
-              aria-label="Deconectare"
-              className="p-2 rounded-md hover:bg-muted"
-            >
-              <LogOut className="h-4 w-4" />
-            </button>
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <button
+                  aria-label="Deschide meniul"
+                  className="p-2 rounded-md hover:bg-muted"
+                >
+                  <Menu className="h-5 w-5" />
+                </button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[280px] max-w-[85vw] p-0 flex flex-col">
+                <SheetHeader className="px-4 py-4 border-b text-left">
+                  <SheetTitle className="truncate text-base">{ownerName}</SheetTitle>
+                </SheetHeader>
+                <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
+                  <a
+                    href="/"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
+                  >
+                    <Home className="h-4 w-4 shrink-0" />
+                    <span>Acasă</span>
+                  </a>
+
+                  {mobileOwnerItems.length > 0 && (
+                    <div className="pt-3">
+                      {mobileRenterItems.length > 0 && (
+                        <div className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Proprietar
+                        </div>
+                      )}
+                      <div className="space-y-1">{mobileOwnerItems.map(renderMobileItem)}</div>
+                    </div>
+                  )}
+
+                  {mobileRenterItems.length > 0 && (
+                    <div className="pt-3">
+                      {mobileOwnerItems.length > 0 && (
+                        <div className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Chiriaș
+                        </div>
+                      )}
+                      <div className="space-y-1">{mobileRenterItems.map(renderMobileItem)}</div>
+                    </div>
+                  )}
+                </nav>
+                <div className="border-t px-3 py-3 space-y-1">
+                  {COMMON_BOTTOM.map(renderMobileItem)}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      void handleLogout();
+                    }}
+                    className="w-full flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                  >
+                    <LogOut className="h-4 w-4 shrink-0" />
+                    <span>Deconectare</span>
+                  </button>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </header>
 
         {/* Page content */}
-        <main className="flex-1 pb-20 md:pb-0 min-w-0 overflow-x-hidden">
+        <main className="flex-1 min-w-0 overflow-x-hidden">
           <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             {children}
           </div>
         </main>
 
-        {/* Mobile bottom nav */}
-        <nav
-          className="md:hidden fixed bottom-0 inset-x-0 bg-card border-t grid z-10"
-          style={{ gridTemplateColumns: `repeat(${mobileItems.length}, minmax(0, 1fr))` }}
-        >
-          {mobileItems.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.to);
-            return (
-              <a
-                key={item.to}
-                href={item.to}
-                className={
-                  "flex flex-col items-center justify-center py-2 text-xs gap-1 " +
-                  (active ? "text-primary" : "text-muted-foreground")
-                }
-              >
-                <Icon className="h-5 w-5" />
-                <span className="truncate max-w-[64px]">{item.label}</span>
-              </a>
-            );
-          })}
-        </nav>
       </div>
     </div>
   );
