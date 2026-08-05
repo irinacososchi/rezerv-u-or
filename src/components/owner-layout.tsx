@@ -179,22 +179,30 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
   // right above the logout button in the fixed bottom section.
   const desktopNavItems = flatItems.filter((item) => item.to !== "/panou/cont");
 
-  // Mobile bottom nav selection (max 5)
-  let mobileItems: NavItem[];
-  if (showBoth) {
-    mobileItems = [
-      OWNER_ITEMS[0], // Dashboard
-      OWNER_ITEMS[1], // Sălile mele
-      OWNER_ITEMS[2], // Calendar
-      OWNER_ITEMS[3], // Cereri
-      RENTER_ITEMS[0], // Orarul meu
-    ];
-  } else if (showRenterOnly) {
-    mobileItems = [...RENTER_ITEMS, ...COMMON_BOTTOM];
-  } else {
-    // owner only, admin, nothing/loading
-    mobileItems = flatItems.slice(0, 5);
-  }
+  // Mobile burger menu: full list, no 5-item cap
+  const mobileOwnerItems = showBoth || showOwnerOnly ? OWNER_ITEMS : [];
+  const mobileRenterItems = showBoth || showRenterOnly ? RENTER_ITEMS : [];
+
+  const renderMobileItem = (item: NavItem) => {
+    const Icon = item.icon;
+    const active = isActive(item.to);
+    return (
+      <a
+        key={item.to}
+        href={item.to}
+        onClick={() => setMobileMenuOpen(false)}
+        className={
+          "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors " +
+          (active
+            ? "bg-primary/10 text-primary font-medium"
+            : "text-foreground hover:bg-muted")
+        }
+      >
+        <Icon className="h-4 w-4 shrink-0" />
+        <span className="truncate">{item.label}</span>
+      </a>
+    );
+  };
 
   const sidebarWidth = collapsed ? "md:w-16" : "md:w-64";
   const contentMargin = collapsed ? "md:ml-16" : "md:ml-64";
