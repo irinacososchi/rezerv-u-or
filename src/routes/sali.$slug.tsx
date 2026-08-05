@@ -346,14 +346,79 @@ function RoomDetailsPage() {
   // Earliest bookable date (start of day) — today
   const minBookingDate = today0;
 
+  /**
+   * Days (ISO "YYYY-MM-DD") within the loaded booking window (today → today+60)
+   * where EVERY 30-min slot between open_time and close_time is unavailable
+   * (busy, or — for today — inside the 2h buffer). Days outside the window are
+   * never included, since no booking data is loaded for them.
+   */
+  const fullyBookedDays = useMemo(() => {
+    const full = new Set<string>();
+    if (schedule.length === 0) return full;
+
+    const byDate = new Map<string, Booking[]>();
+    for (const b of bookings) {
+      const list = byDate.get(b.booking_date);
+      if (list) list.push(b);
+      else byDate.set(b.booking_date, [b]);
+    }
+
+    const now = new Date();
+    const todayISO = formatDateISO(today0);
+    const cutoff = new Date(now.getTime() + SAME_DAY_BUFFER_HOURS * 60 * 60 * 1000);
+    const cutoffMinRaw = cutoff.getHours() * 60 + cutoff.getMinutes();
+    const todayEarliestStartMin =
+      Math.ceil(cutoffMinRaw / SLOT_GRANULARITY_MINUTES) * SLOT_GRANULARITY_MINUTES;
+
+    for (let offset = 0; offset <= 60; offset++) {
+      const date = addDays(today0, offset);
+      const sched = scheduleByDay.get(getDayOfWeek(date));
+      if (!sched) continue;
+      const iso = formatDateISO(date);
+      const isToday = iso === todayISO;
+      const dayBookings = byDate.get(iso) ?? [];
+      if (dayBookings.length === 0 && !isToday) continue;
+
+      const openMin = timeToMinutes(sched.open_time);
+      const closeMin = timeToMinutes(sched.close_time);
+      let hasAnySlot = false;
+      let hasFree = false;
+      for (
+        let m = openMin;
+        m + SLOT_GRANULARITY_MINUTES <= closeMin;
+        m += SLOT_GRANULARITY_MINUTES
+      ) {
+        hasAnySlot = true;
+        if (isToday && m < todayEarliestStartMin) continue;
+        const start = minutesToTime(m);
+        const end = minutesToTime(m + SLOT_GRANULARITY_MINUTES);
+        const busy = dayBookings.some((b) =>
+          intervalsOverlap(start, end, slotFromTime(b.start_time), slotFromTime(b.end_time)),
+        );
+        if (!busy) {
+          hasFree = true;
+          break;
+        }
+      }
+      if (hasAnySlot && !hasFree) full.add(iso);
+    }
+    return full;
+  }, [bookings, schedule, scheduleByDay, today0]);
+
+  function isDayFullyBooked(date: Date): boolean {
+    return fullyBookedDays.has(formatDateISO(date));
+  }
+
   function isDayDisabled(date: Date): boolean {
     const dayStart = new Date(date);
     dayStart.setHours(0, 0, 0, 0);
     if (dayStart < minBookingDate) return true;
     const dow = getDayOfWeek(date);
     if (!scheduleByDay.has(dow)) return true;
+    if (fullyBookedDays.has(formatDateISO(date))) return true;
     return false;
   }
+
 
   // Active day (currently being edited)
   const activeDay =
