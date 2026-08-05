@@ -188,6 +188,8 @@ function formatDurationRO(minutes: number): string {
   return `${hours} ${hourWord} și ${mins} minute`;
 }
 
+const CALENDAR_WINDOW_DAYS = 130;
+
 // ---------- Page ----------
 function RoomDetailsPage() {
   const { slug } = Route.useParams() as { slug: string };
