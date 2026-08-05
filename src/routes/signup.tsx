@@ -139,7 +139,7 @@ function SignupPage() {
           <div className="rounded-2xl border border-border bg-card p-8 shadow-[var(--shadow-card)]">
             <h1 className="text-2xl font-bold tracking-tight">Creează cont</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Un singur cont — poți rezerva săli sau să listezi propriile tale săli.
+              Un singur cont - poți rezerva locații sau să listezi propriile tale săli.
             </p>
 
             <form onSubmit={handleSignup} className="mt-6 space-y-4">
