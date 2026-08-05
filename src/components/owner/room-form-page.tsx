@@ -589,7 +589,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
   if (loading) {
     return (
       <OwnerLayout>
-        <div className="p-6 md:p-8 space-y-6 max-w-4xl mx-auto">
+        <div className="p-4 md:p-8 space-y-6 max-w-4xl mx-auto">
           <Skeleton className="h-8 w-64" />
           <Skeleton className="h-64" />
           <Skeleton className="h-64" />
@@ -601,7 +601,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
   return (
     <OwnerLayout>
       <div className="pb-32">
-        <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-6">
+        <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
               <button
