@@ -205,6 +205,23 @@ function ConfirmarePage() {
     };
   }, [isRecurring, booking, bookings]);
 
+  // Applied rates (display only) — from the server RPC
+  const rateIntervals = useMemo<RateInterval[]>(() => {
+    const b = bookings[0];
+    if (!b || !b.room_id || isRecurring || bookings.length > 1) return [];
+    return [
+      {
+        roomId: b.room_id,
+        date: b.booking_date,
+        start: b.start_time,
+        end: b.end_time,
+      },
+    ];
+  }, [bookings, isRecurring]);
+  const rateRows = useRateBreakdown(rateIntervals);
+
+
+
   if (loading) {
     return (
       <Shell>
