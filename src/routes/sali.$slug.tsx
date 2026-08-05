@@ -1025,7 +1025,7 @@ function RoomDetailsPage() {
             </div>
 
             {/* RIGHT — booking card */}
-            <aside className="lg:sticky lg:top-20 lg:self-start">
+            <aside className="min-w-0 lg:sticky lg:top-20 lg:self-start">
               <div className="rounded-2xl border-2 border-primary bg-card p-5 shadow-[var(--shadow-soft)]">
                 <div className="text-2xl font-bold">
                   {priceRange.min === priceRange.max
