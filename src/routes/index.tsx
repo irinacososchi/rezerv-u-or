@@ -59,7 +59,7 @@ function HomePage() {
                 Găsește sala perfectă pentru nevoile tale
               </h1>
               <p className="mt-5 text-base text-muted-foreground sm:text-lg">
-                Repetiții, cursuri, ateliere sau evenimente — rezervă o sală cu echipare
+                Repetiții, cursuri, ateliere sau evenimente - rezervă o sală cu echipare
                 completă în câteva minute.
               </p>
 
