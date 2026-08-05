@@ -824,9 +824,10 @@ function RoomDetailsPage() {
             </div>
           )}
 
-          <div className="mt-6 grid gap-8 lg:grid-cols-[3fr_2fr]">
+          <div className="mt-6 grid min-w-0 gap-8 lg:grid-cols-[3fr_2fr]">
             {/* LEFT */}
-            <div>
+            <div className="min-w-0">
+
               {/* Gallery */}
               <div className="overflow-hidden rounded-2xl bg-muted">
                 <div className="aspect-[4/3] w-full">
@@ -1024,7 +1025,7 @@ function RoomDetailsPage() {
             </div>
 
             {/* RIGHT — booking card */}
-            <aside className="lg:sticky lg:top-20 lg:self-start">
+            <aside className="min-w-0 lg:sticky lg:top-20 lg:self-start">
               <div className="rounded-2xl border-2 border-primary bg-card p-5 shadow-[var(--shadow-soft)]">
                 <div className="text-2xl font-bold">
                   {priceRange.min === priceRange.max
@@ -1581,7 +1582,7 @@ function RoomDetailsPage() {
 // ---------- Page shell ----------
 function PageShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col overflow-x-hidden bg-background">
       <SiteHeader />
       {children}
       <SiteFooter />
