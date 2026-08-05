@@ -35,3 +35,9 @@ Fișier principal: `src/components/owner-layout.tsx`.
 - Fiecare intrare din meniu apelează `setMobileMenuOpen(false)` la click; se păstrează `<a href>` pentru navigare completă, ca în implementarea actuală.
 - Se reutilizează `isActive()` existent pentru evidențierea rutei curente.
 - `src/components/owner/room-form-page.tsx` linia 1167: bara fixă de jos poate rămâne neschimbată; se verifică doar că nu mai există decalaj vizual după eliminarea navigării de jos.
+
+## Confirmări cerute
+
+1. **Paginile publice nu sunt afectate.** Navigarea de jos există doar în `src/components/owner-layout.tsx` (panoul proprietar/chiriaș). Site-ul public (`/`, `/sali`, pagina de sală etc.) folosește `src/components/site-header.tsx`, care are propriul meniu mobil în antet (buton burger la scroll) și nicio bară de jos. Nu îl atingem. Singurul alt element fix de jos este bara de acțiuni din formularul de sală (`src/components/owner/room-form-page.tsx:1167`), care rămâne.
+2. **Fără spațiu gol rămas / fără scroll orizontal.** Se elimină `pb-20` de pe `<main>` odată cu bara de jos. `Sheet` din Radix se randează într-un portal cu `position: fixed`, deci overlay-ul nu lărgește pagina; se păstrează `overflow-x-hidden` pe `<main>`.
+3. **Antet mobil compact.** Logo cu `min-w-0`, iar clopoțelul + burgerul într-un grup `shrink-0`, ambele butoane de 36px — încap confortabil pe lățimi de 360px.
