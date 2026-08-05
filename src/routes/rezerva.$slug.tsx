@@ -10,6 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/external-client";
+import { useRateBreakdown, type RateInterval } from "@/lib/rate-breakdown";
+import { RateBreakdown } from "@/components/rate-breakdown";
+
 import { toast } from "sonner";
 import {
   formatDateRO,
@@ -669,6 +672,25 @@ function CheckoutPage() {
     () => allSlotsToCreate.filter((s) => !excludedSlotKeys.has(slotKey(s))),
     [allSlotsToCreate, excludedSlotKeys],
   );
+
+  // Applied rates (display only) — from the server RPC
+  const rateIntervals = useMemo<RateInterval[]>(() => {
+    if (!room?.id || finalSlotsToCreate.length === 0) return [];
+    // For recurring series all sessions share the same weekday/interval:
+    // one lookup on the first session is enough.
+    const source = isRecurringView ? [finalSlotsToCreate[0]] : finalSlotsToCreate;
+    const seen = new Set<string>();
+    const out: RateInterval[] = [];
+    for (const s of source) {
+      const k = `${s.date}|${s.start}|${s.end}`;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      out.push({ roomId: room.id as string, date: s.date, start: s.start, end: s.end });
+    }
+    return out.slice(0, 12);
+  }, [room?.id, finalSlotsToCreate, isRecurringView]);
+  const rateRows = useRateBreakdown(rateIntervals);
+
 
   function toggleSlotExclusion(s: ParsedSlot) {
     const key = slotKey(s);
@@ -1412,24 +1434,13 @@ function CheckoutPage() {
                 </>
               )}
 
-              {!isRecurringView && (() => {
-                const allLabels = new Set<string>();
-                for (const s of finalSlotsToCreate) {
-                  const startMin = timeToMinutes(s.start);
-                  const endMin = timeToMinutes(s.end);
-                  const date = parseISODate(s.date);
-                  for (let m = startMin; m < endMin; m += SLOT_GRANULARITY_MINUTES) {
-                    const detail = getPriceForSlotDetailed(date, minutesToTime(m), pricing);
-                    if (detail.label) allLabels.add(detail.label);
-                  }
-                }
-                if (allLabels.size === 0) return null;
-                return (
-                  <p className="text-xs text-muted-foreground mt-1 text-right">
-                    Tarife aplicate: {Array.from(allLabels).join(", ")}
-                  </p>
-                );
-              })()}
+              {rateRows.length > 0 && (
+                <div className="mt-3 border-t border-border pt-3">
+                  <RateBreakdown rows={rateRows} currency={currency} />
+                </div>
+              )}
+
+
 
               {checkingAvailability && (
                 <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">

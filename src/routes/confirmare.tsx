@@ -6,6 +6,9 @@ import { SiteFooter } from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/external-client";
+import { useRateBreakdown, type RateInterval } from "@/lib/rate-breakdown";
+import { RateBreakdown } from "@/components/rate-breakdown";
+
 import { formatDateRO, parseISODate, getDayOfWeek, DAY_NAMES_RO } from "@/lib/date-utils";
 
 export const Route = createFileRoute("/confirmare")({
@@ -27,6 +30,8 @@ export const Route = createFileRoute("/confirmare")({
 type BookingFull = {
   id: string;
   reference: string;
+  room_id?: string | null;
+
   guest_name: string;
   guest_email: string;
   guest_phone: string;
@@ -204,6 +209,23 @@ function ConfirmarePage() {
       firstSessionDate,
     };
   }, [isRecurring, booking, bookings]);
+
+  // Applied rates (display only) — from the server RPC
+  const rateIntervals = useMemo<RateInterval[]>(() => {
+    const b = bookings[0];
+    if (!b || !b.room_id || isRecurring || bookings.length > 1) return [];
+    return [
+      {
+        roomId: b.room_id,
+        date: b.booking_date,
+        start: b.start_time,
+        end: b.end_time,
+      },
+    ];
+  }, [bookings, isRecurring]);
+  const rateRows = useRateBreakdown(rateIntervals);
+
+
 
   if (loading) {
     return (
@@ -385,20 +407,37 @@ function ConfirmarePage() {
                         return `${hours} ${hours === 1 ? "oră" : "ore"}`;
                       })()}
                     />
-                    <DetailRow
-                      label="Preț/oră"
-                      value={
-                        <>
-                          {booking.price_per_hour} {currency}/oră
-                          {booking.pricing_rule_label && (
-                            <span className="text-muted-foreground">
-                              {" · "}
-                              {booking.pricing_rule_label}
-                            </span>
-                          )}
-                        </>
-                      }
-                    />
+                    {rateRows.length > 1 ? (
+                      <div className="border-t border-border pt-3">
+                        <RateBreakdown rows={rateRows} currency={currency} />
+                      </div>
+                    ) : (
+                      <DetailRow
+                        label="Preț/oră"
+                        value={
+                          rateRows.length === 1 ? (
+                            <>
+                              {rateRows[0].price_per_hour} {currency}/oră
+                              <span className="text-muted-foreground">
+                                {" · "}
+                                {rateRows[0].label}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              {booking.price_per_hour} {currency}/oră
+                              {booking.pricing_rule_label && (
+                                <span className="text-muted-foreground">
+                                  {" · "}
+                                  {booking.pricing_rule_label}
+                                </span>
+                              )}
+                            </>
+                          )
+                        }
+                      />
+                    )}
+
                   </>
                 )}
               </dl>

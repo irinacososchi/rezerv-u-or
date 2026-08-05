@@ -20,6 +20,9 @@ import { SiteFooter } from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/external-client";
+import { useRateBreakdown, type RateInterval } from "@/lib/rate-breakdown";
+import { RateBreakdown } from "@/components/rate-breakdown";
+
 import {
   getDayOfWeek,
   DAY_NAMES_RO,
@@ -738,6 +741,19 @@ function RoomDetailsPage() {
     }
   }, [isRecurrent, summaryTotalIntervals]);
 
+  // Applied rates (display only) — from the server RPC
+  const rateIntervals = useMemo<RateInterval[]>(() => {
+    if (!room?.id || !summary) return [];
+    return summary.days.flatMap((d) =>
+      d.intervals.map((iv) => ({
+        roomId: room.id as string,
+        date: formatDateISO(d.date),
+        start: iv.start,
+        end: iv.end,
+      })),
+    );
+  }, [room?.id, summary]);
+  const rateRows = useRateBreakdown(rateIntervals);
 
 
   // ---------- Render ----------
@@ -1409,7 +1425,14 @@ function RoomDetailsPage() {
                       </>
                     )}
 
+                    {rateRows.length > 0 && (
+                      <div className="mt-3 border-t border-border pt-2">
+                        <RateBreakdown rows={rateRows} currency={currency} />
+                      </div>
+                    )}
+
                     <div className="mt-2 flex justify-between border-t border-border pt-2 text-base">
+
                       <span className="font-semibold">Total</span>
                       <span className="font-bold text-primary">
                         {summary.total} {currency}
