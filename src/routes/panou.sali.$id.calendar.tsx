@@ -1844,6 +1844,8 @@ const FREQUENCY_LABEL_RO: Record<string, string> = {
   biweekly: "bi-săptămânală",
   monthly: "lunară",
   daily: "zilnică",
+  saptamanal: "săptămânală",
+  bisaptamanal: "bi-săptămânală",
 };
 
 function BlockDetails({
