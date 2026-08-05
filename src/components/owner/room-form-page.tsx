@@ -636,8 +636,8 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
                   Acesta este linkul pe care îl vei trimite clienților tăi.
                 </p>
 
-                <div className="flex items-center rounded-lg border border-border overflow-hidden focus-within:ring-2 focus-within:ring-primary/30">
-                  <div className="flex items-center gap-1 bg-muted/60 px-3 py-2.5 text-sm text-muted-foreground border-r border-border whitespace-nowrap select-none">
+                <div className="flex items-center min-w-0 rounded-lg border border-border overflow-hidden focus-within:ring-2 focus-within:ring-primary/30">
+                  <div className="flex shrink-0 items-center gap-1 bg-muted/60 px-3 py-2.5 text-sm text-muted-foreground border-r border-border whitespace-nowrap select-none">
                     rzrv.ro/sali/
                   </div>
 
