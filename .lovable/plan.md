@@ -1,63 +1,35 @@
-# Audit: surse de scroll orizontal pe mobil
+# Fix mobile horizontal scroll in the owner panel
 
-Metodă: măsurare reală cu browser la 360px și 393px (scrollWidth vs viewport) pe paginile publice, plus scanare statică a claselor pe toate paginile. Paginile din panou nu au putut fi măsurate live (sesiunea de preview e delogată), deci acolo concluziile sunt din cod.
+Logged in with the test account and measured every panel page at 360px and 393px. Results:
 
-## Rezultatul măsurătorilor (pagini publice)
+| Page | 360px | 393px |
+| --- | --- | --- |
+| /panou/dashboard | ok | ok |
+| /panou/sali | scroll (394px) | scroll (394px) |
+| calendar | ok | ok |
+| /panou/cereri | ok | ok |
+| /panou/vouchere | scroll (694px) | scroll (694px) |
+| /panou/clienti | ok | ok |
+| /panou/cont | ok | ok |
+| /panou/orarul-meu | ok | ok |
+| room edit form (/panou/sali/{id}/edit) | scroll (566px) | scroll |
 
-Toate curate la 360px și 393px — `scrollWidth === viewport`:
-`/`, `/sali`, `/sali/{slug}`, `/rezerva/{slug}`, `/confirmare`, `/rezervari`, `/contact`, `/login`, `/signup`.
+## Root cause
 
-Singurul element care depășește viewportul pe `/sali/{slug}` este thumbnail-ul din galerie (`h-20 w-28 flex-shrink-0`, dreapta la 488px) — dar e **conținut** corect în stripul cu `overflow-x-auto` de la fixul anterior. Nu produce scroll de pagină.
+The panel content column in `src/components/owner-layout.tsx` (`flex-1 md:ml-64 flex flex-col min-h-screen`) has no `min-w-0`. As a flex item it sizes to its content's minimum width, so any wide child stretches the whole column past the viewport — and because the column grows, the `overflow-x-hidden` already on `<main>` never clips anything. That is why one wide table pushes the entire page (header included) to 694px.
 
-Concluzie: în starea curentă nu mai există scroll orizontal la nivel de pagină pe zona publică. Ce urmează sunt riscuri reale, dar latente sau în panou.
+## Changes
 
-## Prioritate 1 — probabil produc scroll pe mobil (panou, nemăsurabil delogat)
+1. **Layout containment (fixes page-level scroll everywhere)** — `src/components/owner-layout.tsx`: add `min-w-0 w-full` to the content column so `<main className="overflow-x-hidden">` actually engages and the sticky mobile header stays viewport-width.
 
-1. `src/routes/panou.vouchere.tsx:435-436` — `<div className="overflow-x-auto"><Table>` cu 7 coloane (Cod, Reducere, Aplicabil la, Utilizări, Valabil până la, Status, Acțiuni). Tabelul nu are variantă mobilă de tip card (spre deosebire de dashboard și ClientList, care ascund tabelul sub `md:`/`lg:`). Chiar dacă `overflow-x-auto` există, `shadcn/ui` `Table` are deja un wrapper propriu `overflow-auto`, iar celulele fără `whitespace-nowrap` produc rânduri foarte înalte și strâmte; pe 360px e cel mai prost UX din panou. Risc de scroll de pagină doar dacă un părinte pierde constrângerea, dar risc UI cert.
+2. **Vouchere table** — `src/routes/panou.vouchere.tsx`: the 7-column table is the widest offender (~694px intrinsic). Keep the table for `md+` (`hidden md:block` around the existing `overflow-x-auto` wrapper) and add a mobile card list below it showing code, discount, scope, uses, validity, status badge and the action buttons.
 
-2. `src/routes/panou.sali.$id.calendar.tsx:902-903` și `src/routes/panou.orarul-meu.tsx:407-408` — vizualizarea „săptămână": `<div class="overflow-x-auto"><div class="min-w-[760px]">`. 760px fix la 360-393px viewport. Se bazează exclusiv pe faptul că fiecare părinte e `block`; orice părinte `flex`/`grid` introdus mai târziu (implicit `min-width:auto`) reproduce exact bug-ul galeriei. Plasa de siguranță e `main` din `owner-layout.tsx:399` (`min-w-0 overflow-x-hidden`) — care ar tăia conținutul, nu l-ar face scrollabil.
+3. **Room edit form** — `src/components/owner/room-form-page.tsx`: the slug field row (`rzrv.ro/sali/` prefix with `whitespace-nowrap` + flex-1 input) cannot shrink. Add `shrink-0` to the prefix and `min-w-0` to the input, plus `min-w-0` on the field wrapper.
 
-3. `src/components/owner/room-form-page.tsx:638-645` — grupul de input pentru URL: prefix `rzrv.ro/sali/` cu `whitespace-nowrap` + input, într-un `flex` unde inputul nu are `min-w-0`. Cu un slug lung, inputul nu se poate contracta sub lățimea sa intrinsecă și împinge containerul.
+4. **Padding stack on mobile** — panel pages wrap content in `p-6 md:p-8` inside the shell's `px-4`, leaving only ~280px of usable width at 360px, which is what tips `/panou/sali` over. Change the mobile padding to `p-4 md:p-8` in `src/routes/panou.sali.index.tsx`, `src/routes/panou.dashboard.tsx` and `src/components/owner/room-form-page.tsx`.
 
-4. Șiruri lungi nefragmentate — email/referință afișate fără `break-words`:
-   - `src/components/clients/ClientList.tsx:200` (`TableCell` email) și `:223` (cardul mobil `Email: {c.email}`)
-   - `src/routes/panou.cereri.tsx:549` și `:621` (`font-mono #{reference}`)
-   Un email de tip `prenume.nume.foarte.lung@subdomeniu.exemplu.ro` întinde cardul pe mobil.
+5. **Long unbroken strings** — add `break-words` to email/reference text in `src/components/clients/ClientList.tsx` and `src/routes/panou.cereri.tsx`, and cap the notification popover in `src/components/notification-bell.tsx` with `max-w-[calc(100vw-2rem)]`.
 
-## Prioritate 2 — risc mediu / de obicei conținut
+## Verification
 
-5. `src/routes/panou.sali.$id.calendar.tsx:843` — coloana de ore `w-16 shrink-0` + 7 coloane de zi, în vizualizarea zi/săptămână. Depinde de containerul scrollabil de la punctul 2.
-
-6. `src/components/notification-bell.tsx:89` — `PopoverContent className="w-[22rem]"` = 352px. Încape la 360/393px doar pentru că Radix corectează coliziunea; fără `max-w-[calc(100vw-2rem)]` e la limită pe ecrane de 320px.
-
-7. `src/routes/panou.sali.$id.calendar.tsx:217` — tooltip `min-w-[180px]`: sigur azi, dar tooltipurile de rezervare cu nume lung de sală + notă pot depăși dacă se adaugă `whitespace-nowrap`.
-
-8. `src/routes/panou.cereri.tsx:424-472` — filtrele: `grid sm:grid-cols-2` cu două `input[type=date]` alăturate. Are deja `min-w-0` pe container și pe ambele inputuri, deci e corect; îl notez doar ca pattern de urmărit, pentru că inputurile date native au lățime intrinsecă mare.
-
-9. `src/routes/panou.sali.$id.calendar.tsx:1050` și `panou.orarul-meu.tsx:512` — marginile negative `-ml-px -mt-px` din grila lunară. 1px, inofensiv, dar e o categorie de risc.
-
-10. `src/routes/rezerva.$slug.tsx:1307` — `grid lg:grid-cols-[1fr_1.4fr]` fără `min-w-0` pe coloane. Pe mobil e o singură coloană, deci nu se manifestă acum; devine problemă dacă se introduce conținut wide (grilă de ore, tabel) în coloană.
-
-11. `src/routes/sali.index.tsx:131` — `grid lg:grid-cols-[280px_1fr]` fără `min-w-0`. Coloana de 280px se aplică doar de la `lg`, deci mobilul e sigur.
-
-## Prioritate 3 — verificat, fără problemă
-
-- Imagini: nu există `<img>` fără constrângere de lățime pe rutele publice; toate folosesc `w-full object-cover` sau dimensiuni fixe mici.
-- Nu există nicăieri în `src` `w-screen`, `100vw` pe lățime, sau margini negative mari.
-- `PageShell` din `sali.$slug.tsx:1585` are deja `overflow-x-hidden`; `owner-layout.tsx:399` la fel pe `main`.
-- `DialogContent` (`ui/dialog.tsx:41`) e `w-full max-w-lg` — corect pe mobil; dialogurile din calendar și `BookingDetailsRenter` nu suprascriu lățimea cu valori fixe.
-- `SheetContent` din meniul burger: `w-[280px] max-w-[85vw]` — corect.
-
-## Ce nu s-a putut verifica
-
-Paginile `/panou/*` nu pot fi măsurate de browserul automat: backendul e un proiect Supabase extern, deci sesiunea din preview nu poate fi preluată în sandbox (toate rutele de panou redirecționează către `/login`). Măsurătoarea live o rulezi tu cu snippetul de consolă trimis în chat, pe: dashboard, sali, calendar sală, cereri, vouchere, clienti-proprietar, cont, orarul-meu și formularul de editare sală cu slug lung. Rezultatele confirmă sau infirmă punctele 1-5 de mai sus.
-
-
-## Plan de remediere propus (când aprobi trecerea la implementare)
-
-1. Vouchere: variantă mobilă tip card sub `md:` (ca la `ClientList`), tabelul rămâne doar pe desktop.
-2. Calendar săptămână (owner + orarul meu): adăugare `min-w-0` pe wrapperul de secțiune al containerului `overflow-x-auto`, ca stripul să rămână scrollabil intern indiferent de context.
-3. `room-form-page`: `min-w-0` pe input și pe wrapperul flex; prefixul primește `shrink-0`.
-4. `break-words` pe email și referință în `ClientList` și `panou.cereri`.
-5. `max-w-[calc(100vw-2rem)]` pe `PopoverContent` din `notification-bell`.
-6. `min-w-0` preventiv pe coloanele grid din `rezerva.$slug.tsx` și `sali.index.tsx`.
+Re-run the automated measurement (logged in, 360px and 393px) across all panel pages plus the room edit form, and confirm `scrollWidth === clientWidth` on each.
