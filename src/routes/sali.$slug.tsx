@@ -1539,6 +1539,8 @@ function RoomDetailsPage() {
                       params: { slug: room.slug },
                       search: {
                         slots: slotsParam,
+                        start: "",
+                        end: "",
                         // Backward compat for single-day
                         date: !summary.isMultiDay ? formatDateISO(summary.days[0].date) : "",
                         intervals: !summary.isMultiDay
