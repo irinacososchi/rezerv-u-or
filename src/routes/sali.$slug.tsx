@@ -738,6 +738,19 @@ function RoomDetailsPage() {
     }
   }, [isRecurrent, summaryTotalIntervals]);
 
+  // Applied rates (display only) — from the server RPC
+  const rateIntervals = useMemo<RateInterval[]>(() => {
+    if (!room?.id || !summary) return [];
+    return summary.days.flatMap((d) =>
+      d.intervals.map((iv) => ({
+        roomId: room.id as string,
+        date: formatDateISO(d.date),
+        start: iv.start,
+        end: iv.end,
+      })),
+    );
+  }, [room?.id, summary]);
+  const rateRows = useRateBreakdown(rateIntervals);
 
 
   // ---------- Render ----------
