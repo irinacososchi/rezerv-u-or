@@ -1425,7 +1425,14 @@ function RoomDetailsPage() {
                       </>
                     )}
 
+                    {rateRows.length > 0 && (
+                      <div className="mt-3 border-t border-border pt-2">
+                        <RateBreakdown rows={rateRows} currency={currency} />
+                      </div>
+                    )}
+
                     <div className="mt-2 flex justify-between border-t border-border pt-2 text-base">
+
                       <span className="font-semibold">Total</span>
                       <span className="font-bold text-primary">
                         {summary.total} {currency}
