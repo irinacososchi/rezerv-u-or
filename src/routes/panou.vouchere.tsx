@@ -29,7 +29,7 @@ type Voucher = {
   discount_value: number;
   room_id: string | null;
   max_uses: number | null;
-  used_count: number | null;
+  times_used: number | null;
   valid_until: string | null;
   is_active: boolean;
   created_at: string;
@@ -170,7 +170,7 @@ function VouchersPage() {
   }
 
   function formatUses(v: Voucher) {
-    const used = v.used_count ?? 0;
+    const used = v.times_used ?? 0;
     return v.max_uses ? `${used} / ${v.max_uses}` : `${used} / ∞`;
   }
 
