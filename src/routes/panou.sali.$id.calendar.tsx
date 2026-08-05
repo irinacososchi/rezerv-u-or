@@ -2091,18 +2091,18 @@ function BlockDetails({
             <label className="flex items-start gap-2 cursor-pointer">
               <RadioGroupItem value="single" id="scope-single" className="mt-0.5" />
               <div>
-                <div className="text-sm font-medium">Doar acest slot</div>
+                <div className="text-sm font-medium">Doar ziua selectată</div>
                 <div className="text-xs text-muted-foreground">
-                  Șterge doar blocarea din {entry.booking_date}, restul seriei rămâne.
+                  Șterge doar blocarea din {entry.booking_date}, restul seriei rămâne neschimbată.
                 </div>
               </div>
             </label>
             <label className="flex items-start gap-2 cursor-pointer">
               <RadioGroupItem value="future" id="scope-future" className="mt-0.5" />
               <div>
-                <div className="text-sm font-medium">Acesta și toate viitoarele</div>
+                <div className="text-sm font-medium">Ziua selectată și toate recurențele viitoare</div>
                 <div className="text-xs text-muted-foreground">
-                  Șterge această blocare și toate cele de după.
+                  Șterge această blocare și toate cele viitoare în acest interval.
                 </div>
               </div>
             </label>
@@ -2111,7 +2111,7 @@ function BlockDetails({
               <div>
                 <div className="text-sm font-medium">Toată seria</div>
                 <div className="text-xs text-muted-foreground">
-                  Șterge TOATE blocările din serie (inclusiv trecutul) și dezactivează seria.
+                  Șterge TOATE blocările din serie (inclusiv din trecut) și dezactivează seria.
                 </div>
               </div>
             </label>
