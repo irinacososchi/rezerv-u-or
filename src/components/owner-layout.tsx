@@ -318,7 +318,7 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main content */}
-      <div className={`flex-1 ${contentMargin} flex flex-col min-h-screen transition-[margin] duration-200`}>
+      <div className={`flex-1 min-w-0 w-full ${contentMargin} flex flex-col min-h-screen transition-[margin] duration-200`}>
         {/* Desktop top bar */}
         <div className="hidden md:flex h-12 items-center justify-end px-6 border-b bg-card/60 sticky top-0 z-10">
           <NotificationBell />
