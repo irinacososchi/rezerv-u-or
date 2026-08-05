@@ -981,9 +981,10 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
               {schedule.map((row, idx) => (
                 <div
                   key={row.day_of_week}
-                  className="flex items-center gap-3 py-2 border-b last:border-0"
+                  className="flex flex-wrap items-center gap-x-3 gap-y-2 py-2 border-b last:border-0"
                 >
                   <Switch
+                    className="shrink-0"
                     checked={row.is_available}
                     onCheckedChange={(v) => {
                       const next = [...schedule];
@@ -991,11 +992,11 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
                       setSchedule(next);
                     }}
                   />
-                  <span className="w-24 text-sm font-medium">
+                  <span className="w-20 sm:w-24 shrink-0 text-sm font-medium">
                     {DAY_NAMES_RO[row.day_of_week]}
                   </span>
                   {row.is_available ? (
-                    <div className="flex items-center gap-2 flex-1">
+                    <div className="flex min-w-0 flex-1 items-center gap-2">
                       <Input
                         type="time"
                         value={row.open_time}
@@ -1004,9 +1005,9 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
                           next[idx] = { ...row, open_time: e.target.value };
                           setSchedule(next);
                         }}
-                        className="w-32"
+                        className="min-w-0 flex-1 sm:w-32 sm:flex-none px-2"
                       />
-                      <span className="text-muted-foreground">–</span>
+                      <span className="text-muted-foreground shrink-0">–</span>
                       <Input
                         type="time"
                         value={row.close_time}
@@ -1015,7 +1016,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
                           next[idx] = { ...row, close_time: e.target.value };
                           setSchedule(next);
                         }}
-                        className="w-32"
+                        className="min-w-0 flex-1 sm:w-32 sm:flex-none px-2"
                       />
                     </div>
                   ) : (
