@@ -80,6 +80,7 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
   const [renterOpen, setRenterOpen] = useState<boolean>(() =>
     readBool(GROUP_RENTER_KEY, true),
   );
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
