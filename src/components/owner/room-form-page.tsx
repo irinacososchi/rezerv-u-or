@@ -1116,25 +1116,26 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
                       <span className="text-sm">Interval orar specific</span>
                     </label>
                     {rule.has_time_window && (
-                      <div className="flex items-center gap-2">
+                      <div className="flex min-w-0 items-center gap-2">
                         <Input
                           type="time"
                           value={rule.start_time ?? ""}
                           onChange={(e) =>
                             updatePricing(rule._key, { start_time: e.target.value })
                           }
-                          className="w-32"
+                          className="min-w-0 flex-1 sm:w-32 sm:flex-none px-2"
                         />
-                        <span className="text-muted-foreground">–</span>
+                        <span className="text-muted-foreground shrink-0">–</span>
                         <Input
                           type="time"
                           value={rule.end_time ?? ""}
                           onChange={(e) =>
                             updatePricing(rule._key, { end_time: e.target.value })
                           }
-                          className="w-32"
+                          className="min-w-0 flex-1 sm:w-32 sm:flex-none px-2"
                         />
                       </div>
+
                     )}
                     <div className="flex items-center justify-between">
                       <label className="flex items-center gap-2 cursor-pointer">
