@@ -150,7 +150,7 @@ function RoomsPage() {
                 <Card key={room.id}>
                   <CardContent className="p-4 flex flex-col md:flex-row md:items-center gap-4">
                     {/* Photo */}
-                    <div className="h-20 w-20 rounded-lg overflow-hidden bg-muted shrink-0 flex items-center justify-center">
+                    <div className="h-32 w-32 md:h-20 md:w-20 rounded-lg overflow-hidden bg-muted shrink-0 flex items-center justify-center self-center md:self-auto">
                       {cover ? (
                         <img
                           src={cover}
@@ -159,7 +159,7 @@ function RoomsPage() {
                           loading="lazy"
                         />
                       ) : (
-                        <span className="text-lg font-semibold text-muted-foreground">
+                        <span className="text-2xl md:text-lg font-semibold text-muted-foreground">
                           {getInitials(room.name)}
                         </span>
                       )}
