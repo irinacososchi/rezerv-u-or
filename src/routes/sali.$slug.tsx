@@ -824,9 +824,10 @@ function RoomDetailsPage() {
             </div>
           )}
 
-          <div className="mt-6 grid gap-8 lg:grid-cols-[3fr_2fr]">
+          <div className="mt-6 grid min-w-0 gap-8 lg:grid-cols-[3fr_2fr]">
             {/* LEFT */}
-            <div>
+            <div className="min-w-0">
+
               {/* Gallery */}
               <div className="overflow-hidden rounded-2xl bg-muted">
                 <div className="aspect-[4/3] w-full">
