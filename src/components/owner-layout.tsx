@@ -14,6 +14,8 @@ import {
   Users,
   CalendarDays,
   ChevronDown,
+  Menu,
+  Home,
   type LucideIcon,
 } from "lucide-react";
 import logoUrl from "@/assets/rzrv-logo-2.png.asset.json";
@@ -23,6 +25,13 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { useUserRole } from "@/hooks/use-user-role";
 
 type NavItem = { to: string; icon: LucideIcon; label: string };
