@@ -2045,7 +2045,7 @@ function BlockDetails({
             <>
               {" · "}
               <span>Serie {frequencyLabel}</span>
-              {recurrenceInfo?.total_bookings ? `\u00A0· ${recurrenceInfo.total_bookings} blocări` : ""}
+              {"\u00A0·\u00A0"}
             </>
           )}
         </DialogDescription>
