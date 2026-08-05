@@ -518,6 +518,36 @@ function VouchersPage() {
             )}
           </CardContent>
         </Card>
+
+        <AlertDialog
+          open={deleteTarget !== null}
+          onOpenChange={(open) => {
+            if (!open) setDeleteTarget(null);
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Ștergi voucherul?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Ești sigur că vrei să ștergi voucherul {deleteTarget?.code}? Această acțiune nu
+                poate fi anulată.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>Anulează</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={deleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleDelete();
+                }}
+              >
+                {deleting ? "Se șterge..." : "Șterge"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </OwnerLayout>
   )
