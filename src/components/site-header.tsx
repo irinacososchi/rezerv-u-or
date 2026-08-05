@@ -148,7 +148,7 @@ export function SiteHeader() {
         <Link to="/sali" onClick={closeMobileMenu}>Săli</Link>
       </Button>
       <Button variant="ghost" asChild className="text-foreground/80 hidden lg:inline-flex">
-        <Link to="/rezervari" onClick={closeMobileMenu}>Rezervarea mea</Link>
+        <Link to="/rezervari" search={{ bookingId: "" }} onClick={closeMobileMenu}>Rezervarea mea</Link>
       </Button>
     </nav>
   );
@@ -159,7 +159,7 @@ export function SiteHeader() {
         <Link to="/sali" onClick={closeMobileMenu}>Săli</Link>
       </Button>
       <Button variant="ghost" asChild className="text-foreground/80">
-        <Link to="/rezervari" onClick={closeMobileMenu}>Rezervarea mea</Link>
+        <Link to="/rezervari" search={{ bookingId: "" }} onClick={closeMobileMenu}>Rezervarea mea</Link>
       </Button>
     </nav>
   );
@@ -227,6 +227,7 @@ export function SiteHeader() {
                 {hasBookings && (
                   <Link
                     to="/rezervari"
+                  search={{ bookingId: "" }}
                     onClick={() => {
                       setDropdownOpen(false);
                       closeMobileMenu();

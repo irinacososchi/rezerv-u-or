@@ -427,7 +427,7 @@ function DashboardPage() {
                             onClick={() =>
                               navigate({
                                 to: "/panou/cereri",
-                                search: { q: "", group: item.groupId },
+                                search: { q: "", group: item.groupId, bookingId: "" },
                               })
                             }
                           >
@@ -457,7 +457,7 @@ function DashboardPage() {
                           onClick={() =>
                             navigate({
                               to: "/panou/cereri",
-                              search: { q: b.reference ?? "", group: "" },
+                              search: { q: b.reference ?? "", group: "", bookingId: "" },
                             })
                           }
                         >
@@ -499,7 +499,7 @@ function DashboardPage() {
                       <Link
                         key={`grp-${item.groupId}`}
                         to="/panou/cereri"
-                        search={{ q: "", group: item.groupId }}
+                        search={{ q: "", group: item.groupId, bookingId: "" }}
                         className="block"
                       >
                         <Card className="border-blue-200 bg-blue-50/30 hover:bg-blue-50/60 transition-colors">
@@ -530,7 +530,7 @@ function DashboardPage() {
                     <Link
                       key={b.id}
                       to="/panou/cereri"
-                      search={{ q: b.reference ?? "", group: "" }}
+                      search={{ q: b.reference ?? "", group: "", bookingId: "" }}
                       className="block"
                     >
                       <Card className="hover:bg-muted/50 transition-colors">
