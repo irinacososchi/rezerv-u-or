@@ -104,7 +104,7 @@ function RoomsPage() {
 
   return (
     <OwnerLayout>
-      <div className="p-6 md:p-8 space-y-6">
+      <div className="p-4 md:p-8 space-y-6">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-2xl md:text-3xl font-semibold">Sălile mele</h1>
