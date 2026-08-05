@@ -407,20 +407,37 @@ function ConfirmarePage() {
                         return `${hours} ${hours === 1 ? "oră" : "ore"}`;
                       })()}
                     />
-                    <DetailRow
-                      label="Preț/oră"
-                      value={
-                        <>
-                          {booking.price_per_hour} {currency}/oră
-                          {booking.pricing_rule_label && (
-                            <span className="text-muted-foreground">
-                              {" · "}
-                              {booking.pricing_rule_label}
-                            </span>
-                          )}
-                        </>
-                      }
-                    />
+                    {rateRows.length > 1 ? (
+                      <div className="border-t border-border pt-3">
+                        <RateBreakdown rows={rateRows} currency={currency} />
+                      </div>
+                    ) : (
+                      <DetailRow
+                        label="Preț/oră"
+                        value={
+                          rateRows.length === 1 ? (
+                            <>
+                              {rateRows[0].price_per_hour} {currency}/oră
+                              <span className="text-muted-foreground">
+                                {" · "}
+                                {rateRows[0].label}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              {booking.price_per_hour} {currency}/oră
+                              {booking.pricing_rule_label && (
+                                <span className="text-muted-foreground">
+                                  {" · "}
+                                  {booking.pricing_rule_label}
+                                </span>
+                              )}
+                            </>
+                          )
+                        }
+                      />
+                    )}
+
                   </>
                 )}
               </dl>
