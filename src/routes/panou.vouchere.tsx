@@ -166,15 +166,38 @@ function VouchersPage() {
     await refreshVouchers(userId);
   }
 
-  async function toggleVoucher(voucherId: string, currentStatus: boolean) {
-    await supabase
+  async function toggleVoucher(e: React.MouseEvent, voucherId: string, currentStatus: boolean) {
+    e.preventDefault();
+    const { error } = await supabase
       .from("voucher_codes")
       .update({ is_active: !currentStatus })
       .eq("id", voucherId);
 
-    setVouchers((prev) =>
-      prev.map((v) => (v.id === voucherId ? { ...v, is_active: !currentStatus } : v)),
-    );
+    if (error) {
+      toast.error("Nu am putut actualiza voucherul. Reîncearcă.");
+      return;
+    }
+
+    await refreshVouchers(userId);
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const { error } = await supabase
+      .from("voucher_codes")
+      .delete()
+      .eq("id", deleteTarget.id);
+    setDeleting(false);
+    setDeleteTarget(null);
+
+    if (error) {
+      toast.error("Voucherul nu poate fi șters (a fost folosit). Îl poți dezactiva.");
+      return;
+    }
+
+    toast.success("Voucher șters.");
+    await refreshVouchers(userId);
   }
 
   function formatDiscount(v: Voucher) {
