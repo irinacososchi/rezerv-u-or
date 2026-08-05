@@ -463,13 +463,52 @@ function VouchersPage() {
                           )}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => toggleVoucher(v.id, v.is_active)}
-                          >
-                            {v.is_active ? "Dezactivează" : "Activează"}
-                          </Button>
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => toggleVoucher(e, v.id, v.is_active)}
+                            >
+                              {v.is_active ? "Dezactivează" : "Activează"}
+                            </Button>
+                            {(v.times_used ?? 0) > 0 ? (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="inline-flex">
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        disabled
+                                        aria-label="Șterge voucher"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    Voucherele folosite nu pot fi șterse. Le poți dezactiva.
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            ) : (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                aria-label="Șterge voucher"
+                                className="text-destructive hover:text-destructive"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setDeleteTarget(v);
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
