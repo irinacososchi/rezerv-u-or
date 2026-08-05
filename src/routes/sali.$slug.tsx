@@ -1752,14 +1752,20 @@ function CalendarMonth({
         {cells.map((d, i) => {
           if (!d) return <div key={i} className="aspect-square" />;
           const disabled = isDisabled(d);
+          const fullyBooked = !!isFullyBooked?.(d);
           const isActive = selected && isSameDay(d, selected);
           const isInMultiSelection = multiSelected.some((md) => isSameDay(md, d));
-          return (
+          const cell = (
             <button
-              key={i}
+              type="button"
               disabled={disabled}
               onClick={() => onSelect(d)}
-              className={`aspect-square rounded-md text-sm transition ${
+              aria-label={
+                fullyBooked
+                  ? `${d.getDate()} — complet rezervat`
+                  : undefined
+              }
+              className={`aspect-square w-full rounded-md text-sm transition ${
                 isActive
                   ? "bg-primary text-primary-foreground font-semibold"
                   : isInMultiSelection
@@ -1772,8 +1778,17 @@ function CalendarMonth({
               {d.getDate()}
             </button>
           );
+          if (fullyBooked) {
+            return (
+              <span key={i} title="Complet rezervat" className="block">
+                {cell}
+              </span>
+            );
+          }
+          return <div key={i}>{cell}</div>;
         })}
       </div>
     </div>
+
   );
 }
