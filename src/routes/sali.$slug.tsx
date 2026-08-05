@@ -1131,6 +1131,8 @@ function RoomDetailsPage() {
                         )
                       }
                       isDisabled={isDayDisabled}
+                      isFullyBooked={isDayFullyBooked}
+
                       selected={activeDay?.date ?? null}
                       multiSelected={daySelections.map((ds) => ds.date)}
                       onSelect={(d) => {
