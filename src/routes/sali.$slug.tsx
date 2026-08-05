@@ -1085,13 +1085,6 @@ function RoomDetailsPage() {
                       </p>
                     ) : (
                       <>
-                        <p className="mt-2 text-xs text-muted-foreground">
-                          {!activeDay.selectedStart
-                            ? "Apasă ora de început."
-                            : !activeDay.selectedEnd
-                              ? `Selectează ora de final (start: ${activeDay.selectedStart}).`
-                              : `Interval: ${activeDay.selectedStart} – ${activeDay.selectedEnd}. Apasă „Confirmă interval" sau ajustează cu „:30".`}
-                        </p>
                         <div className="mt-2 grid grid-cols-3 md:grid-cols-4 gap-x-2 gap-y-3">
                           {hourPoints.map((h) => {
                             const hh = String(h).padStart(2, "0");
@@ -1226,6 +1219,13 @@ function RoomDetailsPage() {
                             );
                           })}
                         </div>
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          {!activeDay.selectedStart
+                            ? "Apasă ora de început."
+                            : !activeDay.selectedEnd
+                              ? `Selectează ora de final (start: ${activeDay.selectedStart}).`
+                              : `Interval: ${activeDay.selectedStart} – ${activeDay.selectedEnd}. Apasă „Confirmă interval" sau ajustează cu „:30".`}
+                        </p>
                         {activeDay.selectedStart && activeDay.selectedEnd && (
                           <div className="mt-3 flex gap-2">
                             <button
