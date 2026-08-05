@@ -670,6 +670,25 @@ function CheckoutPage() {
     [allSlotsToCreate, excludedSlotKeys],
   );
 
+  // Applied rates (display only) — from the server RPC
+  const rateIntervals = useMemo<RateInterval[]>(() => {
+    if (!room?.id || finalSlotsToCreate.length === 0) return [];
+    // For recurring series all sessions share the same weekday/interval:
+    // one lookup on the first session is enough.
+    const source = isRecurringView ? [finalSlotsToCreate[0]] : finalSlotsToCreate;
+    const seen = new Set<string>();
+    const out: RateInterval[] = [];
+    for (const s of source) {
+      const k = `${s.date}|${s.start}|${s.end}`;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      out.push({ roomId: room.id as string, date: s.date, start: s.start, end: s.end });
+    }
+    return out.slice(0, 12);
+  }, [room?.id, finalSlotsToCreate, isRecurringView]);
+  const rateRows = useRateBreakdown(rateIntervals);
+
+
   function toggleSlotExclusion(s: ParsedSlot) {
     const key = slotKey(s);
     setExcludedSlotKeys((prev) => {
