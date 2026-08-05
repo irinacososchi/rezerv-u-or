@@ -1090,11 +1090,23 @@ function CheckoutPage() {
 
       if (rpcErr) {
         setSubmitting(false);
-        const msg = rpcErr.message || "Nu am putut crea rezervarea. Reîncearcă.";
+        const raw = rpcErr.message || "";
+        if (/num[ăa]rul maxim de utiliz/i.test(raw)) {
+          setVoucher(null);
+          setVoucherInput("");
+          setVoucherError("Acest voucher a atins numărul maxim de utilizări.");
+          const msg =
+            "Voucherul a atins numărul maxim de utilizări. L-am eliminat — poți continua fără el.";
+          setSubmitError(msg);
+          toast.error(msg);
+          return;
+        }
+        const msg = raw || "Nu am putut crea rezervarea. Reîncearcă.";
         setSubmitError(msg);
         toast.error(msg);
         return;
       }
+
 
       const result = (Array.isArray(rpcData) ? rpcData[0] : rpcData) as
         | { booking_id?: string; reference?: string; total?: number; status?: string }
