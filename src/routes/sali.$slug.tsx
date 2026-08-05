@@ -292,7 +292,7 @@ function RoomDetailsPage() {
             .select("booking_date, start_time, end_time, status")
             .eq("room_id", roomData.id)
             .gte("booking_date", todayISO)
-            .lte("booking_date", sixtyISO)
+            .lte("booking_date", horizonISO)
             .not("status", "in", '("refuzată","anulată","expirată")'),
         ]);
 
