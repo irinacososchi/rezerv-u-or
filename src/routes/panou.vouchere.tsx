@@ -516,6 +516,60 @@ function VouchersPage() {
                   </TableBody>
                 </Table>
               </div>
+
+              {/* Mobile card list */}
+              <div className="md:hidden space-y-3">
+                {vouchers.map((v) => (
+                  <div key={v.id} className="rounded-lg border border-border p-4 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="font-mono font-bold break-all">{v.code}</span>
+                      {v.is_active ? (
+                        <Badge className="bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/20 border-transparent shrink-0">
+                          Activ
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="shrink-0">Inactiv</Badge>
+                      )}
+                    </div>
+                    <div className="text-sm text-muted-foreground space-y-1">
+                      <div className="break-words">Reducere: {formatDiscount(v)}</div>
+                      <div className="break-words">Aplicabil la: {formatScope(v)}</div>
+                      <div>Utilizări: {formatUses(v)}</div>
+                      <div>Valabil până la: {formatDate(v.valid_until)}</div>
+                    </div>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => toggleVoucher(e, v.id, v.is_active)}
+                      >
+                        {v.is_active ? "Dezactivează" : "Activează"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        aria-label="Șterge voucher"
+                        disabled={(v.times_used ?? 0) > 0}
+                        className="text-destructive hover:text-destructive"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setDeleteTarget(v);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    {(v.times_used ?? 0) > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Voucherele folosite nu pot fi șterse. Le poți dezactiva.
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+              </>
             )}
           </CardContent>
         </Card>
