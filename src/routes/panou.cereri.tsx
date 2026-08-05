@@ -617,12 +617,12 @@ function CereriPage() {
                 return (
                 <div key={b.id} id={`booking-row-${b.id}`} className={`rounded-xl border bg-background p-4 ${highlightId === b.id ? "ring-2 ring-primary border-primary" : "border-border"}`}>
                   <div className="flex items-start justify-between gap-2 mb-3">
-                    <div>
-                      <span className="font-mono text-xs text-muted-foreground">#{b.reference}</span>
+                    <div className="min-w-0 break-words">
+                      <span className="font-mono text-xs text-muted-foreground break-all">#{b.reference}</span>
                       {b.is_recurring && <span className="ml-1.5 inline-block align-middle"><RecurringBadge /></span>}
                       {b.recurrence_id && !b.is_recurring && <span className="ml-1 text-xs text-primary">↻</span>}
-                      <div className="font-medium mt-0.5">{b.renter_name}</div>
-                      <div className="text-xs text-muted-foreground">{b.renter_phone}</div>
+                      <div className="font-medium mt-0.5 break-words">{b.renter_name}</div>
+                      <div className="text-xs text-muted-foreground break-all">{b.renter_phone}</div>
                     </div>
                     <StatusBadge status={b.status} />
                   </div>

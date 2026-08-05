@@ -589,7 +589,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
   if (loading) {
     return (
       <OwnerLayout>
-        <div className="p-6 md:p-8 space-y-6 max-w-4xl mx-auto">
+        <div className="p-4 md:p-8 space-y-6 max-w-4xl mx-auto">
           <Skeleton className="h-8 w-64" />
           <Skeleton className="h-64" />
           <Skeleton className="h-64" />
@@ -601,7 +601,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
   return (
     <OwnerLayout>
       <div className="pb-32">
-        <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-6">
+        <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
               <button
@@ -636,8 +636,8 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
                   Acesta este linkul pe care îl vei trimite clienților tăi.
                 </p>
 
-                <div className="flex items-center rounded-lg border border-border overflow-hidden focus-within:ring-2 focus-within:ring-primary/30">
-                  <div className="flex items-center gap-1 bg-muted/60 px-3 py-2.5 text-sm text-muted-foreground border-r border-border whitespace-nowrap select-none">
+                <div className="flex items-center min-w-0 rounded-lg border border-border overflow-hidden focus-within:ring-2 focus-within:ring-primary/30">
+                  <div className="flex shrink-0 items-center gap-1 bg-muted/60 px-3 py-2.5 text-sm text-muted-foreground border-r border-border whitespace-nowrap select-none">
                     rzrv.ro/sali/
                   </div>
 
@@ -654,7 +654,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
                     }}
                     onBlur={() => checkSlugAvailability(form.slug)}
                     placeholder="studio-dans-floreasca"
-                    className="flex-1 bg-background px-3 py-2.5 text-sm outline-none"
+                    className="flex-1 min-w-0 bg-background px-3 py-2.5 text-sm outline-none"
                     maxLength={80}
                   />
 
@@ -981,9 +981,10 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
               {schedule.map((row, idx) => (
                 <div
                   key={row.day_of_week}
-                  className="flex items-center gap-3 py-2 border-b last:border-0"
+                  className="flex flex-wrap items-center gap-x-3 gap-y-2 py-2 border-b last:border-0"
                 >
                   <Switch
+                    className="shrink-0"
                     checked={row.is_available}
                     onCheckedChange={(v) => {
                       const next = [...schedule];
@@ -991,11 +992,11 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
                       setSchedule(next);
                     }}
                   />
-                  <span className="w-24 text-sm font-medium">
+                  <span className="w-20 sm:w-24 shrink-0 text-sm font-medium">
                     {DAY_NAMES_RO[row.day_of_week]}
                   </span>
                   {row.is_available ? (
-                    <div className="flex items-center gap-2 flex-1">
+                    <div className="flex min-w-0 basis-full sm:basis-auto sm:flex-1 items-center gap-2">
                       <Input
                         type="time"
                         value={row.open_time}
@@ -1004,9 +1005,9 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
                           next[idx] = { ...row, open_time: e.target.value };
                           setSchedule(next);
                         }}
-                        className="w-32"
+                        className="min-w-0 flex-1 sm:w-32 sm:flex-none px-2"
                       />
-                      <span className="text-muted-foreground">–</span>
+                      <span className="text-muted-foreground shrink-0">–</span>
                       <Input
                         type="time"
                         value={row.close_time}
@@ -1015,7 +1016,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
                           next[idx] = { ...row, close_time: e.target.value };
                           setSchedule(next);
                         }}
-                        className="w-32"
+                        className="min-w-0 flex-1 sm:w-32 sm:flex-none px-2"
                       />
                     </div>
                   ) : (
@@ -1115,25 +1116,26 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
                       <span className="text-sm">Interval orar specific</span>
                     </label>
                     {rule.has_time_window && (
-                      <div className="flex items-center gap-2">
+                      <div className="flex min-w-0 items-center gap-2">
                         <Input
                           type="time"
                           value={rule.start_time ?? ""}
                           onChange={(e) =>
                             updatePricing(rule._key, { start_time: e.target.value })
                           }
-                          className="w-32"
+                          className="min-w-0 flex-1 sm:w-32 sm:flex-none px-2"
                         />
-                        <span className="text-muted-foreground">–</span>
+                        <span className="text-muted-foreground shrink-0">–</span>
                         <Input
                           type="time"
                           value={rule.end_time ?? ""}
                           onChange={(e) =>
                             updatePricing(rule._key, { end_time: e.target.value })
                           }
-                          className="w-32"
+                          className="min-w-0 flex-1 sm:w-32 sm:flex-none px-2"
                         />
                       </div>
+
                     )}
                     <div className="flex items-center justify-between">
                       <label className="flex items-center gap-2 cursor-pointer">

@@ -220,7 +220,7 @@ export function ClientList({ context, pageTitle }: Props) {
                   </div>
                   <div className="text-sm text-muted-foreground space-y-1">
                     <div>Telefon: {c.phone || "—"}</div>
-                    <div>Email: {c.email || "—"}</div>
+                    <div className="break-words">Email: {c.email || "—"}</div>
                     {c.notes && <div className="line-clamp-2">Note: {c.notes}</div>}
                   </div>
                   {renderActions(c)}

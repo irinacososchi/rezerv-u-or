@@ -257,7 +257,7 @@ function DashboardPage() {
   if (loading) {
     return (
       <OwnerLayout>
-        <div className="p-6 md:p-8 space-y-6">
+        <div className="p-4 md:p-8 space-y-6">
           <Skeleton className="h-8 w-48" />
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-28" />)}
@@ -271,7 +271,7 @@ function DashboardPage() {
   if (rooms.length === 0) {
     return (
       <OwnerLayout>
-        <div className="p-6 md:p-8 max-w-2xl mx-auto text-center space-y-4 py-20">
+        <div className="p-4 md:p-8 max-w-2xl mx-auto text-center space-y-4 py-20">
           <Building2 className="h-12 w-12 mx-auto text-muted-foreground" />
           <h1 className="text-2xl font-semibold">Nu ai adăugat nicio sală încă.</h1>
           <p className="text-muted-foreground">Adaugă prima ta sală pentru a începe să primești rezervări.</p>
@@ -285,7 +285,7 @@ function DashboardPage() {
 
   return (
     <OwnerLayout>
-      <div className="p-6 md:p-8 space-y-8">
+      <div className="p-4 md:p-8 space-y-8">
         <div>
           <h1 className="text-2xl md:text-3xl font-semibold">Dashboard</h1>
           <p className="text-muted-foreground mt-1">Privire de ansamblu asupra rezervărilor tale.</p>
