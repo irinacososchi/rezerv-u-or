@@ -1434,24 +1434,13 @@ function CheckoutPage() {
                 </>
               )}
 
-              {!isRecurringView && (() => {
-                const allLabels = new Set<string>();
-                for (const s of finalSlotsToCreate) {
-                  const startMin = timeToMinutes(s.start);
-                  const endMin = timeToMinutes(s.end);
-                  const date = parseISODate(s.date);
-                  for (let m = startMin; m < endMin; m += SLOT_GRANULARITY_MINUTES) {
-                    const detail = getPriceForSlotDetailed(date, minutesToTime(m), pricing);
-                    if (detail.label) allLabels.add(detail.label);
-                  }
-                }
-                if (allLabels.size === 0) return null;
-                return (
-                  <p className="text-xs text-muted-foreground mt-1 text-right">
-                    Tarife aplicate: {Array.from(allLabels).join(", ")}
-                  </p>
-                );
-              })()}
+              {rateRows.length > 0 && (
+                <div className="mt-3 border-t border-border pt-3">
+                  <RateBreakdown rows={rateRows} currency={currency} />
+                </div>
+              )}
+
+
 
               {checkingAvailability && (
                 <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
