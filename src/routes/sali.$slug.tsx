@@ -1686,6 +1686,7 @@ function CalendarMonth({
   onPrev,
   onNext,
   isDisabled,
+  isFullyBooked,
   selected,
   onSelect,
   multiSelected = [],
@@ -1694,10 +1695,12 @@ function CalendarMonth({
   onPrev: () => void;
   onNext: () => void;
   isDisabled: (d: Date) => boolean;
+  isFullyBooked?: (d: Date) => boolean;
   selected: Date | null;
   onSelect: (d: Date) => void;
   multiSelected?: Date[];
 }) {
+
   const monthName = month.toLocaleDateString("ro-RO", {
     month: "long",
     year: "numeric",
