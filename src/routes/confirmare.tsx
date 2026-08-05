@@ -30,6 +30,8 @@ export const Route = createFileRoute("/confirmare")({
 type BookingFull = {
   id: string;
   reference: string;
+  room_id?: string | null;
+
   guest_name: string;
   guest_email: string;
   guest_phone: string;
