@@ -363,24 +363,32 @@ function DashboardPage() {
                         <BookingTimestamps createdAt={b.created_at} updatedAt={b.updated_at} />
                       </div>
                       <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => handleDecision(b.id, "confirmată")}
-                          disabled={actionId === b.id}
-                        >
-                          <Check className="h-4 w-4" />
-                          Aprobă
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDecision(b.id, "refuzată")}
-                          disabled={actionId === b.id}
-                          className="border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
-                        >
-                          <X className="h-4 w-4" />
-                          Refuză
-                        </Button>
+                        {isBookingLocked(b.booking_date) ? (
+                          <span className="text-xs text-muted-foreground self-center">
+                            Rezervare arhivată — statusul nu mai poate fi modificat.
+                          </span>
+                        ) : (
+                          <>
+                            <Button
+                              size="sm"
+                              onClick={() => handleDecision(b.id, "confirmată")}
+                              disabled={actionId === b.id}
+                            >
+                              <Check className="h-4 w-4" />
+                              Aprobă
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDecision(b.id, "refuzată")}
+                              disabled={actionId === b.id}
+                              className="border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
+                            >
+                              <X className="h-4 w-4" />
+                              Refuză
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
