@@ -349,7 +349,7 @@ function RoomDetailsPage() {
   const minBookingDate = today0;
 
   /**
-   * Days (ISO "YYYY-MM-DD") within the loaded booking window (today → today+60)
+   * Days (ISO "YYYY-MM-DD") within the loaded booking window (today → today+CALENDAR_WINDOW_DAYS)
    * where EVERY 30-min slot between open_time and close_time is unavailable
    * (busy, or — for today — inside the 2h buffer). Days outside the window are
    * never included, since no booking data is loaded for them.
