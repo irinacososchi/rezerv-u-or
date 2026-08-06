@@ -75,6 +75,12 @@ export function RecurringGroupCard({
   const pendingBookings = bookings.filter((b) => b.status === "în așteptare");
   const canApprove = pendingBookings.length > 0;
 
+  const seriesCreatedAt = bookings
+    .map((b) => b.created_at as string | null | undefined)
+    .filter((v): v is string => !!v)
+    .sort()[0];
+
+
 
   function toggleSelection(id: string) {
     setSelectedIds((prev) => {
