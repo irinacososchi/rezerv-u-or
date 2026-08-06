@@ -21,7 +21,8 @@ import {
   type County,
   type City,
 } from "@/data/locations";
-import { SearchX } from "lucide-react";
+import { useFavorites } from "@/hooks/use-favorites";
+import { SearchX, Heart } from "lucide-react";
 
 type SaliSearch = { county?: string; city?: string };
 
@@ -65,7 +66,10 @@ function SaliPage() {
   const [sound, setSound] = useState(false);
   const [barre, setBarre] = useState(false);
   const [parking, setParking] = useState(false);
+  const [onlyFavorites, setOnlyFavorites] = useState(false);
   const [rooms, setRooms] = useState<Room[]>([]);
+  const { isFavorite, toggleFavorite } = useFavorites();
+
 
   useEffect(() => {
     fetchRooms(100, { activeOnly: false })
@@ -100,9 +104,17 @@ function SaliPage() {
       if (sound && !r.hasSound) return false;
       if (barre && !r.hasBarre) return false;
       if (parking && !r.hasParking) return false;
+      if (onlyFavorites && !isFavorite(r.id)) return false;
       return true;
     });
-  }, [rooms, countyId, cityId, priceMin, priceMax, mirrors, sound, barre, parking]);
+  }, [rooms, countyId, cityId, priceMin, priceMax, mirrors, sound, barre, parking, onlyFavorites, isFavorite]);
+
+  // Favoritele primele, ordinea relativă păstrată (sortare stabilă)
+  const sorted = useMemo(() => {
+    return [...filtered].sort(
+      (a, b) => Number(isFavorite(b.id)) - Number(isFavorite(a.id)),
+    );
+  }, [filtered, isFavorite]);
 
   const reset = () => {
     setCountyId(null);
@@ -113,6 +125,7 @@ function SaliPage() {
     setSound(false);
     setBarre(false);
     setParking(false);
+    setOnlyFavorites(false);
   };
 
   return (
@@ -240,13 +253,22 @@ function SaliPage() {
                     />
                     Locuri de parcare
                   </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <Checkbox
+                      checked={onlyFavorites}
+                      onCheckedChange={(v) => setOnlyFavorites(Boolean(v))}
+                    />
+                    <Heart className="h-3.5 w-3.5 text-primary" />
+                    Favorite
+                  </label>
                 </div>
+
               </div>
             </aside>
 
             {/* Results */}
             <section>
-              {filtered.length === 0 ? (
+              {sorted.length === 0 ? (
                 <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card/50 px-6 py-20 text-center">
                   <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
                     <SearchX className="h-6 w-6 text-muted-foreground" />
@@ -262,8 +284,13 @@ function SaliPage() {
                 </div>
               ) : (
                 <div className="grid gap-6 sm:grid-cols-2">
-                  {filtered.map((r) => (
-                    <RoomCard key={r.id} room={r} />
+                  {sorted.map((r) => (
+                    <RoomCard
+                      key={r.id}
+                      room={r}
+                      isFavorite={isFavorite(r.id)}
+                      onToggleFavorite={toggleFavorite}
+                    />
                   ))}
                 </div>
               )}
