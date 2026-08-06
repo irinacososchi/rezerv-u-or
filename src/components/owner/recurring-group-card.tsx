@@ -18,6 +18,7 @@ import {
   type Booking,
 } from "@/lib/group-recurring-bookings";
 import { getDayOfWeek, DAY_NAMES_RO, parseISODate } from "@/lib/date-utils";
+import { BookingTimestamps } from "@/components/booking-timestamps";
 
 
 interface Props {
