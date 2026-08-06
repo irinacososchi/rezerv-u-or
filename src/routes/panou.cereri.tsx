@@ -161,7 +161,7 @@ function ActionButtons({
       )}
       {locked && (
         <span className="text-xs text-muted-foreground">
-          Rezervare arhivată — statusul nu mai poate fi modificat.
+          Rezervare arhivată&nbsp;
         </span>
       )}
     </div>
