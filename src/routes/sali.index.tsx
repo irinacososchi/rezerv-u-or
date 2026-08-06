@@ -268,24 +268,16 @@ function SaliPage() {
 
             {/* Results */}
             <section>
-              {filtered.length === 0 ? (
-                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card/50 px-6 py-20 text-center">
-                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                    <SearchX className="h-6 w-6 text-muted-foreground" />
-                  </span>
-                  <h3 className="mt-4 text-lg font-semibold">Niciun rezultat</h3>
-                  <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-                    Nu am găsit săli care să corespundă filtrelor selectate. Încearcă să
-                    ajustezi criteriile.
-                  </p>
-                  <Button onClick={reset} variant="outline" className="mt-5">
-                    Resetează filtrele
-                  </Button>
-                </div>
-              ) : (
+              {sorted.length === 0 ? (
+...
                 <div className="grid gap-6 sm:grid-cols-2">
-                  {filtered.map((r) => (
-                    <RoomCard key={r.id} room={r} />
+                  {sorted.map((r) => (
+                    <RoomCard
+                      key={r.id}
+                      room={r}
+                      isFavorite={isFavorite(r.id)}
+                      onToggleFavorite={toggleFavorite}
+                    />
                   ))}
                 </div>
               )}
