@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { MapPin } from "lucide-react";
+import { MapPin, Heart } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 
 export interface Room {
