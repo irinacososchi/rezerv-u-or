@@ -72,7 +72,13 @@ export function RecurringGroupCard({
   const weekday = DAY_NAMES_RO[getDayOfWeek(parseISODate(firstDate))];
   const timeRange = `${rep.start_time.slice(0, 5)}–${rep.end_time.slice(0, 5)}`;
 
-  const pendingBookings = bookings.filter((b) => b.status === "în așteptare");
+  // Serii mixte: sesiunile vechi (blocate) sunt excluse din acțiunile pe serie.
+  const pendingBookings = bookings.filter(
+    (b) => b.status === "în așteptare" && !isBookingLocked(b.booking_date),
+  );
+  const hasLockedPending = bookings.some(
+    (b) => b.status === "în așteptare" && isBookingLocked(b.booking_date),
+  );
   const canApprove = pendingBookings.length > 0;
 
   const seriesCreatedAt = bookings
