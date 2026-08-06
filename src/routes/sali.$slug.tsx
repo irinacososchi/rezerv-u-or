@@ -308,7 +308,11 @@ function RoomDetailsPage() {
       setSchedule((schedRes.data ?? []) as ScheduleRow[]);
       const pricingData = (priceRes.data ?? []) as PricingRule[];
       setPricing(pricingData);
+      if (bookRes.error) {
+        console.error("get_room_availability failed", bookRes.error);
+      }
       setBookings((bookRes.data ?? []) as Booking[]);
+
 
       if (pricingData.length === 0) {
         setUnavailable(true);
