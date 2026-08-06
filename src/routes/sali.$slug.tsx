@@ -188,6 +188,8 @@ function formatDurationRO(minutes: number): string {
   return `${hours} ${hourWord} și ${mins} minute`;
 }
 
+const CALENDAR_WINDOW_DAYS = 130;
+
 // ---------- Page ----------
 function RoomDetailsPage() {
   const { slug } = Route.useParams() as { slug: string };
@@ -261,7 +263,7 @@ function RoomDetailsPage() {
 
       const today = new Date();
       const todayISO = formatDateISO(today);
-      const sixtyISO = formatDateISO(addDays(today, 60));
+      const horizonISO = formatDateISO(addDays(today, CALENDAR_WINDOW_DAYS));
 
 
 
@@ -290,7 +292,7 @@ function RoomDetailsPage() {
             .select("booking_date, start_time, end_time, status")
             .eq("room_id", roomData.id)
             .gte("booking_date", todayISO)
-            .lte("booking_date", sixtyISO)
+            .lte("booking_date", horizonISO)
             .not("status", "in", '("refuzată","anulată","expirată")'),
         ]);
 
@@ -347,7 +349,7 @@ function RoomDetailsPage() {
   const minBookingDate = today0;
 
   /**
-   * Days (ISO "YYYY-MM-DD") within the loaded booking window (today → today+60)
+   * Days (ISO "YYYY-MM-DD") within the loaded booking window (today → today+CALENDAR_WINDOW_DAYS)
    * where EVERY 30-min slot between open_time and close_time is unavailable
    * (busy, or — for today — inside the 2h buffer). Days outside the window are
    * never included, since no booking data is loaded for them.
@@ -370,7 +372,7 @@ function RoomDetailsPage() {
     const todayEarliestStartMin =
       Math.ceil(cutoffMinRaw / SLOT_GRANULARITY_MINUTES) * SLOT_GRANULARITY_MINUTES;
 
-    for (let offset = 0; offset <= 60; offset++) {
+    for (let offset = 0; offset <= CALENDAR_WINDOW_DAYS; offset++) {
       const date = addDays(today0, offset);
       const sched = scheduleByDay.get(getDayOfWeek(date));
       if (!sched) continue;
