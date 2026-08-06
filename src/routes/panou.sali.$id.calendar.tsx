@@ -28,6 +28,8 @@ import {
   formatDateRO,
   parseISODate,
   addDays,
+  isBookingLocked,
+  canMarkPaid,
   DAY_NAMES_RO,
   MONTH_NAMES_RO,
   startOfMonth,
@@ -1298,6 +1300,8 @@ function BookingDetails({
     return new Date(y, m - 1, d, hh, mm).getTime();
   }, [details.booking_date, details.start_time]);
   const tariffLocked = bookingStartMs != null && bookingStartMs < Date.now() + 48 * 3600 * 1000;
+  const archived = isBookingLocked(details.booking_date);
+  const paidAllowed = canMarkPaid({ status: details.status });
 
   // Fetch full booking row (price_per_hour, discount_amount, renter_notes)
   useEffect(() => {
@@ -1606,28 +1610,32 @@ function BookingDetails({
       </div>
 
       <DialogFooter className="gap-2 sm:justify-between flex-wrap">
-        <div className="flex gap-2 flex-wrap">
-          <Button
-            variant="outline"
-            onClick={() => setEditingTime((v) => !v)}
-            disabled={busy}
-          >
-            {editingTime ? "Ascunde editor" : "Modifică intervalul"}
-          </Button>
-          {isPaid ? (
-            <Button variant="outline" onClick={togglePayment} disabled={busy}>
-              Marchează ca neplatit
-            </Button>
-          ) : (
+        <div className="flex gap-2 flex-wrap items-center">
+          {!archived && (
             <Button
-              onClick={togglePayment}
+              variant="outline"
+              onClick={() => setEditingTime((v) => !v)}
               disabled={busy}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
             >
-              Marchează ca plătit
+              {editingTime ? "Ascunde editor" : "Modifică intervalul"}
             </Button>
           )}
-          {details.status !== "anulată" && (
+          {(!archived || paidAllowed) && (
+            isPaid ? (
+              <Button variant="outline" onClick={togglePayment} disabled={busy}>
+                Marchează ca neplatit
+              </Button>
+            ) : (
+              <Button
+                onClick={togglePayment}
+                disabled={busy}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              >
+                Marchează ca plătit
+              </Button>
+            )
+          )}
+          {!archived && details.status !== "anulată" && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -1653,7 +1661,7 @@ function BookingDetails({
               </Tooltip>
             </TooltipProvider>
           )}
-          {details.status !== "anulată" && (
+          {!archived && details.status !== "anulată" && (
             recurrenceInfo ? (
               <Button
                 variant="destructive"
@@ -1671,6 +1679,11 @@ function BookingDetails({
                 Anulează rezervarea
               </Button>
             )
+          )}
+          {archived && (
+            <span className="text-xs text-muted-foreground">
+              Rezervare arhivată — statusul nu mai poate fi modificat.
+            </span>
           )}
         </div>
         <Button variant="outline" onClick={onClose}>

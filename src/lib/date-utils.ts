@@ -68,3 +68,15 @@ export function parseISODate(s: string): Date {
   const [y, m, d] = s.split("-").map((n) => parseInt(n, 10));
   return new Date(y, m - 1, d);
 }
+
+// Perioadă de grație: rezervările de azi și de ieri rămân editabile.
+// Cele de alaltăieri sau mai vechi sunt blocate (restricție doar de interfață).
+export function isBookingLocked(bookingDate?: string | null): boolean {
+  if (!bookingDate) return false;
+  return bookingDate < formatDateISO(addDays(new Date(), -1));
+}
+
+// Excepție: o rezervare confirmată poate fi marcată plătită/neplătită și când e blocată.
+export function canMarkPaid(booking: { status?: string | null }): boolean {
+  return booking.status === "confirmată";
+}

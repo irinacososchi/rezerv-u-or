@@ -17,7 +17,7 @@ import {
   getGroupStatusLabel,
   type Booking,
 } from "@/lib/group-recurring-bookings";
-import { getDayOfWeek, DAY_NAMES_RO, parseISODate } from "@/lib/date-utils";
+import { getDayOfWeek, DAY_NAMES_RO, parseISODate, isBookingLocked } from "@/lib/date-utils";
 import { BookingTimestamps } from "@/components/booking-timestamps";
 
 
@@ -72,7 +72,13 @@ export function RecurringGroupCard({
   const weekday = DAY_NAMES_RO[getDayOfWeek(parseISODate(firstDate))];
   const timeRange = `${rep.start_time.slice(0, 5)}–${rep.end_time.slice(0, 5)}`;
 
-  const pendingBookings = bookings.filter((b) => b.status === "în așteptare");
+  // Serii mixte: sesiunile vechi (blocate) sunt excluse din acțiunile pe serie.
+  const pendingBookings = bookings.filter(
+    (b) => b.status === "în așteptare" && !isBookingLocked(b.booking_date),
+  );
+  const hasLockedPending = bookings.some(
+    (b) => b.status === "în așteptare" && isBookingLocked(b.booking_date),
+  );
   const canApprove = pendingBookings.length > 0;
 
   const seriesCreatedAt = bookings
@@ -83,6 +89,8 @@ export function RecurringGroupCard({
 
 
   function toggleSelection(id: string) {
+    // Sesiunile blocate (arhivate) nu pot fi selectate.
+    if (!pendingBookings.some((b) => b.id === id)) return;
     setSelectedIds((prev) => {
       const n = new Set(prev);
       if (n.has(id)) n.delete(id);
@@ -103,7 +111,11 @@ export function RecurringGroupCard({
     e?.preventDefault();
     setProcessing(true);
     try {
-      await onApproveAll(groupId);
+      if (hasLockedPending) {
+        await onApproveSelected(pendingBookings.map((b) => b.id));
+      } else {
+        await onApproveAll(groupId);
+      }
     } finally {
       setProcessing(false);
     }
@@ -113,7 +125,11 @@ export function RecurringGroupCard({
     e?.preventDefault();
     setProcessing(true);
     try {
-      await onRefuseAll(groupId);
+      if (hasLockedPending) {
+        await onRefuseSelected(pendingBookings.map((b) => b.id));
+      } else {
+        await onRefuseAll(groupId);
+      }
     } finally {
       setProcessing(false);
     }
