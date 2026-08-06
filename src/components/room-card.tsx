@@ -63,7 +63,27 @@ export function RoomCard({
             </span>
           </>
         )}
+        {onToggleFavorite && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onToggleFavorite(room.id);
+            }}
+            aria-label={isFavorite ? "Elimină de la favorite" : "Adaugă la favorite"}
+            aria-pressed={!!isFavorite}
+            className="absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-background/80 shadow-sm backdrop-blur transition hover:bg-background cursor-pointer"
+          >
+            <Heart
+              className={`h-4.5 w-4.5 transition ${
+                isFavorite ? "fill-primary text-primary" : "text-muted-foreground"
+              }`}
+            />
+          </button>
+        )}
       </div>
+
       <div className="flex flex-1 flex-col gap-3 p-5">
         <div>
           <h3 className="text-lg font-semibold tracking-tight">{room.name}</h3>
