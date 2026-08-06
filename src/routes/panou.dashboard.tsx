@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatDateRO, parseISODate } from "@/lib/date-utils";
+import { formatDateRO, parseISODate, isBookingLocked } from "@/lib/date-utils";
 import { BookingTimestamps } from "@/components/booking-timestamps";
 import {
   groupRecurringBookings,
