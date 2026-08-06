@@ -101,10 +101,15 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
     let cancelled = false;
     async function checkAuth() {
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+        const { data, error } = await supabase.auth.getSession();
         if (cancelled) return;
+        if (error) {
+          // Eroare tranzitorie (rețea) — NU deloga utilizatorul.
+          console.error("Session read failed:", error);
+          setChecking(false);
+          return;
+        }
+        const user = data.session?.user ?? null;
         if (!user) {
           navigate({ to: "/login" });
           return;
@@ -118,8 +123,8 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
         if (cancelled) return;
         setOwnerName(profile?.full_name ?? "Proprietar");
       } catch (err) {
+        // Eroare de rețea / profil — rămânem autentificați.
         console.error("Auth check failed:", err);
-        if (!cancelled) navigate({ to: "/login" });
       } finally {
         if (!cancelled) setChecking(false);
       }
