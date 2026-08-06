@@ -35,7 +35,13 @@ export function ClientList({ context, pageTitle }: Props) {
 
   async function fetchClients() {
     setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError) {
+      console.error("Session read failed:", sessionError);
+      setLoading(false);
+      return;
+    }
+    const user = sessionData.session?.user ?? null;
     if (!user) {
       navigate({ to: "/login" });
       return;
