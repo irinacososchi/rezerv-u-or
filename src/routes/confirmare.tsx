@@ -293,7 +293,7 @@ function ConfirmarePage() {
           </h1>
           <p className="mt-3 text-muted-foreground">
             {isConfirmed
-              ? "Vei primi detaliile pe email și WhatsApp."
+              ? "Vei primi detaliile pe email."
               : "Proprietarul va confirma în curând. Vei fi notificat pe email."}
           </p>
         </div>
