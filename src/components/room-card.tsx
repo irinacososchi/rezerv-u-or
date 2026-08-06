@@ -22,7 +22,15 @@ export interface Room {
   googleMapsUrl: string | null;
 }
 
-export function RoomCard({ room }: { room: Room }) {
+export function RoomCard({
+  room,
+  isFavorite,
+  onToggleFavorite,
+}: {
+  room: Room;
+  isFavorite?: boolean;
+  onToggleFavorite?: (roomId: string) => void;
+}) {
   const navigate = useNavigate();
   const inactive = !room.isActive;
 
