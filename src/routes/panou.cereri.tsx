@@ -108,7 +108,7 @@ function ActionButtons({
           <button
             onClick={() => onAction(booking.id, "refuza")}
             disabled={loading}
-            className="rounded-md border border-border px-2 py-1 text-xs text-muted-foreground hover:bg-muted/40 transition disabled:opacity-50"
+            className="rounded-md border border-red-200 px-2 py-1 text-xs text-red-600 hover:bg-red-50 transition disabled:opacity-50"
           >
             Refuză
           </button>
