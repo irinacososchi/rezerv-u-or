@@ -104,9 +104,17 @@ function SaliPage() {
       if (sound && !r.hasSound) return false;
       if (barre && !r.hasBarre) return false;
       if (parking && !r.hasParking) return false;
+      if (onlyFavorites && !isFavorite(r.id)) return false;
       return true;
     });
-  }, [rooms, countyId, cityId, priceMin, priceMax, mirrors, sound, barre, parking]);
+  }, [rooms, countyId, cityId, priceMin, priceMax, mirrors, sound, barre, parking, onlyFavorites, isFavorite]);
+
+  // Favoritele primele, ordinea relativă păstrată (sortare stabilă)
+  const sorted = useMemo(() => {
+    return [...filtered].sort(
+      (a, b) => Number(isFavorite(b.id)) - Number(isFavorite(a.id)),
+    );
+  }, [filtered, isFavorite]);
 
   const reset = () => {
     setCountyId(null);
