@@ -1672,7 +1672,7 @@ function BookingDetails({
                 }}
                 disabled={busy}
               >
-                Anulează rezervarea...
+                Anulează / Suspendă
               </Button>
             ) : (
               <Button variant="destructive" onClick={cancelSingle} disabled={busy}>
