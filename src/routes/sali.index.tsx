@@ -66,7 +66,10 @@ function SaliPage() {
   const [sound, setSound] = useState(false);
   const [barre, setBarre] = useState(false);
   const [parking, setParking] = useState(false);
+  const [onlyFavorites, setOnlyFavorites] = useState(false);
   const [rooms, setRooms] = useState<Room[]>([]);
+  const { isFavorite, toggleFavorite } = useFavorites();
+
 
   useEffect(() => {
     fetchRooms(100, { activeOnly: false })
