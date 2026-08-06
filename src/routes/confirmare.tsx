@@ -53,6 +53,9 @@ type BookingFull = {
   room_address: string | null;
   room_city: string | null;
   room_currency: string | null;
+  booking_group_id?: string | null;
+  is_recurring?: boolean | null;
+  recurrence_id?: string | null;
 };
 
 function Shell({ children }: { children: React.ReactNode }) {
