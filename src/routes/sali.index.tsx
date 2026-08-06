@@ -22,7 +22,7 @@ import {
   type City,
 } from "@/data/locations";
 import { useFavorites } from "@/hooks/use-favorites";
-import { SearchX, Heart } from "lucide-react";
+import { SearchX } from "lucide-react";
 
 type SaliSearch = { county?: string; city?: string };
 
