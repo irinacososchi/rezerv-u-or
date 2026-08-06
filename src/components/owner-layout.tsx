@@ -350,14 +350,14 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
                   <SheetTitle className="truncate text-base">{ownerName}</SheetTitle>
                 </SheetHeader>
                 <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
-                  <a
-                    href="/"
+                  <Link
+                    to="/"
                     onClick={() => setMobileMenuOpen(false)}
                     className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
                   >
                     <Home className="h-4 w-4 shrink-0" />
                     <span>Acasă</span>
-                  </a>
+                  </Link>
 
                   {mobileOwnerItems.length > 0 && (
                     <div className="pt-3">
