@@ -1300,6 +1300,8 @@ function BookingDetails({
     return new Date(y, m - 1, d, hh, mm).getTime();
   }, [details.booking_date, details.start_time]);
   const tariffLocked = bookingStartMs != null && bookingStartMs < Date.now() + 48 * 3600 * 1000;
+  const archived = isBookingLocked(details.booking_date);
+  const paidAllowed = canMarkPaid({ status: details.status });
 
   // Fetch full booking row (price_per_hour, discount_amount, renter_notes)
   useEffect(() => {
