@@ -826,32 +826,27 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
               <div className="flex-1">
                 <h3 className="font-semibold">Tur virtual 360° (opțional)</h3>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Adaugă un link Google Maps 360° către sala ta. Chiriașii vor putea vedea
+                  Adaugă un link către un tur virtual al sălii tale. Chiriașii vor putea vedea
                   sala înainte să rezerve.
                 </p>
               </div>
             </div>
 
-            <Label htmlFor="virtual_tour_url">Link Google Maps</Label>
+            <Label htmlFor="virtual_tour_url">Link tur virtual</Label>
             <Input
               id="virtual_tour_url"
               type="text"
               value={form.virtual_tour_url}
               onChange={(e) => update("virtual_tour_url", e.target.value)}
-              placeholder="https://www.google.com/maps/place/..."
+              placeholder="https://..."
             />
             <details className="mt-3">
               <summary className="text-sm text-primary cursor-pointer hover:underline">
                 Cum obțin linkul?
               </summary>
-              <ol className="text-sm text-muted-foreground mt-2 ml-4 list-decimal space-y-1">
-                <li>Deschide Google Maps și caută sala ta</li>
-                <li>Click pe imaginea Street View / tur interior 360°</li>
-                <li>Apasă butonul <strong>Partajează</strong> (sau ⋮ → "Partajează sau încorporează imaginea")</li>
-                <li>Copiază linkul scurt afișat (începe cu <code>maps.app.goo.gl</code>) și lipește-l aici</li>
-              </ol>
               <p className="text-sm text-muted-foreground mt-2">
-                Acceptăm și linkul lung din bara de adrese a browserului.
+                Poți folosi orice link de tur virtual: Google Maps 360°, Matterport, YouTube,
+                site propriu etc. Copiază adresa URL și lipește-o aici.
               </p>
             </details>
           </div>
