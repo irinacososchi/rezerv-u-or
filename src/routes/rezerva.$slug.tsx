@@ -716,13 +716,11 @@ function CheckoutPage() {
     const minDate = dates.reduce((a, b) => (a < b ? a : b));
     const maxDate = dates.reduce((a, b) => (a > b ? a : b));
 
-    const { data, error } = await supabase
-      .from("bookings")
-      .select("booking_date, start_time, end_time, status")
-      .eq("room_id", room.id)
-      .gte("booking_date", minDate)
-      .lte("booking_date", maxDate)
-      .not("status", "in", '("refuzată","anulată","expirată")');
+    const { data, error } = await supabase.rpc("get_room_availability", {
+      p_room_id: room.id,
+      p_from: minDate,
+      p_to: maxDate,
+    });
 
     if (error) {
       console.error("availability check error:", error);
