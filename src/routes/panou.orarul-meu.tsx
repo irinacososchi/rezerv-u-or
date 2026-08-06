@@ -93,7 +93,8 @@ function OrarulMeu() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data: { user: u } } = await supabase.auth.getUser();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const u = sessionData.session?.user ?? null;
       if (cancelled) return;
       if (!u) {
         navigate({ to: "/login" as never });

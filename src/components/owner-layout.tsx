@@ -101,10 +101,15 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
     let cancelled = false;
     async function checkAuth() {
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+        const { data, error } = await supabase.auth.getSession();
         if (cancelled) return;
+        if (error) {
+          // Eroare tranzitorie (rețea) — NU deloga utilizatorul.
+          console.error("Session read failed:", error);
+          setChecking(false);
+          return;
+        }
+        const user = data.session?.user ?? null;
         if (!user) {
           navigate({ to: "/login" });
           return;
@@ -118,8 +123,8 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
         if (cancelled) return;
         setOwnerName(profile?.full_name ?? "Proprietar");
       } catch (err) {
+        // Eroare de rețea / profil — rămânem autentificați.
         console.error("Auth check failed:", err);
-        if (!cancelled) navigate({ to: "/login" });
       } finally {
         if (!cancelled) setChecking(false);
       }
@@ -188,9 +193,9 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
     const Icon = item.icon;
     const active = isActive(item.to);
     return (
-      <a
+      <Link
         key={item.to}
-        href={item.to}
+        to={item.to as never}
         onClick={() => setMobileMenuOpen(false)}
         className={
           "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors " +
@@ -201,7 +206,7 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
       >
         <Icon className="h-4 w-4 shrink-0" />
         <span className="truncate">{item.label}</span>
-      </a>
+      </Link>
     );
   };
 
@@ -212,9 +217,9 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
     const Icon = item.icon;
     const active = isActive(item.to);
     return (
-      <a
+      <Link
         key={item.to}
-        href={item.to}
+        to={item.to as never}
         title={collapsed ? item.label : undefined}
         className={
           "flex items-center gap-3 rounded-md text-sm transition-colors " +
@@ -226,7 +231,7 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
       >
         <Icon className="h-4 w-4 shrink-0" />
         {!collapsed && <span className="truncate">{item.label}</span>}
-      </a>
+      </Link>
     );
   };
 
@@ -345,14 +350,14 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
                   <SheetTitle className="truncate text-base">{ownerName}</SheetTitle>
                 </SheetHeader>
                 <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
-                  <a
-                    href="/"
+                  <Link
+                    to="/"
                     onClick={() => setMobileMenuOpen(false)}
                     className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
                   >
                     <Home className="h-4 w-4 shrink-0" />
                     <span>Acasă</span>
-                  </a>
+                  </Link>
 
                   {mobileOwnerItems.length > 0 && (
                     <div className="pt-3">

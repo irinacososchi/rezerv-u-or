@@ -31,9 +31,9 @@ export function useUserRole(): UserRoleState {
     if (typeof window === "undefined") return;
     let cancelled = false;
 
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getSession().then(({ data }) => {
       if (cancelled) return;
-      setUserId(data.user?.id ?? null);
+      setUserId(data.session?.user?.id ?? null);
     });
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
