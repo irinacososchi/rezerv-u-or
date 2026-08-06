@@ -287,13 +287,11 @@ function RoomDetailsPage() {
             .eq("room_id", roomData.id)
             .eq("is_active", true)
             .order("priority", { ascending: false }),
-          supabase
-            .from("bookings")
-            .select("booking_date, start_time, end_time, status")
-            .eq("room_id", roomData.id)
-            .gte("booking_date", todayISO)
-            .lte("booking_date", horizonISO)
-            .not("status", "in", '("refuzată","anulată","expirată")'),
+          supabase.rpc("get_room_availability", {
+            p_room_id: roomData.id,
+            p_from: todayISO,
+            p_to: horizonISO,
+          }),
         ]);
 
       if (cancelled) return;
@@ -310,7 +308,11 @@ function RoomDetailsPage() {
       setSchedule((schedRes.data ?? []) as ScheduleRow[]);
       const pricingData = (priceRes.data ?? []) as PricingRule[];
       setPricing(pricingData);
+      if (bookRes.error) {
+        console.error("get_room_availability failed", bookRes.error);
+      }
       setBookings((bookRes.data ?? []) as Booking[]);
+
 
       if (pricingData.length === 0) {
         setUnavailable(true);
