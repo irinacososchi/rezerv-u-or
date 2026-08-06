@@ -253,7 +253,16 @@ function SaliPage() {
                     />
                     Locuri de parcare
                   </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <Checkbox
+                      checked={onlyFavorites}
+                      onCheckedChange={(v) => setOnlyFavorites(Boolean(v))}
+                    />
+                    <Heart className="h-3.5 w-3.5 text-primary" />
+                    Favorite
+                  </label>
                 </div>
+
               </div>
             </aside>
 
