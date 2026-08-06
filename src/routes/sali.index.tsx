@@ -21,7 +21,8 @@ import {
   type County,
   type City,
 } from "@/data/locations";
-import { SearchX } from "lucide-react";
+import { useFavorites } from "@/hooks/use-favorites";
+import { SearchX, Heart } from "lucide-react";
 
 type SaliSearch = { county?: string; city?: string };
 
