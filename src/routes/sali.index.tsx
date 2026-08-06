@@ -125,6 +125,7 @@ function SaliPage() {
     setSound(false);
     setBarre(false);
     setParking(false);
+    setOnlyFavorites(false);
   };
 
   return (
