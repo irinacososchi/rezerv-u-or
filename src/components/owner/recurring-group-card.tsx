@@ -18,6 +18,7 @@ import {
   type Booking,
 } from "@/lib/group-recurring-bookings";
 import { getDayOfWeek, DAY_NAMES_RO, parseISODate } from "@/lib/date-utils";
+import { BookingTimestamps } from "@/components/booking-timestamps";
 
 
 interface Props {
@@ -73,6 +74,12 @@ export function RecurringGroupCard({
 
   const pendingBookings = bookings.filter((b) => b.status === "în așteptare");
   const canApprove = pendingBookings.length > 0;
+
+  const seriesCreatedAt = bookings
+    .map((b) => b.created_at as string | null | undefined)
+    .filter((v): v is string => !!v)
+    .sort()[0];
+
 
 
   function toggleSelection(id: string) {
@@ -172,6 +179,7 @@ export function RecurringGroupCard({
             {monthlyPrice.toFixed(2)} {currency}
           </span>
         </div>
+        <BookingTimestamps createdAt={seriesCreatedAt} className="mt-1" />
       </div>
 
       <div className="flex flex-wrap gap-2">
