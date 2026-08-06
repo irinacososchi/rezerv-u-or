@@ -41,11 +41,11 @@ Blocat = `booking_date < formatDateISO(azi - 1 zi)`, comparație pe string ISO (
 ## Ce voi implementa (la aprobare)
 
 1. **Helper comun** în `src/lib/date-utils.ts`:
-   - `isBookingLocked(bookingDate: string): boolean` — folosește `addDays(new Date(), -1)` + `formatDateISO`.
-   - `canMarkPaid(booking): boolean` — `!isBookingLocked(date) || status === "confirmată"`.
-2. **`panou.cereri.tsx` / `ActionButtons`**: dacă e blocată, ascund Aprobă, Refuză, Anulează, Reactivează, Pune în așteptare. Păstrez „Marchează plătit" doar pentru `confirmată`; „Marchează neplatit" rămâne pe rezervări `confirmată` (ascuns pe celelalte statusuri blocate). Adaug un text scurt: „Rezervare arhivată — statusul nu mai poate fi modificat."
+   - `isBookingLocked(bookingDate: string): boolean` — `bookingDate < formatDateISO(addDays(new Date(), -1))`, comparație pe string ISO.
+   - `canMarkPaid(booking): boolean` — `status === "confirmată"` (plata rămâne permisă și pe rezervări blocate, dar doar pe cele confirmate).
+2. **`panou.cereri.tsx` / `ActionButtons`**: dacă e blocată, ascund Aprobă, Refuză, Anulează, Reactivează, Pune în așteptare. Păstrez „Marchează plătit" / „Marchează neplatit" doar când statusul e `confirmată`. Adaug un text scurt: „Rezervare arhivată — statusul nu mai poate fi modificat."
 3. **`panou.dashboard.tsx`**: ascund Aprobă/Refuză pentru cererile cu dată blocată.
-4. **`recurring-group-card.tsx`**: pentru butoanele „pe serie", iau în calcul doar sesiunile neblocate; dacă nicio sesiune eligibilă nu e `în așteptare`, ascund butoanele. În modul selecție, sesiunile blocate nu pot fi selectate.
-5. **Dialogul din calendarul sălii**: ascund „Anulează rezervarea", „Modifică intervalul" și „Editează tarif" pe rezervări blocate; păstrez plata activă doar dacă statusul e `confirmată`.
+4. **`recurring-group-card.tsx` (serii mixte)**: o serie poate avea sesiuni trecute (blocate) și viitoare (editabile). „Aprobă seria" / „Refuză seria" acționează DOAR asupra sesiunilor în așteptare neblocate — dacă seria conține și sesiuni blocate, trimit explicit lista de ID-uri eligibile în loc de acțiunea pe tot grupul. Butoanele se ascund doar dacă nu rămâne nicio sesiune eligibilă. În modul selecție, sesiunile blocate nu pot fi selectate.
+5. **Dialogul din calendarul sălii**: ascund „Anulează rezervarea", „Modifică intervalul" și „Editează tarif" pe rezervări blocate; comutarea plății rămâne doar dacă statusul e `confirmată`. Blocarea existentă de 48h pentru tarif rămâne neschimbată.
 
 Nu modific baza de date, RLS sau RPC-urile — este strict o restricție de interfață.
