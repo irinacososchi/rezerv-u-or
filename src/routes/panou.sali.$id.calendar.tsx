@@ -28,6 +28,8 @@ import {
   formatDateRO,
   parseISODate,
   addDays,
+  isBookingLocked,
+  canMarkPaid,
   DAY_NAMES_RO,
   MONTH_NAMES_RO,
   startOfMonth,
