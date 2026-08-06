@@ -205,31 +205,36 @@ function DashboardPage() {
       return;
     }
 
-    // Un singur email de aprobare per serie recurentă.
-    if (newStatus === "confirmată") {
-      let recurrenceId: string | null = filter.recurrenceId ?? null;
-      if (!recurrenceId && filter.groupId) {
-        recurrenceId =
-          ((pendingList as any[]).find(
-            (b) =>
-              (b.recurrence_id === filter.groupId ||
-                b.booking_group_id === filter.groupId) &&
-              b.recurrence_id,
-          )?.recurrence_id as string | undefined) ?? null;
-      }
-      if (!recurrenceId && filter.ids) {
-        recurrenceId =
-          ((pendingList as any[]).find(
-            (b) => filter.ids!.includes(b.id) && b.recurrence_id,
-          )?.recurrence_id as string | undefined) ?? null;
-      }
-      if (recurrenceId) {
-        void supabase.functions
-          .invoke("send-booking-email", {
-            body: { type: "recurring-approved", recurrenceId },
-          })
-          .catch((err) => console.warn("recurring-approved email failed", err));
-      }
+    // Un singur email per serie recurentă (aprobare sau refuz).
+    let recurrenceId: string | null = filter.recurrenceId ?? null;
+    if (!recurrenceId && filter.groupId) {
+      recurrenceId =
+        ((pendingList as any[]).find(
+          (b) =>
+            (b.recurrence_id === filter.groupId ||
+              b.booking_group_id === filter.groupId) &&
+            b.recurrence_id,
+        )?.recurrence_id as string | undefined) ?? null;
+    }
+    if (!recurrenceId && filter.ids) {
+      recurrenceId =
+        ((pendingList as any[]).find(
+          (b) => filter.ids!.includes(b.id) && b.recurrence_id,
+        )?.recurrence_id as string | undefined) ?? null;
+    }
+
+    if (newStatus === "confirmată" && recurrenceId) {
+      void supabase.functions
+        .invoke("send-booking-email", {
+          body: { type: "recurring-approved", recurrenceId },
+        })
+        .catch((err) => console.warn("recurring-approved email failed", err));
+    } else if (newStatus === "refuzată" && recurrenceId) {
+      void supabase.functions
+        .invoke("send-booking-email", {
+          body: { type: "recurring-ended", recurrenceId, reason: "refused" },
+        })
+        .catch((err) => console.warn("recurring-ended email failed", err));
     }
 
     await loadDashboard();
