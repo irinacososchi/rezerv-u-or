@@ -372,7 +372,7 @@ function RoomDetailsPage() {
     const todayEarliestStartMin =
       Math.ceil(cutoffMinRaw / SLOT_GRANULARITY_MINUTES) * SLOT_GRANULARITY_MINUTES;
 
-    for (let offset = 0; offset <= 60; offset++) {
+    for (let offset = 0; offset <= CALENDAR_WINDOW_DAYS; offset++) {
       const date = addDays(today0, offset);
       const sched = scheduleByDay.get(getDayOfWeek(date));
       if (!sched) continue;
