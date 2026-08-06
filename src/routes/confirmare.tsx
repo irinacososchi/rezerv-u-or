@@ -53,6 +53,9 @@ type BookingFull = {
   room_address: string | null;
   room_city: string | null;
   room_currency: string | null;
+  booking_group_id?: string | null;
+  is_recurring?: boolean | null;
+  recurrence_id?: string | null;
 };
 
 function Shell({ children }: { children: React.ReactNode }) {
@@ -152,18 +155,23 @@ function ConfirmarePage() {
     }
     let cancelled = false;
     (async () => {
-      let query = supabase.from("bookings_full").select("*");
-      if (group) {
-        query = query.eq("booking_group_id", group).order("booking_date").order("start_time");
-      } else {
-        query = query.eq("reference", reference);
-      }
-      const { data, error } = await query;
+      const { data, error } = await supabase.rpc("get_booking_by_reference", {
+        p_reference: reference || null,
+        p_group: group || null,
+      } as never);
       if (cancelled) return;
-      if (error || !data || data.length === 0) {
+      const rows = (data ?? []) as BookingFull[];
+      if (error || rows.length === 0) {
         setNotFound(true);
       } else {
-        setBookings(data as BookingFull[]);
+        const sorted = group
+          ? [...rows].sort(
+              (a, b) =>
+                a.booking_date.localeCompare(b.booking_date) ||
+                a.start_time.localeCompare(b.start_time),
+            )
+          : rows;
+        setBookings(sorted);
       }
       setLoading(false);
     })();
