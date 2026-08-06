@@ -91,9 +91,11 @@ function ActionButtons({
   loading: boolean;
   onAction: (id: string, action: string) => void;
 }) {
+  const locked = isBookingLocked(booking.booking_date);
+  const paidAllowed = canMarkPaid(booking);
   return (
-    <div className="flex gap-1.5 flex-wrap">
-      {booking.status === "în așteptare" && (
+    <div className="flex gap-1.5 flex-wrap items-center">
+      {!locked && booking.status === "în așteptare" && (
         <>
           <button
             onClick={() => onAction(booking.id, "confirma")}
@@ -111,7 +113,7 @@ function ActionButtons({
           </button>
         </>
       )}
-      {booking.status === "confirmată" && (
+      {!locked && booking.status === "confirmată" && (
         <button
           onClick={() => onAction(booking.id, "anuleaza")}
           disabled={loading}
@@ -120,7 +122,7 @@ function ActionButtons({
           Anulează
         </button>
       )}
-      {(booking.status === "anulată" || booking.status === "refuzată" || booking.status === "expirată") && (
+      {!locked && (booking.status === "anulată" || booking.status === "refuzată" || booking.status === "expirată") && (
         <>
           <button
             onClick={() => onAction(booking.id, "confirma")}
@@ -138,7 +140,7 @@ function ActionButtons({
           </button>
         </>
       )}
-      {booking.payment_status === "neplatit" && booking.status === "confirmată" && (
+      {paidAllowed && booking.payment_status === "neplatit" && (
         <button
           onClick={() => onAction(booking.id, "platit")}
           disabled={loading}
@@ -147,7 +149,7 @@ function ActionButtons({
           Marchează plătit
         </button>
       )}
-      {booking.payment_status === "platit" && (
+      {paidAllowed && booking.payment_status === "platit" && (
         <button
           onClick={() => onAction(booking.id, "neplatit")}
           disabled={loading}
@@ -155,6 +157,11 @@ function ActionButtons({
         >
           Marchează neplatit
         </button>
+      )}
+      {locked && (
+        <span className="text-xs text-muted-foreground">
+          Rezervare arhivată — statusul nu mai poate fi modificat.
+        </span>
       )}
     </div>
   );
