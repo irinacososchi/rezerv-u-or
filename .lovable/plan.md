@@ -1,59 +1,30 @@
-# Bucla de login pe mobil în panoul de chiriaș — raport
+# Fix buclă de login pe mobil (Samsung Internet) în panou
 
-## Cum e păzită autentificarea azi (nu există route guard)
+Cauză confirmată: 4 apeluri `getUser()` paralele la deschiderea unei pagini de panou → refresh-uri concurente pe același refresh token (fără Web Locks în Samsung Internet) → „Refresh Token Already Used" → sesiunea e ștearsă local → redirect la `/login` → buclă.
 
-Nu există `beforeLoad`, loader sau layout `_authenticated`. Rutele `/panou/*` sunt publice; paza se face în componente, prin `useEffect` + `supabase.auth.getUser()`.
+## Modificări
 
-1. `src/components/owner-layout.tsx` (liniile 100-131) — wrapper-ul panoului:
-```
-const { data: { user } } = await supabase.auth.getUser();
-if (!user) { navigate({ to: "/login" }); return; }
-... fetch profiles ...
-catch (err) { navigate({ to: "/login" }); }
-```
-2. `src/routes/panou.orarul-meu.tsx` (liniile 92-105) — al doilea gard, identic:
-```
-const { data: { user: u } } = await supabase.auth.getUser();
-if (!u) { navigate({ to: "/login" }); return; }
-```
-3. `src/components/clients/ClientList.tsx` (liniile 36-41) — al treilea gard (folosit de `/panou/clienti-chirias` și `/panou/clienti-proprietar`):
-```
-const { data: { user } } = await supabase.auth.getUser();
-if (!user) { navigate({ to: "/login" }); return; }
-```
-4. `src/hooks/use-user-role.ts` și `src/hooks/use-notifications.ts` cheamă și ele `getUser()` la montare (rolul NU redirecționează; are `loading` propriu și e respectat de sidebar).
+1. `src/components/owner-layout.tsx` (garda din `useEffect`, ~100-131)
+   - `supabase.auth.getUser()` → `supabase.auth.getSession()`; se folosește `session.user`.
+   - Redirect la `/login` DOAR dacă `session === null` după rezolvare.
+   - `catch`: nu mai navighează la `/login`; doar `console.error` + `setChecking(false)` (eroare de rețea sau la citirea profilului nu deloghează).
 
-## Răspuns la întrebări
+2. `src/routes/panou.orarul-meu.tsx` (~92-105) — aceeași înlocuire cu `getSession()`; redirect doar când nu există sesiune.
 
-- Gardurile **așteaptă** (`await getUser()`), deci nu redirecționează într-o stare „loading" sincronă. Nu există aici bug-ul clasic „redirect while loading".
-- Rolul (`use-user-role`) **nu** provoacă redirect; doar ascunde/afișează itemi de meniu.
-- Deci ipoteza „guard rulează înainte de restaurarea sesiunii" nu se confirmă.
+3. `src/components/clients/ClientList.tsx` (~36-41) — aceeași înlocuire; la lipsa sesiunii redirect, la eroare de rețea doar oprire loading.
 
-## Cauza reală probabilă: curse între apeluri `getUser()` paralele fără Web Locks
+4. `src/hooks/use-user-role.ts` — `getUser()` → `getSession()` pentru stabilirea `userId` inițial; `onAuthStateChange` rămâne neschimbat.
 
-`getUser()` NU citește local — face un request de rețea la `/auth/v1/user`, iar dacă access-token-ul e expirat declanșează întâi un refresh cu rotația refresh-token-ului.
+5. `src/hooks/use-notifications.ts` — `getUser()` → `getSession()` în `fetchAll`; restul logicii neschimbat.
 
-La deschiderea `/panou/orarul-meu` pornesc **4 apeluri `getUser()` simultan** (owner-layout, pagina, use-user-role, use-notifications); la `/panou/clienti-*` tot 4 (ClientList în loc de pagină). Supabase-js serializează refresh-ul prin `navigator.locks`; Samsung Internet nu expune Web Locks în multe versiuni, deci se face fallback fără lock:
-
-- două refresh-uri pleacă în paralel cu același refresh token,
-- al doilea primește `Invalid Refresh Token: Already Used` (400),
-- clientul consideră sesiunea invalidă și o șterge din localStorage,
-- `getUser()` întoarce `user: null` → redirect `/login`,
-- utilizatorul se loghează din nou, revine în panou, se repetă → **buclă**.
-
-Se potrivește cu toate simptomele: pe desktop (Chrome, cu Web Locks) nu apare; un refresh manual al paginii de multe ori merge (token proaspăt, fără refresh concurent); sesiunea „pare" persistată până la intrarea în panou.
-
-Factor agravant: linkurile din sidebar sunt `<a href>` (nu `<Link>`), deci fiecare navigare în panou e full page load care re-declanșează toate cele 4 apeluri de rețea.
-
-## Ce aș schimba (după aprobare)
-
-1. Un singur punct de adevăr pentru sesiune: gardurile din `owner-layout`, `panou.orarul-meu`, `ClientList`, `use-user-role`, `use-notifications` folosesc `getSession()` (citire locală, fără rețea) în loc de `getUser()`, plus `onAuthStateChange`; nu 4 apeluri paralele de rețea.
-2. Redirect doar când sesiunea e clar absentă (`session === null` după rezolvare), niciodată pe eroare de rețea — în `owner-layout` blocul `catch` trimite azi la `/login` chiar și la o eroare de fetch a profilului.
-3. Sidebar: `<a href>` → `<Link>`, ca navigarea în panou să nu mai fie full reload.
-4. Opțional: un mic wrapper de sesiune (context) folosit de toate paginile de panou, ca gardul să existe într-un singur loc.
+6. Navigație client-side în panou: în `owner-layout.tsx`, itemii din sidebar desktop (`renderItem`) și din meniul burger mobil (`renderMobileItem`) trec de la `<a href>` la `<Link to>` din `@tanstack/react-router` (cu `onClick` de închidere a sheet-ului păstrat). Linkul „Acasă" din burger devine tot `<Link to="/">`. Butonul de logout rămâne cum e.
 
 ## Detalii tehnice
 
-- `getUser()` = network + posibil refresh; `getSession()` = citire din storage cu refresh doar dacă e expirat. Reducerea la un singur consumator elimină cursa indiferent de suportul Web Locks.
-- `@supabase/supabase-js` ^2.105.1, `persistSession: true`, `flowType: "implicit"`, storage `localStorage` (`src/integrations/supabase/external-client.ts`).
-- Nicio schimbare de backend, RLS sau schemă.
+- `getSession()` citește din `localStorage` și declanșează refresh doar dacă token-ul e expirat, deci nu mai există 4 refresh-uri concurente; pe desktop comportamentul rămâne identic.
+- Tipurile rutelor: `<Link to>` cu căi statice de panou este type-safe (rutele există deja); se elimină `as never`-urile de navigare doar unde nu mai e necesar.
+- Fără modificări de backend, RLS, schemă sau pagina de login.
+
+## Verificare
+
+Build după modificări; apoi test: login pe mobil → `/panou/orarul-meu` și `/panou/clienti-chirias` fără redirect; navigare între secțiuni fără reload complet; desktop neschimbat.
