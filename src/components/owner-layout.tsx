@@ -217,9 +217,9 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
     const Icon = item.icon;
     const active = isActive(item.to);
     return (
-      <a
+      <Link
         key={item.to}
-        href={item.to}
+        to={item.to as never}
         title={collapsed ? item.label : undefined}
         className={
           "flex items-center gap-3 rounded-md text-sm transition-colors " +
@@ -231,7 +231,7 @@ export function OwnerLayout({ children }: { children: React.ReactNode }) {
       >
         <Icon className="h-4 w-4 shrink-0" />
         {!collapsed && <span className="truncate">{item.label}</span>}
-      </a>
+      </Link>
     );
   };
 
