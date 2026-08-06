@@ -22,7 +22,7 @@ import {
   type City,
 } from "@/data/locations";
 import { useFavorites } from "@/hooks/use-favorites";
-import { SearchX, Heart } from "lucide-react";
+import { SearchX } from "lucide-react";
 
 type SaliSearch = { county?: string; city?: string };
 
@@ -258,7 +258,6 @@ function SaliPage() {
                       checked={onlyFavorites}
                       onCheckedChange={(v) => setOnlyFavorites(Boolean(v))}
                     />
-                    <Heart className="h-3.5 w-3.5 text-primary" />
                     Favorite
                   </label>
                 </div>
