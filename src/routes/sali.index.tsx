@@ -258,7 +258,6 @@ function SaliPage() {
                       checked={onlyFavorites}
                       onCheckedChange={(v) => setOnlyFavorites(Boolean(v))}
                     />
-                    <Heart className="h-3.5 w-3.5 text-primary" />
                     Favorite
                   </label>
                 </div>
