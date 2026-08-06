@@ -89,6 +89,8 @@ export function RecurringGroupCard({
 
 
   function toggleSelection(id: string) {
+    // Sesiunile blocate (arhivate) nu pot fi selectate.
+    if (!pendingBookings.some((b) => b.id === id)) return;
     setSelectedIds((prev) => {
       const n = new Set(prev);
       if (n.has(id)) n.delete(id);
