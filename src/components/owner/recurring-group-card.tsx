@@ -109,7 +109,11 @@ export function RecurringGroupCard({
     e?.preventDefault();
     setProcessing(true);
     try {
-      await onApproveAll(groupId);
+      if (hasLockedPending) {
+        await onApproveSelected(pendingBookings.map((b) => b.id));
+      } else {
+        await onApproveAll(groupId);
+      }
     } finally {
       setProcessing(false);
     }
@@ -119,7 +123,11 @@ export function RecurringGroupCard({
     e?.preventDefault();
     setProcessing(true);
     try {
-      await onRefuseAll(groupId);
+      if (hasLockedPending) {
+        await onRefuseSelected(pendingBookings.map((b) => b.id));
+      } else {
+        await onRefuseAll(groupId);
+      }
     } finally {
       setProcessing(false);
     }
