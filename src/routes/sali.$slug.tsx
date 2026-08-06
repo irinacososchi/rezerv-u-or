@@ -287,13 +287,11 @@ function RoomDetailsPage() {
             .eq("room_id", roomData.id)
             .eq("is_active", true)
             .order("priority", { ascending: false }),
-          supabase
-            .from("bookings")
-            .select("booking_date, start_time, end_time, status")
-            .eq("room_id", roomData.id)
-            .gte("booking_date", todayISO)
-            .lte("booking_date", horizonISO)
-            .not("status", "in", '("refuzată","anulată","expirată")'),
+          supabase.rpc("get_room_availability", {
+            p_room_id: roomData.id,
+            p_from: todayISO,
+            p_to: horizonISO,
+          }),
         ]);
 
       if (cancelled) return;
