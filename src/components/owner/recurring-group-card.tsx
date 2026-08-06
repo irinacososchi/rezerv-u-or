@@ -179,6 +179,7 @@ export function RecurringGroupCard({
             {monthlyPrice.toFixed(2)} {currency}
           </span>
         </div>
+        <BookingTimestamps createdAt={seriesCreatedAt} className="mt-1" />
       </div>
 
       <div className="flex flex-wrap gap-2">
