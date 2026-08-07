@@ -2489,6 +2489,13 @@ function ManualBookingForm({
 
     const allDates = isRecurrent ? generateWeeklyDatesHorizonISO(date) : [date];
 
+    const clientEmail = manualEmail.trim();
+    const canEmailClient =
+      clientEmail !== "" &&
+      !clientEmail.includes("@rezervari.intern") &&
+      !clientEmail.startsWith("noemail+");
+
+
     setManualSubmitting(true);
     setManualError(null);
 
