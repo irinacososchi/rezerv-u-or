@@ -1474,6 +1474,23 @@ function BookingDetails({
     }
     setBusy(false);
     if (ok) {
+      void supabase.functions
+        .invoke("send-booking-email", {
+          body: {
+            type: "recurring-ended",
+            recurrenceId: recurrenceInfo.id,
+            reason:
+              cancelScope === "suspend"
+                ? "suspended"
+                : cancelScope === "future"
+                  ? "cancelled_future"
+                  : cancelScope === "this"
+                    ? "cancelled_one"
+                    : "cancelled",
+            date: cancelScope === "suspend" ? cancelUntilDate : entry.booking_date,
+          },
+        })
+        .catch(console.warn);
       toast.success(successMsg);
       setCancelOpen(false);
       onChanged();
