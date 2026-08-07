@@ -2467,7 +2467,6 @@ function ManualBookingForm({
   const recurrenceDates = isRecurrent ? generateWeeklyDatesHorizonISO(date) : [];
 
   async function handleManualBooking() {
-    console.log("=== handleManualBooking START ===");
     if (!manualName.trim()) {
       setManualError("Completează numele clientului.");
       return;
@@ -2613,8 +2612,6 @@ function ManualBookingForm({
       return;
     }
 
-    console.log("RECURRING EMAIL DEBUG", { D_recurrenceId: recurrenceId, E_canEmail: canEmailClient, b_email: clientEmail, allDatesLength: allDates.length, H_isRecurrent: isRecurrent });
-    console.log("=== EMAIL CHECK ===", { recurrenceId, canEmailClient, clientEmail, insertedLength: inserted?.length });
     if (recurrenceId) {
       if (canEmailClient) {
         void supabase.functions
