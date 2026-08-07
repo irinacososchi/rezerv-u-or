@@ -170,6 +170,23 @@ export function BookingDetailsRenter({ booking, userEmail, onClose, onCancelled 
     }
     setBusy(false);
     if (ok) {
+      if (booking?.recurrence_id) {
+        void supabase.functions
+          .invoke("send-booking-email", {
+            body: {
+              type: "recurring-ended-owner",
+              recurrenceId: booking.recurrence_id,
+              reason:
+                mode === "suspend"
+                  ? "suspended"
+                  : mode === "future"
+                    ? "cancelled_future"
+                    : "cancelled_one",
+              date: mode === "suspend" ? untilDate : booking.booking_date,
+            },
+          })
+          .catch(console.warn);
+      }
       if (successMsg) toast.success(successMsg);
       setRecurringOpen(false);
       onCancelled();
