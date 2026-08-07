@@ -1058,7 +1058,7 @@ function RoomCalendarPage() {
                           }
                         }}
                         className={
-                          "min-h-[72px] border-l border-t -ml-px -mt-px text-left p-2 text-xs transition-colors cursor-pointer " +
+                          "min-w-0 min-h-[72px] border-l border-t -ml-px -mt-px text-left p-2 text-xs transition-colors cursor-pointer " +
                           (inMonth ? "" : "bg-muted/30 text-muted-foreground ") +
                           (hasBookings ? "bg-primary/15 hover:bg-primary/25 " : "hover:bg-muted/60 ") +
                           (hasBlocks && !hasBookings ? "ring-2 ring-orange-300 ring-inset " : "") +

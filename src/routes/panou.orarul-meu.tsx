@@ -513,7 +513,8 @@ function OrarulMeu() {
           </div>
         )}
 
-        {hasAnyForCurrentView && view === "month" && (
+        {hasAnyForCurrentView &&
+          (view === "month" || (isMobileViewport && view === "week")) && (
           <div className="border rounded-lg bg-card overflow-hidden">
             <div className="grid grid-cols-7 text-xs border-b">
               {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
@@ -537,7 +538,7 @@ function OrarulMeu() {
                   <div
                     key={dateISO}
                     className={
-                      "min-h-[96px] border-l border-t -ml-px -mt-px p-1.5 text-xs " +
+                      "min-w-0 min-h-[96px] border-l border-t -ml-px -mt-px p-1.5 text-xs " +
                       (inMonth ? "" : "bg-muted/30 text-muted-foreground ") +
                       (isToday ? "outline outline-2 outline-primary " : "")
                     }
