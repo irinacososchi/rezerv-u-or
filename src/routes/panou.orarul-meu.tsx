@@ -63,9 +63,12 @@ function cellClass(b: RenterBookingRow | undefined): string {
 
 function detectDefaultView(): ViewMode {
   if (typeof window === "undefined") return "week";
+  const isMobile = window.matchMedia("(max-width: 767px)").matches;
   const saved = window.localStorage.getItem(VIEW_KEY);
-  if (saved === "day" || saved === "week" || saved === "month") return saved;
-  return window.matchMedia("(max-width: 768px)").matches ? "day" : "week";
+  if (saved === "day" || saved === "week" || saved === "month") {
+    return isMobile && saved === "week" ? "month" : saved;
+  }
+  return isMobile ? "month" : "week";
 }
 
 function OrarulMeu() {
@@ -74,6 +77,11 @@ function OrarulMeu() {
   const [user, setUser] = useState<{ id: string; email: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [bookings, setBookings] = useState<RenterBookingRow[]>([]);
+  const [isMobileViewport, setIsMobileViewport] = useState(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia("(max-width: 767px)").matches
+      : false,
+  );
   const [view, setView] = useState<ViewMode>(() => detectDefaultView());
   const [selectedDay, setSelectedDay] = useState<Date>(() => {
     const d = new Date();
@@ -88,6 +96,21 @@ function OrarulMeu() {
   useEffect(() => {
     window.localStorage.setItem(VIEW_KEY, view);
   }, [view]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
+    const handleViewportChange = () => {
+      const mobile = mediaQuery.matches;
+      setIsMobileViewport(mobile);
+      if (mobile) {
+        setView((currentView) => (currentView === "week" ? "month" : currentView));
+      }
+    };
+
+    handleViewportChange();
+    mediaQuery.addEventListener("change", handleViewportChange);
+    return () => mediaQuery.removeEventListener("change", handleViewportChange);
+  }, []);
 
   // Auth + initial fetch
   useEffect(() => {
@@ -322,8 +345,12 @@ function OrarulMeu() {
           </div>
 
           <div className="inline-flex rounded-md border bg-card p-1 text-sm">
-            {(["day", "week", "month"] as const).map((v) => (
+            {(isMobileViewport
+              ? (["day", "month"] as const)
+              : (["day", "week", "month"] as const)
+            ).map((v) => (
               <button
+                type="button"
                 key={v}
                 className={
                   "px-3 py-1 rounded " +
@@ -404,7 +431,7 @@ function OrarulMeu() {
           </div>
         )}
 
-        {hasAnyForCurrentView && view === "week" && (
+        {hasAnyForCurrentView && view === "week" && !isMobileViewport && (
           <div className="border rounded-lg bg-card overflow-x-auto">
             <div className="min-w-[760px]">
               <div
