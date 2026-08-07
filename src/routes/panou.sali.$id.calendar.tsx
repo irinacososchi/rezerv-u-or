@@ -319,8 +319,18 @@ function RoomCalendarPage() {
 
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isMobileViewport, setIsMobileViewport] = useState(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia("(max-width: 767px)").matches
+      : false,
+  );
   const [view, setView] = useState<"day" | "week" | "month">(() => {
-    if (typeof window !== "undefined" && window.innerWidth < 1024) return "day";
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia("(max-width: 767px)").matches
+    ) {
+      return "month";
+    }
     return "week";
   });
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date()));
@@ -331,16 +341,21 @@ function RoomCalendarPage() {
     return d;
   });
 
-  // Auto-switch from week to day on small screens
+  // Keep the wide week grid unavailable on phone-sized viewports.
   useEffect(() => {
-    function handleResize() {
-      if (window.innerWidth < 1024 && view === "week") {
-        setView("day");
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
+    const handleViewportChange = () => {
+      const mobile = mediaQuery.matches;
+      setIsMobileViewport(mobile);
+      if (mobile) {
+        setView((currentView) => (currentView === "week" ? "month" : currentView));
       }
-    }
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [view]);
+    };
+
+    handleViewportChange();
+    mediaQuery.addEventListener("change", handleViewportChange);
+    return () => mediaQuery.removeEventListener("change", handleViewportChange);
+  }, []);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [pricingRules, setPricingRules] = useState<PricingRule[]>([]);
   const [selected, setSelected] = useState<
@@ -772,36 +787,11 @@ function RoomCalendarPage() {
               </div>
             </div>
 
-            {/* Desktop: Săptămână / Lună */}
-            <div className="hidden lg:inline-flex rounded-md border bg-card p-1 text-sm">
-              <button
-                className={
-                  "px-3 py-1 rounded " +
-                  (view === "week"
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted")
-                }
-                onClick={() => setView("week")}
-              >
-                Săptămână
-              </button>
-              <button
-                className={
-                  "px-3 py-1 rounded " +
-                  (view === "month"
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted")
-                }
-                onClick={() => setView("month")}
-              >
-                Lună
-              </button>
-            </div>
-
-            {/* Mobile: Zi / Săptămână / Lună */}
-            <div className="inline-flex lg:hidden rounded-md border bg-card p-1 text-sm">
+            {/* Tablet and desktop: Zi / Săptămână / Lună */}
+            <div className="hidden md:inline-flex rounded-md border bg-card p-1 text-sm">
               {(["day", "week", "month"] as const).map((v) => (
                 <button
+                  type="button"
                   key={v}
                   className={
                     "px-3 py-1 rounded " +
@@ -811,7 +801,26 @@ function RoomCalendarPage() {
                   }
                   onClick={() => setView(v)}
                 >
-                  {v === "day" ? "Zi" : v === "week" ? "Săpt." : "Lună"}
+                  {v === "day" ? "Zi" : v === "week" ? "Săptămână" : "Lună"}
+                </button>
+              ))}
+            </div>
+
+            {/* Mobile: Zi / Lună */}
+            <div className="inline-flex md:hidden rounded-md border bg-card p-1 text-sm">
+              {(["day", "month"] as const).map((v) => (
+                <button
+                  type="button"
+                  key={v}
+                  className={
+                    "px-3 py-1 rounded " +
+                    (view === v
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-muted")
+                  }
+                  onClick={() => setView(v)}
+                >
+                  {v === "day" ? "Zi" : "Lună"}
                 </button>
               ))}
             </div>
@@ -900,7 +909,7 @@ function RoomCalendarPage() {
                 })}
                 </div>
               </div>
-            ) : view === "week" ? (
+            ) : view === "week" && !isMobileViewport ? (
               <div className="border rounded-lg bg-card overflow-x-auto">
                 <div className="min-w-[760px]">
                   <div
@@ -1026,7 +1035,7 @@ function RoomCalendarPage() {
                     const visibleEntries = dayEntries.slice(0, MAX_CHIPS);
                     const extraCount = dayEntries.length - visibleEntries.length;
                     const navigateToDay = () => {
-                      if (typeof window !== "undefined" && window.innerWidth < 1024) {
+                      if (isMobileViewport) {
                         const day = new Date(d);
                         day.setHours(0, 0, 0, 0);
                         setSelectedDay(day);
@@ -1049,7 +1058,7 @@ function RoomCalendarPage() {
                           }
                         }}
                         className={
-                          "min-h-[72px] border-l border-t -ml-px -mt-px text-left p-2 text-xs transition-colors cursor-pointer " +
+                          "min-w-0 min-h-[72px] border-l border-t -ml-px -mt-px text-left p-2 text-xs transition-colors cursor-pointer " +
                           (inMonth ? "" : "bg-muted/30 text-muted-foreground ") +
                           (hasBookings ? "bg-primary/15 hover:bg-primary/25 " : "hover:bg-muted/60 ") +
                           (hasBlocks && !hasBookings ? "ring-2 ring-orange-300 ring-inset " : "") +
