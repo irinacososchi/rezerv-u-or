@@ -8,20 +8,20 @@
 
 ## Ce se schimbă
 
-Prag: **< 768px = mobil** (`useIsMobile()` din `src/hooks/use-mobile.tsx`, deja bazat pe `matchMedia("(max-width: 767px)")`). Vedere implicită pe mobil: **Lună**.
+Prag unic: **< 768px = mobil**, detectat direct cu `window.matchMedia("(max-width: 767px)")`. Vedere implicită pe mobil: **Lună**; pe desktop rămâne **Săptămână**.
 
 ### Pentru fiecare dintre cele două pagini
 
-1. **Toggle-ul „Săptămână"** se ascunde sub 768px (`hidden md:inline-flex` pe butonul respectiv). Pe telefon rămân vizibile doar **Zi** și **Lună**; de la md în sus apar toate trei.
-2. **Guard pe viewport real** (nu doar CSS): un `useEffect` care urmărește `isMobile` și, dacă `view === "week"` pe mobil, setează `"month"`. Acoperă atât încărcarea inițială (inclusiv valoarea din `localStorage`), cât și micșorarea ferestrei de la desktop la mobil.
-3. **Randarea vederii week** primește o condiție suplimentară: nu se randează când e mobil — dacă starea ar rămâne cumva „week", se afișează Luna.
+1. **Toggle-ul „Săptămână"** este exclus din lista mobilă. Pe telefon se randează doar **Zi** și **Lună**; de la md în sus se randează toate trei.
+2. **Guard pe viewport real** (nu doar CSS): fiecare pagină instalează un listener `matchMedia("(max-width: 767px)")`, rulează verificarea imediat la montare și apoi la fiecare schimbare de viewport. Dacă media query-ul este activ și `view === "week"`, setează `"month"`. Listener-ul este eliminat la demontare.
+3. **Randarea vederii week** este condiționată și de starea mobilă derivată din același `matchMedia`; astfel grila `min-w-[760px]` nu poate apărea sub 768px nici înainte ca actualizarea de stare din efect să se finalizeze.
 4. **Desktop / tabletă (≥768px)**: nimic nu se schimbă — toate trei vederile rămân complet funcționale, iar preferința salvată în `localStorage` continuă să funcționeze.
 5. **Fără scroll orizontal** în vederile Zi și Lună pe mobil: se verifică și se corectează, dacă e cazul, cu `min-w-0` pe containerele de text și `truncate` pe etichete; grila lunii rămâne `grid-cols-7` fără lățime minimă fixă.
 
 ### Detalii specifice
 
-- `panou.sali.$id.calendar.tsx`: se unifică cele două switcher-e (desktop `hidden lg:inline-flex` cu Săptămână/Lună și mobil `lg:hidden` cu toate trei) într-o singură listă Zi / Săptămână / Lună, unde butonul Săptămână are `hidden md:inline-flex`. Se elimină listener-ul vechi de `resize` cu prag 1024px și se înlocuiește cu guard-ul bazat pe `useIsMobile()`.
-- `panou.orarul-meu.tsx`: `detectDefaultView()` returnează „month" pe mobil când nu există preferință salvată; valoarea „week" din `localStorage` este ignorată pe mobil. Detecția rămâne client-side (după hidratare) pentru a evita nepotriviri SSR.
+- `panou.sali.$id.calendar.tsx`: lista din switcher-ul mobil devine explicit `["day", "month"]`; switcher-ul pentru ≥768px oferă Zi / Săptămână / Lună. Inițializatorul alege „month" când media query-ul mobil este activ și „week" în rest. Listener-ul vechi de `resize` cu prag 1024px este înlocuit cu guard-ul `matchMedia` de 768px.
+- `panou.orarul-meu.tsx`: lista de toggle-uri exclude condiționat „week" când media query-ul mobil este activ. `detectDefaultView()` tratează mobilul înainte de a accepta preferința: un „week" salvat este convertit în „month", iar fără preferință mobilul pornește tot pe „month". Preferințele continuă să fie salvate, dar „week" nu este niciodată activat pe mobil.
 
 ## Verificare
 
