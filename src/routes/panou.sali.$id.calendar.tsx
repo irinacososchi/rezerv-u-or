@@ -2612,6 +2612,19 @@ function ManualBookingForm({
       return;
     }
 
+    if (recurrenceId) {
+      if (canEmailClient) {
+        void supabase.functions
+          .invoke("send-booking-email", {
+            body: { type: "recurring-approved", recurrenceId },
+          })
+          .catch(console.warn);
+      } else {
+        toast.info("Clientul nu are email — nu a fost trimisă nicio notificare.");
+      }
+    }
+
+
     if (skipped.length > 0) {
       toast.warning(
         `${inserted.length} rezervări create. Sărite (ocupate): ${skipped.join(", ")}`,
