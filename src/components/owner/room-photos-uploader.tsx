@@ -392,9 +392,27 @@ export function RoomPhotosUploader({ roomId, pending, onPendingChange }: Props) 
   }
 
   function setPendingCover(key: string) {
-    const next = (pending ?? []).map((p) => ({ ...p, is_cover: p._key === key }));
+    const list = pending ?? [];
+    const index = list.findIndex((p) => p._key === key);
+    if (index <= 0) return;
+    const next = arrayMove(list, index, 0).map((p, i) => ({ ...p, is_cover: i === 0 }));
     onPendingChange?.(next);
   }
+
+  function handlePendingDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const list = pending ?? [];
+    const oldIndex = list.findIndex((p) => p._key === active.id);
+    const newIndex = list.findIndex((p) => p._key === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    const next = arrayMove(list, oldIndex, newIndex).map((p, i) => ({
+      ...p,
+      is_cover: i === 0,
+    }));
+    onPendingChange?.(next);
+  }
+
 
   function removePending(key: string) {
     const target = (pending ?? []).find((p) => p._key === key);
