@@ -286,6 +286,7 @@ function SignupPage() {
                     id="agreedToLegal"
                     checked={agreedToLegal}
                     onCheckedChange={(v) => {
+                      console.log("agreedToLegal changed", v);
                       setAgreedToLegal(v === true);
                       setShowConsentHint(false);
                     }}
