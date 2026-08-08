@@ -117,6 +117,80 @@ type Props = {
   onPendingChange?: (next: PendingPhoto[]) => void;
 };
 
+function SortablePhotoCard({
+  id,
+  src,
+  isCover,
+  disabled,
+  onSetCover,
+  onRemove,
+  lazy,
+}: {
+  id: string;
+  src: string;
+  isCover: boolean;
+  disabled?: boolean;
+  onSetCover: () => void;
+  onRemove: () => void;
+  lazy?: boolean;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id });
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={`relative group rounded-lg overflow-hidden border bg-muted aspect-square touch-none ${
+        isDragging ? "z-20 opacity-80 ring-2 ring-primary" : ""
+      }`}
+      {...attributes}
+      {...listeners}
+    >
+      <img
+        src={src}
+        alt="Poză sală"
+        className="h-full w-full object-cover pointer-events-none select-none"
+        draggable={false}
+        loading={lazy ? "lazy" : undefined}
+      />
+      {isCover && (
+        <div className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-md bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5">
+          <Star className="h-3 w-3 fill-current" />
+          Principală
+        </div>
+      )}
+      <div className="absolute top-2 right-2 rounded-md bg-background/80 p-1 text-muted-foreground">
+        <GripVertical className="h-4 w-4" />
+      </div>
+      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+        {!isCover && (
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            disabled={disabled}
+            onClick={onSetCover}
+          >
+            <Star className="h-4 w-4" />
+            Setează principală
+          </Button>
+        )}
+        <Button
+          type="button"
+          size="sm"
+          variant="destructive"
+          disabled={disabled}
+          onClick={onRemove}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+
 export function RoomPhotosUploader({ roomId, pending, onPendingChange }: Props) {
   const isPendingMode = !roomId;
   const [photos, setPhotos] = useState<RoomPhoto[]>([]);
