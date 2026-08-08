@@ -88,6 +88,16 @@ function TermeniPage() {
         3.4. RZRV depune eforturi rezonabile pentru funcționarea corectă a Platformei, dar nu
         garantează funcționarea neîntreruptă sau lipsită de erori.
       </P>
+      <P>
+        3.5. <Strong>Despăgubire (clauză de garanție).</Strong> Proprietarul se obligă să despăgubească
+        și să exonereze de răspundere RZRV pentru orice pretenție, cerere, acțiune, daună, pierdere,
+        cost sau cheltuială (inclusiv cheltuieli rezonabile de judecată și onorarii de avocat)
+        formulată de un chiriaș sau de orice terț și care derivă din: (i) utilizarea, starea sau
+        siguranța spațiului său; (ii) informațiile publicate de proprietar; (iii) nerespectarea de
+        către proprietar a obligațiilor legale, fiscale sau contractuale; (iv) orice incident produs
+        în legătură cu spațiul închiriat. În mod similar, fiecare utilizator (proprietar sau chiriaș)
+        răspunde pentru prejudiciile cauzate prin propria încălcare a acestor Termeni sau a legii.
+      </P>
 
       <H2>4. Conturile utilizatorilor</H2>
       <P>
@@ -115,6 +125,19 @@ function TermeniPage() {
         <li>să respecte legislația aplicabilă (inclusiv fiscală și de siguranță);</li>
         <li>să comunice corect cu chiriașii.</li>
       </UL>
+      <P>
+        <Strong>Responsabilitatea fiscală.</Strong> Proprietarul poartă responsabilitatea exclusivă și
+        integrală pentru încasarea legală a tarifelor, emiterea documentelor fiscale aferente (bon
+        fiscal și/sau factură, după caz), înregistrarea veniturilor și plata tuturor taxelor și
+        impozitelor datorate. RZRV este strict o platformă de intermediere a rezervărilor și{" "}
+        <Strong>nu are nicio responsabilitate</Strong> privind încasarea, fiscalizarea sau raportarea
+        sumelor plătite direct între chiriaș și proprietar.
+      </P>
+      <P>
+        <Strong>Siguranța spațiului.</Strong> Proprietarul este responsabil pentru conformitatea
+        spațiului cu normele legale de siguranță, sănătate și protecție împotriva incendiilor
+        aplicabile activității desfășurate.
+      </P>
 
       <H2>6. Obligațiile chiriașilor</H2>
       <P>Chiriașii se angajează:</P>
