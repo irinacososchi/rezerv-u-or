@@ -200,6 +200,11 @@ export function RoomPhotosUploader({ roomId, pending, onPendingChange }: Props) 
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dragCounter = useRef(0);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
 
   async function loadPhotos() {
     if (!roomId) return;
