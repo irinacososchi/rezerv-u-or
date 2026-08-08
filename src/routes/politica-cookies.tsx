@@ -3,7 +3,7 @@ import { LegalPage, H2, H3, P, UL, Strong, Note, Table } from "@/components/lega
 
 const TITLE = "Politica de Cookies — RZRV";
 const DESC =
-  "Ce cookie-uri și tehnologii de stocare locală folosește RZRV: doar cele strict necesare funcționării, fără tracking de marketing.";
+  "Ce cookie-uri și tehnologii de stocare locală folosește RZRV: doar cele strict necesare funcționării, plus analiză de trafic fără cookie-uri, fără tracking de marketing.";
 
 export const Route = createFileRoute("/politica-cookies")({
   head: () => ({
@@ -60,7 +60,23 @@ function CookiesPage() {
         furniza un serviciu funcțional, respectiv necesitatea tehnică.
       </P>
 
-      <H3>2.2. Ce NU folosim</H3>
+      <H3>2.2. Analiză de trafic (fără cookie-uri)</H3>
+      <P>
+        Folosim un sistem de <Strong>analiză a traficului fără cookie-uri</Strong>, furnizat de
+        platforma de găzduire. Acesta măsoară în mod <Strong>agregat</Strong>: numărul de vizitatori,
+        paginile vizitate, sursa vizitei, tipul de dispozitiv și țara (estimată din fusul orar al
+        browserului). Nu se creează profiluri de utilizator,{" "}
+        <Strong>nu se stochează identificatori pe dispozitivul dumneavoastră</Strong> și nu urmărim
+        vizitatorii între vizite.
+      </P>
+      <P>
+        Deoarece acest sistem{" "}
+        <Strong>nu accesează și nu stochează informații pe dispozitivul dumneavoastră</Strong> (nu
+        folosește cookie-uri sau tehnologii echivalente), nu necesită un consimțământ prealabil de tip
+        „banner de cookie-uri".
+      </P>
+
+      <H3>2.3. Ce NU folosim</H3>
       <P>
         RZRV <Strong>nu utilizează</Strong>:
       </P>
@@ -118,10 +134,11 @@ function CookiesPage() {
       </P>
 
       <Note>
-        Acest document constituie un draft inițial și reflectă utilizarea actuală a Platformei (stocare
-        strict necesară, fără tracking de marketing). Dacă în viitor se introduc instrumente de analiză
-        sau marketing, această politică și mecanismul de consimțământ (banner de cookies) trebuie
-        actualizate corespunzător.
+        Acest document constituie un draft inițial și reflectă utilizarea actuală a Platformei:
+        stocare strict necesară funcționării, plus un sistem de analiză a traficului fără cookie-uri
+        și fără profilare. Dacă în viitor se introduc instrumente de analiză bazate pe cookie-uri sau
+        instrumente de marketing, această politică și, după caz, un mecanism de consimțământ (banner
+        de cookie-uri) trebuie actualizate corespunzător.
       </Note>
     </LegalPage>
   );

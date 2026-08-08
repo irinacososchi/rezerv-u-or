@@ -103,9 +103,20 @@ function ConfidentialitatePage() {
           <Link to="/politica-cookies" className="text-primary underline underline-offset-4">
             Politica de Cookies
           </Link>
-          ).
+          );
+        </li>
+        <li>
+          date de analiză a traficului, în formă <Strong>agregată și anonimă</Strong>, printr-un
+          sistem <Strong>fără cookie-uri</Strong>: număr de vizitatori, pagini vizitate, sursa
+          vizitei, tipul de dispozitiv și țara (estimată din fusul orar al browserului). Aceste date
+          nu creează profiluri și nu vă identifică individual.
         </li>
       </UL>
+      <P>
+        Ca la orice serviciu web, adresa IP este prezentă tranzitoriu în cererile HTTP la nivelul
+        infrastructurii de găzduire, fiind prelucrată în temeiul interesului legitim de a asigura
+        funcționarea și securitatea Platformei; nu o stocăm ca dată de analiză.
+      </P>
       <P>
         Nu colectăm date cu caracter personal sensibile (origine etnică, convingeri, date de sănătate
         etc.) și nu realizăm profilare sau decizii automate cu efecte juridice asupra dumneavoastră.
