@@ -352,13 +352,13 @@ export function RoomPhotosUploader({ roomId, pending, onPendingChange }: Props) 
         }}
       >
         {isDragging && (
-          <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-primary bg-primary/5">
+          <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-primary bg-background/95">
             <Upload className="mb-2 h-10 w-10 text-primary" />
             <p className="font-medium text-primary">Trage pozele aici</p>
             <p className="text-xs text-muted-foreground">JPG, PNG sau WEBP</p>
           </div>
         )}
-        <CardContent className={isDragging ? "opacity-50" : undefined}>
+        <CardContent>
           {loading ? (
             <div className="text-sm text-muted-foreground">Se încarcă pozele...</div>
           ) : showEmpty ? (
