@@ -290,6 +290,9 @@ function SignupPage() {
                       setAgreedToLegal(v === true);
                       setShowConsentHint(false);
                     }}
+                    onClick={() => {
+                      console.log("agreedToLegal clicked");
+                    }}
                   />
                   <label htmlFor="agreedToLegal" className="text-sm leading-tight text-muted-foreground">
                     Sunt de acord cu{" "}
