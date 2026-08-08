@@ -36,6 +36,7 @@ export const Route = createRootRoute({
       { property: "og:title", content: "Rezervări Săli — Săli de închiriat" },
       { property: "og:description", content: "Găsește și rezervă online săli de dans din toată țara." },
       { property: "og:type", content: "website" },
+      { property: "og:locale", content: "ro_RO" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "Rezervări Săli — Săli de închiriat" },
@@ -62,7 +63,7 @@ export const Route = createRootRoute({
 
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="ro">
       <head>
         <HeadContent />
       </head>
