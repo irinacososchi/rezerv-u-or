@@ -105,6 +105,7 @@ export function RoomPhotosUploader({ roomId, pending, onPendingChange }: Props) 
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function loadPhotos() {
@@ -324,7 +325,27 @@ export function RoomPhotosUploader({ roomId, pending, onPendingChange }: Props) 
           onChange={(e) => handleFiles(e.target.files)}
         />
       </CardHeader>
-      <CardContent>
+      <div
+        className="relative"
+        onDragOver={(e) => {
+          e.preventDefault();
+          setIsDragging(true);
+        }}
+        onDragLeave={() => setIsDragging(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setIsDragging(false);
+          handleFiles(e.dataTransfer.files);
+        }}
+      >
+        {isDragging && (
+          <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-primary bg-primary/5">
+            <Upload className="mb-2 h-10 w-10 text-primary" />
+            <p className="font-medium text-primary">Trage pozele aici</p>
+            <p className="text-xs text-muted-foreground">JPG, PNG sau WEBP</p>
+          </div>
+        )}
+        <CardContent>
         {loading ? (
           <div className="text-sm text-muted-foreground">Se încarcă pozele...</div>
         ) : showEmpty ? (
@@ -422,7 +443,8 @@ export function RoomPhotosUploader({ roomId, pending, onPendingChange }: Props) 
             ))}
           </div>
         )}
-      </CardContent>
+        </CardContent>
+      </div>
     </Card>
   );
 }
