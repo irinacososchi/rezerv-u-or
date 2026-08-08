@@ -15,6 +15,7 @@ import { Route as SaliRouteImport } from './routes/sali'
 import { Route as RezervariRouteImport } from './routes/rezervari'
 import { Route as RezervareaMeaRouteImport } from './routes/rezervarea-mea'
 import { Route as ResetParolaRouteImport } from './routes/reset-parola'
+import { Route as PoliticaConfidentialitateRouteImport } from './routes/politica-confidentialitate'
 import { Route as PanouRouteImport } from './routes/panou'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ContactRouteImport } from './routes/contact'
@@ -73,6 +74,12 @@ const ResetParolaRoute = ResetParolaRouteImport.update({
   path: '/reset-parola',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PoliticaConfidentialitateRoute =
+  PoliticaConfidentialitateRouteImport.update({
+    id: '/politica-confidentialitate',
+    path: '/politica-confidentialitate',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const PanouRoute = PanouRouteImport.update({
   id: '/panou',
   path: '/panou',
@@ -216,6 +223,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
   '/panou': typeof PanouRouteWithChildren
+  '/politica-confidentialitate': typeof PoliticaConfidentialitateRoute
   '/reset-parola': typeof ResetParolaRoute
   '/rezervarea-mea': typeof RezervareaMeaRoute
   '/rezervari': typeof RezervariRoute
@@ -249,6 +257,7 @@ export interface FileRoutesByTo {
   '/confirmare': typeof ConfirmareRoute
   '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
+  '/politica-confidentialitate': typeof PoliticaConfidentialitateRoute
   '/reset-parola': typeof ResetParolaRoute
   '/rezervarea-mea': typeof RezervareaMeaRoute
   '/rezervari': typeof RezervariRoute
@@ -283,6 +292,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
   '/panou': typeof PanouRouteWithChildren
+  '/politica-confidentialitate': typeof PoliticaConfidentialitateRoute
   '/reset-parola': typeof ResetParolaRoute
   '/rezervarea-mea': typeof RezervareaMeaRoute
   '/rezervari': typeof RezervariRoute
@@ -320,6 +330,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/login'
     | '/panou'
+    | '/politica-confidentialitate'
     | '/reset-parola'
     | '/rezervarea-mea'
     | '/rezervari'
@@ -353,6 +364,7 @@ export interface FileRouteTypes {
     | '/confirmare'
     | '/contact'
     | '/login'
+    | '/politica-confidentialitate'
     | '/reset-parola'
     | '/rezervarea-mea'
     | '/rezervari'
@@ -386,6 +398,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/login'
     | '/panou'
+    | '/politica-confidentialitate'
     | '/reset-parola'
     | '/rezervarea-mea'
     | '/rezervari'
@@ -422,6 +435,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   LoginRoute: typeof LoginRoute
   PanouRoute: typeof PanouRouteWithChildren
+  PoliticaConfidentialitateRoute: typeof PoliticaConfidentialitateRoute
   ResetParolaRoute: typeof ResetParolaRoute
   RezervareaMeaRoute: typeof RezervareaMeaRoute
   RezervariRoute: typeof RezervariRoute
@@ -473,6 +487,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-parola'
       fullPath: '/reset-parola'
       preLoaderRoute: typeof ResetParolaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/politica-confidentialitate': {
+      id: '/politica-confidentialitate'
+      path: '/politica-confidentialitate'
+      fullPath: '/politica-confidentialitate'
+      preLoaderRoute: typeof PoliticaConfidentialitateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/panou': {
@@ -758,6 +779,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   LoginRoute: LoginRoute,
   PanouRoute: PanouRouteWithChildren,
+  PoliticaConfidentialitateRoute: PoliticaConfidentialitateRoute,
   ResetParolaRoute: ResetParolaRoute,
   RezervareaMeaRoute: RezervareaMeaRoute,
   RezervariRoute: RezervariRoute,
