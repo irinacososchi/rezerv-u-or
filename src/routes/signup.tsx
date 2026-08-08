@@ -280,10 +280,62 @@ function SignupPage() {
                 </p>
               )}
 
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    id="agreedToLegal"
+                    checked={agreedToLegal}
+                    onCheckedChange={(v) => {
+                      setAgreedToLegal(v === true);
+                      setShowConsentHint(false);
+                    }}
+                  />
+                  <label htmlFor="agreedToLegal" className="text-sm leading-tight text-muted-foreground">
+                    Sunt de acord cu{" "}
+                    <a
+                      href="/termeni-si-conditii"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-primary underline underline-offset-4"
+                    >
+                      Termenii și Condițiile
+                    </a>{" "}
+                    și{" "}
+                    <a
+                      href="/politica-confidentialitate"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-primary underline underline-offset-4"
+                    >
+                      Politica de Confidențialitate
+                    </a>
+                    .
+                  </label>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    id="isOver16"
+                    checked={isOver16}
+                    onCheckedChange={(v) => {
+                      setIsOver16(v === true);
+                      setShowConsentHint(false);
+                    }}
+                  />
+                  <label htmlFor="isOver16" className="text-sm leading-tight text-muted-foreground">
+                    Confirm că am cel puțin 16 ani.
+                  </label>
+                </div>
+                {showConsentHint && (
+                  <p className="text-sm text-destructive">
+                    Trebuie să bifezi ambele opțiuni pentru a crea contul.
+                  </p>
+                )}
+              </div>
+
               <Button
                 type="submit"
                 className="w-full"
-                disabled={loading || emailExists || checkingEmail}
+                disabled={loading || emailExists || checkingEmail || !agreedToLegal || !isOver16}
               >
                 {loading ? (
                   <>
