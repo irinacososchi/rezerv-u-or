@@ -1172,7 +1172,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
                   className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
                 >
                   <Trash2 className="h-4 w-4" />
-                  {deleting ? "Se dezactivează..." : "Dezactivează sala"}
+                  {deleting ? "Se dezactivează..." : "Dezactivează\u00a0"}
                 </Button>
               )}
             </div>
@@ -1188,7 +1188,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
                 {saving
                   ? "Se salvează..."
                   : isEdit
-                    ? "Salvează modificările"
+                    ? "Salvează\u00a0"
                     : "Adaugă sala"}
               </Button>
             </div>
