@@ -54,11 +54,17 @@ function SignupPage() {
     e.preventDefault();
     setError(null);
     setInfo(null);
+    setShowConsentHint(false);
 
+    if (!agreedToLegal || !isOver16) {
+      setShowConsentHint(true);
+      return;
+    }
     if (!fullName.trim()) { setError("Completează numele."); return; }
     if (password.length < 6) { setError("Parola trebuie să aibă minim 6 caractere."); return; }
     if (password !== confirm) { setError("Parolele nu coincid."); return; }
     if (emailExists) { setError("Emailul este deja înregistrat."); return; }
+
 
     setLoading(true);
 
