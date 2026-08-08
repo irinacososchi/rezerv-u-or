@@ -324,22 +324,46 @@ export function RoomPhotosUploader({ roomId, pending, onPendingChange }: Props) 
     await loadPhotos();
   }
 
-  async function setCover(photo: RoomPhoto) {
-    if (!roomId || photo.is_cover) return;
-    setBusyId(photo.id);
-    await supabase.from("room_photos").update({ is_cover: false }).eq("room_id", roomId);
-    const { error } = await supabase
-      .from("room_photos")
-      .update({ is_cover: true })
-      .eq("id", photo.id);
-    setBusyId(null);
-    if (error) {
-      toast.error("Nu am putut seta poza principală.");
-      return;
+  async function persistOrder(next: RoomPhoto[], prev: RoomPhoto[]) {
+    const reindexed = next.map((p, i) => ({ ...p, sort_order: i, is_cover: i === 0 }));
+    setPhotos(reindexed);
+    const results = await Promise.all(
+      reindexed.map((p) =>
+        supabase
+          .from("room_photos")
+          .update({ sort_order: p.sort_order, is_cover: p.is_cover })
+          .eq("id", p.id),
+      ),
+    );
+    if (results.some((r) => r.error)) {
+      console.error(results.find((r) => r.error)?.error);
+      setPhotos(prev);
+      toast.error("Nu am putut salva ordinea pozelor.");
+      return false;
     }
-    toast.success("Poză principală actualizată.");
-    await loadPhotos();
+    return true;
   }
+
+  async function setCover(photo: RoomPhoto) {
+    if (!roomId) return;
+    const index = photos.findIndex((p) => p.id === photo.id);
+    if (index <= 0) return;
+    setBusyId(photo.id);
+    const prev = photos;
+    const ok = await persistOrder(arrayMove(photos, index, 0), prev);
+    setBusyId(null);
+    if (ok) toast.success("Poză principală actualizată.");
+  }
+
+  async function handlePhotosDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = photos.findIndex((p) => p.id === active.id);
+    const newIndex = photos.findIndex((p) => p.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    await persistOrder(arrayMove(photos, oldIndex, newIndex), photos);
+  }
+
 
   async function removePhoto(photo: RoomPhoto) {
     if (!window.confirm("Sigur ștergi această poză?")) return;
