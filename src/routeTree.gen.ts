@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermeniSiConditiiRouteImport } from './routes/termeni-si-conditii'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SaliRouteImport } from './routes/sali'
 import { Route as RezervariRouteImport } from './routes/rezervari'
@@ -42,6 +43,11 @@ import { Route as PanouSaliIdRouteImport } from './routes/panou.sali.$id'
 import { Route as PanouSaliIdEditRouteImport } from './routes/panou.sali.$id.edit'
 import { Route as PanouSaliIdCalendarRouteImport } from './routes/panou.sali.$id.calendar'
 
+const TermeniSiConditiiRoute = TermeniSiConditiiRouteImport.update({
+  id: '/termeni-si-conditii',
+  path: '/termeni-si-conditii',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
@@ -215,6 +221,7 @@ export interface FileRoutesByFullPath {
   '/rezervari': typeof RezervariRoute
   '/sali': typeof SaliRouteWithChildren
   '/signup': typeof SignupRoute
+  '/termeni-si-conditii': typeof TermeniSiConditiiRoute
   '/cont/favorite': typeof ContFavoriteRoute
   '/cont/rezervari': typeof ContRezervariRoute
   '/panou/calendar': typeof PanouCalendarRoute
@@ -246,6 +253,7 @@ export interface FileRoutesByTo {
   '/rezervarea-mea': typeof RezervareaMeaRoute
   '/rezervari': typeof RezervariRoute
   '/signup': typeof SignupRoute
+  '/termeni-si-conditii': typeof TermeniSiConditiiRoute
   '/cont/favorite': typeof ContFavoriteRoute
   '/cont/rezervari': typeof ContRezervariRoute
   '/panou/calendar': typeof PanouCalendarRoute
@@ -280,6 +288,7 @@ export interface FileRoutesById {
   '/rezervari': typeof RezervariRoute
   '/sali': typeof SaliRouteWithChildren
   '/signup': typeof SignupRoute
+  '/termeni-si-conditii': typeof TermeniSiConditiiRoute
   '/cont/favorite': typeof ContFavoriteRoute
   '/cont/rezervari': typeof ContRezervariRoute
   '/panou/calendar': typeof PanouCalendarRoute
@@ -316,6 +325,7 @@ export interface FileRouteTypes {
     | '/rezervari'
     | '/sali'
     | '/signup'
+    | '/termeni-si-conditii'
     | '/cont/favorite'
     | '/cont/rezervari'
     | '/panou/calendar'
@@ -347,6 +357,7 @@ export interface FileRouteTypes {
     | '/rezervarea-mea'
     | '/rezervari'
     | '/signup'
+    | '/termeni-si-conditii'
     | '/cont/favorite'
     | '/cont/rezervari'
     | '/panou/calendar'
@@ -380,6 +391,7 @@ export interface FileRouteTypes {
     | '/rezervari'
     | '/sali'
     | '/signup'
+    | '/termeni-si-conditii'
     | '/cont/favorite'
     | '/cont/rezervari'
     | '/panou/calendar'
@@ -415,11 +427,19 @@ export interface RootRouteChildren {
   RezervariRoute: typeof RezervariRoute
   SaliRoute: typeof SaliRouteWithChildren
   SignupRoute: typeof SignupRoute
+  TermeniSiConditiiRoute: typeof TermeniSiConditiiRoute
   RezervaSlugRoute: typeof RezervaSlugRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/termeni-si-conditii': {
+      id: '/termeni-si-conditii'
+      path: '/termeni-si-conditii'
+      fullPath: '/termeni-si-conditii'
+      preLoaderRoute: typeof TermeniSiConditiiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signup': {
       id: '/signup'
       path: '/signup'
@@ -743,17 +763,9 @@ const rootRouteChildren: RootRouteChildren = {
   RezervariRoute: RezervariRoute,
   SaliRoute: SaliRouteWithChildren,
   SignupRoute: SignupRoute,
+  TermeniSiConditiiRoute: TermeniSiConditiiRoute,
   RezervaSlugRoute: RezervaSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
