@@ -358,105 +358,107 @@ export function RoomPhotosUploader({ roomId, pending, onPendingChange }: Props) 
             <p className="text-xs text-muted-foreground">JPG, PNG sau WEBP</p>
           </div>
         )}
-        <CardContent>
-        {loading ? (
-          <div className="text-sm text-muted-foreground">Se încarcă pozele...</div>
-        ) : showEmpty ? (
-          <div className="rounded-lg border border-dashed p-8 text-center space-y-2">
-            <ImageIcon className="h-8 w-8 mx-auto text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">
-              Nicio poză încă. Apasă „Adaugă poze" ca să încarci.
-            </p>
-          </div>
-        ) : isPendingMode ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            {pendingList.map((p) => (
-              <div
-                key={p._key}
-                className="relative group rounded-lg overflow-hidden border bg-muted aspect-square"
-              >
-                <img
-                  src={p.previewUrl}
-                  alt="Poză sală"
-                  className="h-full w-full object-cover"
-                />
-                {p.is_cover && (
-                  <div className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-md bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5">
-                    <Star className="h-3 w-3 fill-current" />
-                    Principală
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                  {!p.is_cover && (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => setPendingCover(p._key)}
-                    >
-                      <Star className="h-4 w-4" />
-                      Setează principală
-                    </Button>
-                  )}
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => removePending(p._key)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+        {!isDragging && (
+          <CardContent>
+            {loading ? (
+              <div className="text-sm text-muted-foreground">Se încarcă pozele...</div>
+            ) : showEmpty ? (
+              <div className="rounded-lg border border-dashed p-8 text-center space-y-2">
+                <ImageIcon className="h-8 w-8 mx-auto text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  Nicio poză încă. Apasă „Adaugă poze" ca să încarci.
+                </p>
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            {photos.map((photo) => (
-              <div
-                key={photo.id}
-                className="relative group rounded-lg overflow-hidden border bg-muted aspect-square"
-              >
-                <img
-                  src={photo.storage_url}
-                  alt="Poză sală"
-                  className="h-full w-full object-cover"
-                  loading="lazy"
-                />
-                {photo.is_cover && (
-                  <div className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-md bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5">
-                    <Star className="h-3 w-3 fill-current" />
-                    Principală
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                  {!photo.is_cover && (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => setCover(photo)}
-                      disabled={busyId === photo.id}
-                    >
-                      <Star className="h-4 w-4" />
-                      Setează principală
-                    </Button>
-                  )}
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => removePhoto(photo)}
-                    disabled={busyId === photo.id}
+            ) : isPendingMode ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {pendingList.map((p) => (
+                  <div
+                    key={p._key}
+                    className="relative group rounded-lg overflow-hidden border bg-muted aspect-square"
                   >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+                    <img
+                      src={p.previewUrl}
+                      alt="Poză sală"
+                      className="h-full w-full object-cover"
+                    />
+                    {p.is_cover && (
+                      <div className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-md bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5">
+                        <Star className="h-3 w-3 fill-current" />
+                        Principală
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      {!p.is_cover && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => setPendingCover(p._key)}
+                        >
+                          <Star className="h-4 w-4" />
+                          Setează principală
+                        </Button>
+                      )}
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => removePending(p._key)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {photos.map((photo) => (
+                  <div
+                    key={photo.id}
+                    className="relative group rounded-lg overflow-hidden border bg-muted aspect-square"
+                  >
+                    <img
+                      src={photo.storage_url}
+                      alt="Poză sală"
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                    {photo.is_cover && (
+                      <div className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-md bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5">
+                        <Star className="h-3 w-3 fill-current" />
+                        Principală
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      {!photo.is_cover && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => setCover(photo)}
+                          disabled={busyId === photo.id}
+                        >
+                          <Star className="h-4 w-4" />
+                          Setează principală
+                        </Button>
+                      )}
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => removePhoto(photo)}
+                        disabled={busyId === photo.id}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
         )}
-        </CardContent>
       </div>
     </Card>
   );
