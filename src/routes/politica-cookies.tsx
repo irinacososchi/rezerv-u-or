@@ -134,11 +134,11 @@ function CookiesPage() {
       </P>
 
       <Note>
-        Acest document constituie un draft inițial și reflectă utilizarea actuală a Platformei:
-        stocare strict necesară funcționării, plus un sistem de analiză a traficului fără cookie-uri
-        și fără profilare. Dacă în viitor se introduc instrumente de analiză bazate pe cookie-uri sau
-        instrumente de marketing, această politică și, după caz, un mecanism de consimțământ (banner
-        de cookie-uri) trebuie actualizate corespunzător.
+        Această politică reflectă utilizarea actuală a Platformei: stocare strict necesară
+        funcționării, plus un sistem de analiză a traficului fără cookie-uri și fără profilare. Dacă
+        în viitor se introduc instrumente de analiză bazate pe cookie-uri sau instrumente de
+        marketing, această politică și, după caz, un mecanism de consimțământ (banner de cookie-uri)
+        trebuie actualizate corespunzător.
       </Note>
     </LegalPage>
   );

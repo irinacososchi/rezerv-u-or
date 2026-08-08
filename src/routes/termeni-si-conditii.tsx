@@ -227,10 +227,8 @@ function TermeniPage() {
       </P>
 
       <Note>
-        Acest document constituie un draft inițial și ar trebui revizuit de un consultant juridic
-        înainte de utilizarea în producție. Notă: prevederile referitoare la ANPC, dreptul de
-        retragere și obligațiile specifice comerțului electronic devin relevante atunci când se
-        introduc plăți prin Platformă.
+        Notă: prevederile referitoare la ANPC, dreptul de retragere și obligațiile specifice
+        comerțului electronic devin relevante atunci când se introduc plăți prin Platformă.
       </Note>
     </LegalPage>
   );

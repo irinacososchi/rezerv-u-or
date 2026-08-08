@@ -305,11 +305,6 @@ function ConfidentialitatePage() {
           contact@rzrv.ro
         </a>
       </P>
-
-      <Note>
-        Acest document constituie un draft inițial și ar trebui revizuit de un consultant juridic
-        înainte de utilizarea în producție.
-      </Note>
     </LegalPage>
   );
 }
