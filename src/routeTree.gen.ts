@@ -9,11 +9,14 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermeniSiConditiiRouteImport } from './routes/termeni-si-conditii'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SaliRouteImport } from './routes/sali'
 import { Route as RezervariRouteImport } from './routes/rezervari'
 import { Route as RezervareaMeaRouteImport } from './routes/rezervarea-mea'
 import { Route as ResetParolaRouteImport } from './routes/reset-parola'
+import { Route as PoliticaCookiesRouteImport } from './routes/politica-cookies'
+import { Route as PoliticaConfidentialitateRouteImport } from './routes/politica-confidentialitate'
 import { Route as PanouRouteImport } from './routes/panou'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ContactRouteImport } from './routes/contact'
@@ -42,6 +45,11 @@ import { Route as PanouSaliIdRouteImport } from './routes/panou.sali.$id'
 import { Route as PanouSaliIdEditRouteImport } from './routes/panou.sali.$id.edit'
 import { Route as PanouSaliIdCalendarRouteImport } from './routes/panou.sali.$id.calendar'
 
+const TermeniSiConditiiRoute = TermeniSiConditiiRouteImport.update({
+  id: '/termeni-si-conditii',
+  path: '/termeni-si-conditii',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
@@ -67,6 +75,17 @@ const ResetParolaRoute = ResetParolaRouteImport.update({
   path: '/reset-parola',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PoliticaCookiesRoute = PoliticaCookiesRouteImport.update({
+  id: '/politica-cookies',
+  path: '/politica-cookies',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PoliticaConfidentialitateRoute =
+  PoliticaConfidentialitateRouteImport.update({
+    id: '/politica-confidentialitate',
+    path: '/politica-confidentialitate',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const PanouRoute = PanouRouteImport.update({
   id: '/panou',
   path: '/panou',
@@ -210,11 +229,14 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
   '/panou': typeof PanouRouteWithChildren
+  '/politica-confidentialitate': typeof PoliticaConfidentialitateRoute
+  '/politica-cookies': typeof PoliticaCookiesRoute
   '/reset-parola': typeof ResetParolaRoute
   '/rezervarea-mea': typeof RezervareaMeaRoute
   '/rezervari': typeof RezervariRoute
   '/sali': typeof SaliRouteWithChildren
   '/signup': typeof SignupRoute
+  '/termeni-si-conditii': typeof TermeniSiConditiiRoute
   '/cont/favorite': typeof ContFavoriteRoute
   '/cont/rezervari': typeof ContRezervariRoute
   '/panou/calendar': typeof PanouCalendarRoute
@@ -242,10 +264,13 @@ export interface FileRoutesByTo {
   '/confirmare': typeof ConfirmareRoute
   '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
+  '/politica-confidentialitate': typeof PoliticaConfidentialitateRoute
+  '/politica-cookies': typeof PoliticaCookiesRoute
   '/reset-parola': typeof ResetParolaRoute
   '/rezervarea-mea': typeof RezervareaMeaRoute
   '/rezervari': typeof RezervariRoute
   '/signup': typeof SignupRoute
+  '/termeni-si-conditii': typeof TermeniSiConditiiRoute
   '/cont/favorite': typeof ContFavoriteRoute
   '/cont/rezervari': typeof ContRezervariRoute
   '/panou/calendar': typeof PanouCalendarRoute
@@ -275,11 +300,14 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
   '/panou': typeof PanouRouteWithChildren
+  '/politica-confidentialitate': typeof PoliticaConfidentialitateRoute
+  '/politica-cookies': typeof PoliticaCookiesRoute
   '/reset-parola': typeof ResetParolaRoute
   '/rezervarea-mea': typeof RezervareaMeaRoute
   '/rezervari': typeof RezervariRoute
   '/sali': typeof SaliRouteWithChildren
   '/signup': typeof SignupRoute
+  '/termeni-si-conditii': typeof TermeniSiConditiiRoute
   '/cont/favorite': typeof ContFavoriteRoute
   '/cont/rezervari': typeof ContRezervariRoute
   '/panou/calendar': typeof PanouCalendarRoute
@@ -311,11 +339,14 @@ export interface FileRouteTypes {
     | '/contact'
     | '/login'
     | '/panou'
+    | '/politica-confidentialitate'
+    | '/politica-cookies'
     | '/reset-parola'
     | '/rezervarea-mea'
     | '/rezervari'
     | '/sali'
     | '/signup'
+    | '/termeni-si-conditii'
     | '/cont/favorite'
     | '/cont/rezervari'
     | '/panou/calendar'
@@ -343,10 +374,13 @@ export interface FileRouteTypes {
     | '/confirmare'
     | '/contact'
     | '/login'
+    | '/politica-confidentialitate'
+    | '/politica-cookies'
     | '/reset-parola'
     | '/rezervarea-mea'
     | '/rezervari'
     | '/signup'
+    | '/termeni-si-conditii'
     | '/cont/favorite'
     | '/cont/rezervari'
     | '/panou/calendar'
@@ -375,11 +409,14 @@ export interface FileRouteTypes {
     | '/contact'
     | '/login'
     | '/panou'
+    | '/politica-confidentialitate'
+    | '/politica-cookies'
     | '/reset-parola'
     | '/rezervarea-mea'
     | '/rezervari'
     | '/sali'
     | '/signup'
+    | '/termeni-si-conditii'
     | '/cont/favorite'
     | '/cont/rezervari'
     | '/panou/calendar'
@@ -410,16 +447,26 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   LoginRoute: typeof LoginRoute
   PanouRoute: typeof PanouRouteWithChildren
+  PoliticaConfidentialitateRoute: typeof PoliticaConfidentialitateRoute
+  PoliticaCookiesRoute: typeof PoliticaCookiesRoute
   ResetParolaRoute: typeof ResetParolaRoute
   RezervareaMeaRoute: typeof RezervareaMeaRoute
   RezervariRoute: typeof RezervariRoute
   SaliRoute: typeof SaliRouteWithChildren
   SignupRoute: typeof SignupRoute
+  TermeniSiConditiiRoute: typeof TermeniSiConditiiRoute
   RezervaSlugRoute: typeof RezervaSlugRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/termeni-si-conditii': {
+      id: '/termeni-si-conditii'
+      path: '/termeni-si-conditii'
+      fullPath: '/termeni-si-conditii'
+      preLoaderRoute: typeof TermeniSiConditiiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signup': {
       id: '/signup'
       path: '/signup'
@@ -453,6 +500,20 @@ declare module '@tanstack/react-router' {
       path: '/reset-parola'
       fullPath: '/reset-parola'
       preLoaderRoute: typeof ResetParolaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/politica-cookies': {
+      id: '/politica-cookies'
+      path: '/politica-cookies'
+      fullPath: '/politica-cookies'
+      preLoaderRoute: typeof PoliticaCookiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/politica-confidentialitate': {
+      id: '/politica-confidentialitate'
+      path: '/politica-confidentialitate'
+      fullPath: '/politica-confidentialitate'
+      preLoaderRoute: typeof PoliticaConfidentialitateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/panou': {
@@ -738,11 +799,14 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   LoginRoute: LoginRoute,
   PanouRoute: PanouRouteWithChildren,
+  PoliticaConfidentialitateRoute: PoliticaConfidentialitateRoute,
+  PoliticaCookiesRoute: PoliticaCookiesRoute,
   ResetParolaRoute: ResetParolaRoute,
   RezervareaMeaRoute: RezervareaMeaRoute,
   RezervariRoute: RezervariRoute,
   SaliRoute: SaliRouteWithChildren,
   SignupRoute: SignupRoute,
+  TermeniSiConditiiRoute: TermeniSiConditiiRoute,
   RezervaSlugRoute: RezervaSlugRoute,
 }
 export const routeTree = rootRouteImport
