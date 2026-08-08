@@ -468,14 +468,17 @@ export function RoomPhotosUploader({ roomId, pending, onPendingChange }: Props) 
       <div
         className="relative"
         onDragEnter={(e) => {
+          if (!e.dataTransfer?.types?.includes("Files")) return;
           e.preventDefault();
           dragCounter.current++;
           if (dragCounter.current === 1) setIsDragging(true);
         }}
         onDragOver={(e) => {
+          if (!e.dataTransfer?.types?.includes("Files")) return;
           e.preventDefault();
         }}
         onDragLeave={(e) => {
+          if (!e.dataTransfer?.types?.includes("Files")) return;
           e.preventDefault();
           dragCounter.current--;
           if (dragCounter.current <= 0) {
@@ -484,11 +487,13 @@ export function RoomPhotosUploader({ roomId, pending, onPendingChange }: Props) 
           }
         }}
         onDrop={(e) => {
+          if (!e.dataTransfer?.types?.includes("Files")) return;
           e.preventDefault();
           dragCounter.current = 0;
           setIsDragging(false);
           handleFiles(e.dataTransfer.files);
         }}
+
       >
         {isDragging && (
           <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-primary bg-background/95">
