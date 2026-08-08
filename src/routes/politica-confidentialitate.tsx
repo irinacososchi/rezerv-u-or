@@ -220,6 +220,23 @@ function ConfidentialitatePage() {
         </li>
       </UL>
       <P>
+        <Strong>Cum vă exercitați drepturile în mod concret:</Strong>
+      </P>
+      <UL>
+        <li>
+          <Strong>Ștergerea contului și a datelor:</Strong> ne puteți transmite o cerere la{" "}
+          <a href="mailto:contact@rzrv.ro" className="text-primary underline underline-offset-4">
+            contact@rzrv.ro
+          </a>
+          , iar noi vom șterge contul și datele asociate în termenul legal (cu excepția datelor pe
+          care trebuie să le păstrăm din obligații legale).
+        </li>
+        <li>
+          <Strong>Accesul, rectificarea sau restricționarea</Strong> datelor: prin solicitare la aceeași
+          adresă de e-mail.
+        </li>
+      </UL>
+      <P>
         Pentru exercitarea acestor drepturi, ne puteți contacta la{" "}
         <a href="mailto:contact@rzrv.ro" className="text-primary underline underline-offset-4">
           contact@rzrv.ro
@@ -257,9 +274,10 @@ function ConfidentialitatePage() {
 
       <H2>9. Datele minorilor</H2>
       <P>
-        Platforma nu se adresează persoanelor sub 16 ani. Nu colectăm cu bună știință date de la
-        minori. Dacă aflăm că am colectat astfel de date fără consimțământul reprezentantului legal, le
-        vom șterge.
+        Platforma nu se adresează persoanelor sub 16 ani. La crearea contului, utilizatorul confirmă
+        că are cel puțin 16 ani. Nu colectăm cu bună știință date de la persoane sub această vârstă.
+        Dacă aflăm că am colectat astfel de date fără consimțământul reprezentantului legal, le vom
+        șterge fără întârziere.
       </P>
 
       <H2>10. Modificări ale acestei politici</H2>
