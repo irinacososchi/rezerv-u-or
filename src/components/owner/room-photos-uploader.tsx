@@ -513,93 +513,57 @@ export function RoomPhotosUploader({ roomId, pending, onPendingChange }: Props) 
               </p>
             </div>
           ) : isPendingMode ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {pendingList.map((p) => (
-                <div
-                  key={p._key}
-                  className="relative group rounded-lg overflow-hidden border bg-muted aspect-square"
-                >
-                  <img
-                    src={p.previewUrl}
-                    alt="Poză sală"
-                    className="h-full w-full object-cover"
-                  />
-                  {p.is_cover && (
-                    <div className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-md bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5">
-                      <Star className="h-3 w-3 fill-current" />
-                      Principală
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    {!p.is_cover && (
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => setPendingCover(p._key)}
-                      >
-                        <Star className="h-4 w-4" />
-                        Setează principală
-                      </Button>
-                    )}
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => removePending(p._key)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handlePendingDragEnd}
+            >
+              <SortableContext
+                items={pendingList.map((p) => p._key)}
+                strategy={rectSortingStrategy}
+              >
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {pendingList.map((p, i) => (
+                    <SortablePhotoCard
+                      key={p._key}
+                      id={p._key}
+                      src={p.previewUrl}
+                      isCover={i === 0}
+                      onSetCover={() => setPendingCover(p._key)}
+                      onRemove={() => removePending(p._key)}
+                    />
+                  ))}
                 </div>
-              ))}
-            </div>
+              </SortableContext>
+            </DndContext>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {photos.map((photo) => (
-                <div
-                  key={photo.id}
-                  className="relative group rounded-lg overflow-hidden border bg-muted aspect-square"
-                >
-                  <img
-                    src={photo.storage_url}
-                    alt="Poză sală"
-                    className="h-full w-full object-cover"
-                    loading="lazy"
-                  />
-                  {photo.is_cover && (
-                    <div className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-md bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5">
-                      <Star className="h-3 w-3 fill-current" />
-                      Principală
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    {!photo.is_cover && (
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => setCover(photo)}
-                        disabled={busyId === photo.id}
-                      >
-                        <Star className="h-4 w-4" />
-                        Setează principală
-                      </Button>
-                    )}
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => removePhoto(photo)}
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handlePhotosDragEnd}
+            >
+              <SortableContext
+                items={photos.map((p) => p.id)}
+                strategy={rectSortingStrategy}
+              >
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {photos.map((photo, i) => (
+                    <SortablePhotoCard
+                      key={photo.id}
+                      id={photo.id}
+                      src={photo.storage_url}
+                      isCover={i === 0}
+                      lazy
                       disabled={busyId === photo.id}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                      onSetCover={() => setCover(photo)}
+                      onRemove={() => removePhoto(photo)}
+                    />
+                  ))}
                 </div>
-              ))}
-            </div>
+              </SortableContext>
+            </DndContext>
           )}
+
         </CardContent>
       </div>
     </Card>
