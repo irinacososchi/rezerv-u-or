@@ -281,19 +281,20 @@ function SignupPage() {
               )}
 
               <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <Checkbox
-                    id="agreedToLegal"
-                    checked={agreedToLegal}
-                    onCheckedChange={(v) => {
-                      console.log("agreedToLegal changed", v);
-                      setAgreedToLegal(v === true);
-                      setShowConsentHint(false);
-                    }}
-                    onClick={() => {
-                      console.log("agreedToLegal clicked");
-                    }}
-                  />
+              <div className="flex items-start gap-3">
+                <button type="button" id="debugBtn" onClick={() => console.log("debug button clicked")} className="border px-2 py-1">Debug</button>
+                <Checkbox
+                  id="agreedToLegal"
+                  checked={agreedToLegal}
+                  onCheckedChange={(v) => {
+                    console.log("agreedToLegal changed", v);
+                    setAgreedToLegal(v === true);
+                    setShowConsentHint(false);
+                  }}
+                  onClick={() => {
+                    console.log("agreedToLegal clicked");
+                  }}
+                />
                   <label htmlFor="agreedToLegal" className="text-sm leading-tight text-muted-foreground">
                     Sunt de acord cu{" "}
                     <a
