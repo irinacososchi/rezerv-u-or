@@ -328,13 +328,25 @@ export function RoomPhotosUploader({ roomId, pending, onPendingChange }: Props) 
       </CardHeader>
       <div
         className="relative"
+        onDragEnter={(e) => {
+          e.preventDefault();
+          dragCounter.current++;
+          if (dragCounter.current === 1) setIsDragging(true);
+        }}
         onDragOver={(e) => {
           e.preventDefault();
-          setIsDragging(true);
         }}
-        onDragLeave={() => setIsDragging(false)}
+        onDragLeave={(e) => {
+          e.preventDefault();
+          dragCounter.current--;
+          if (dragCounter.current <= 0) {
+            dragCounter.current = 0;
+            setIsDragging(false);
+          }
+        }}
         onDrop={(e) => {
           e.preventDefault();
+          dragCounter.current = 0;
           setIsDragging(false);
           handleFiles(e.dataTransfer.files);
         }}
