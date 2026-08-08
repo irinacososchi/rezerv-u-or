@@ -1162,36 +1162,32 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
 
         {/* Sticky save bar */}
         <div className="fixed bottom-0 inset-x-0 md:left-64 bg-card/95 backdrop-blur border-t z-20">
-          <div className="max-w-4xl mx-auto p-4 flex items-center justify-between gap-3 flex-wrap">
-            <div>
-              {isEdit && (
-                <Button
-                  variant="outline"
-                  onClick={handleDelete}
-                  disabled={saving || deleting}
-                  className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  {deleting ? "Se dezactivează..." : "Dezactivează\u00a0"}
-                </Button>
-              )}
-            </div>
-            <div className="flex items-center gap-3">
+          <div className="max-w-4xl mx-auto p-4 flex items-center justify-between gap-3">
+            <Button onClick={handleSave} disabled={saving || deleting}>
+              {saving
+                ? "Se salvează..."
+                : isEdit
+                  ? "Salvează\u00a0"
+                  : "Adaugă sala"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate({ to: "/panou/sali" })}
+              disabled={saving || deleting}
+            >
+              Anulează
+            </Button>
+            {isEdit && (
               <Button
                 variant="outline"
-                onClick={() => navigate({ to: "/panou/sali" })}
+                onClick={handleDelete}
                 disabled={saving || deleting}
+                className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
               >
-                Anulează
+                <Trash2 className="h-4 w-4" />
+                {deleting ? "Se dezactivează..." : "Dezactivează\u00a0"}
               </Button>
-              <Button onClick={handleSave} disabled={saving || deleting}>
-                {saving
-                  ? "Se salvează..."
-                  : isEdit
-                    ? "Salvează\u00a0"
-                    : "Adaugă sala"}
-              </Button>
-            </div>
+            )}
           </div>
         </div>
       </div>
