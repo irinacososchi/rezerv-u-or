@@ -2,8 +2,26 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/external-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Upload, Trash2, Star, ImageIcon } from "lucide-react";
+import { Loader2, Upload, Trash2, Star, ImageIcon, GripVertical } from "lucide-react";
 import { toast } from "sonner";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  rectSortingStrategy,
+  sortableKeyboardCoordinates,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
 
 const BUCKET = "room-photos";
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -99,6 +117,80 @@ type Props = {
   onPendingChange?: (next: PendingPhoto[]) => void;
 };
 
+function SortablePhotoCard({
+  id,
+  src,
+  isCover,
+  disabled,
+  onSetCover,
+  onRemove,
+  lazy,
+}: {
+  id: string;
+  src: string;
+  isCover: boolean;
+  disabled?: boolean;
+  onSetCover: () => void;
+  onRemove: () => void;
+  lazy?: boolean;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id });
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={`relative group rounded-lg overflow-hidden border bg-muted aspect-square touch-none ${
+        isDragging ? "z-20 opacity-80 ring-2 ring-primary" : ""
+      }`}
+      {...attributes}
+      {...listeners}
+    >
+      <img
+        src={src}
+        alt="Poză sală"
+        className="h-full w-full object-cover pointer-events-none select-none"
+        draggable={false}
+        loading={lazy ? "lazy" : undefined}
+      />
+      {isCover && (
+        <div className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-md bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5">
+          <Star className="h-3 w-3 fill-current" />
+          Principală
+        </div>
+      )}
+      <div className="absolute top-2 right-2 rounded-md bg-background/80 p-1 text-muted-foreground">
+        <GripVertical className="h-4 w-4" />
+      </div>
+      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+        {!isCover && (
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            disabled={disabled}
+            onClick={onSetCover}
+          >
+            <Star className="h-4 w-4" />
+            Setează principală
+          </Button>
+        )}
+        <Button
+          type="button"
+          size="sm"
+          variant="destructive"
+          disabled={disabled}
+          onClick={onRemove}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+
 export function RoomPhotosUploader({ roomId, pending, onPendingChange }: Props) {
   const isPendingMode = !roomId;
   const [photos, setPhotos] = useState<RoomPhoto[]>([]);
@@ -108,6 +200,11 @@ export function RoomPhotosUploader({ roomId, pending, onPendingChange }: Props) 
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dragCounter = useRef(0);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
 
   async function loadPhotos() {
     if (!roomId) return;
@@ -232,22 +329,46 @@ export function RoomPhotosUploader({ roomId, pending, onPendingChange }: Props) 
     await loadPhotos();
   }
 
-  async function setCover(photo: RoomPhoto) {
-    if (!roomId || photo.is_cover) return;
-    setBusyId(photo.id);
-    await supabase.from("room_photos").update({ is_cover: false }).eq("room_id", roomId);
-    const { error } = await supabase
-      .from("room_photos")
-      .update({ is_cover: true })
-      .eq("id", photo.id);
-    setBusyId(null);
-    if (error) {
-      toast.error("Nu am putut seta poza principală.");
-      return;
+  async function persistOrder(next: RoomPhoto[], prev: RoomPhoto[]) {
+    const reindexed = next.map((p, i) => ({ ...p, sort_order: i, is_cover: i === 0 }));
+    setPhotos(reindexed);
+    const results = await Promise.all(
+      reindexed.map((p) =>
+        supabase
+          .from("room_photos")
+          .update({ sort_order: p.sort_order, is_cover: p.is_cover })
+          .eq("id", p.id),
+      ),
+    );
+    if (results.some((r) => r.error)) {
+      console.error(results.find((r) => r.error)?.error);
+      setPhotos(prev);
+      toast.error("Nu am putut salva ordinea pozelor.");
+      return false;
     }
-    toast.success("Poză principală actualizată.");
-    await loadPhotos();
+    return true;
   }
+
+  async function setCover(photo: RoomPhoto) {
+    if (!roomId) return;
+    const index = photos.findIndex((p) => p.id === photo.id);
+    if (index <= 0) return;
+    setBusyId(photo.id);
+    const prev = photos;
+    const ok = await persistOrder(arrayMove(photos, index, 0), prev);
+    setBusyId(null);
+    if (ok) toast.success("Poză principală actualizată.");
+  }
+
+  async function handlePhotosDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = photos.findIndex((p) => p.id === active.id);
+    const newIndex = photos.findIndex((p) => p.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    await persistOrder(arrayMove(photos, oldIndex, newIndex), photos);
+  }
+
 
   async function removePhoto(photo: RoomPhoto) {
     if (!window.confirm("Sigur ștergi această poză?")) return;
@@ -276,9 +397,27 @@ export function RoomPhotosUploader({ roomId, pending, onPendingChange }: Props) 
   }
 
   function setPendingCover(key: string) {
-    const next = (pending ?? []).map((p) => ({ ...p, is_cover: p._key === key }));
+    const list = pending ?? [];
+    const index = list.findIndex((p) => p._key === key);
+    if (index <= 0) return;
+    const next = arrayMove(list, index, 0).map((p, i) => ({ ...p, is_cover: i === 0 }));
     onPendingChange?.(next);
   }
+
+  function handlePendingDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const list = pending ?? [];
+    const oldIndex = list.findIndex((p) => p._key === active.id);
+    const newIndex = list.findIndex((p) => p._key === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    const next = arrayMove(list, oldIndex, newIndex).map((p, i) => ({
+      ...p,
+      is_cover: i === 0,
+    }));
+    onPendingChange?.(next);
+  }
+
 
   function removePending(key: string) {
     const target = (pending ?? []).find((p) => p._key === key);
@@ -329,14 +468,17 @@ export function RoomPhotosUploader({ roomId, pending, onPendingChange }: Props) 
       <div
         className="relative"
         onDragEnter={(e) => {
+          if (!e.dataTransfer?.types?.includes("Files")) return;
           e.preventDefault();
           dragCounter.current++;
           if (dragCounter.current === 1) setIsDragging(true);
         }}
         onDragOver={(e) => {
+          if (!e.dataTransfer?.types?.includes("Files")) return;
           e.preventDefault();
         }}
         onDragLeave={(e) => {
+          if (!e.dataTransfer?.types?.includes("Files")) return;
           e.preventDefault();
           dragCounter.current--;
           if (dragCounter.current <= 0) {
@@ -345,11 +487,13 @@ export function RoomPhotosUploader({ roomId, pending, onPendingChange }: Props) 
           }
         }}
         onDrop={(e) => {
+          if (!e.dataTransfer?.types?.includes("Files")) return;
           e.preventDefault();
           dragCounter.current = 0;
           setIsDragging(false);
           handleFiles(e.dataTransfer.files);
         }}
+
       >
         {isDragging && (
           <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-primary bg-background/95">
@@ -369,93 +513,57 @@ export function RoomPhotosUploader({ roomId, pending, onPendingChange }: Props) 
               </p>
             </div>
           ) : isPendingMode ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {pendingList.map((p) => (
-                <div
-                  key={p._key}
-                  className="relative group rounded-lg overflow-hidden border bg-muted aspect-square"
-                >
-                  <img
-                    src={p.previewUrl}
-                    alt="Poză sală"
-                    className="h-full w-full object-cover"
-                  />
-                  {p.is_cover && (
-                    <div className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-md bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5">
-                      <Star className="h-3 w-3 fill-current" />
-                      Principală
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    {!p.is_cover && (
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => setPendingCover(p._key)}
-                      >
-                        <Star className="h-4 w-4" />
-                        Setează principală
-                      </Button>
-                    )}
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => removePending(p._key)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handlePendingDragEnd}
+            >
+              <SortableContext
+                items={pendingList.map((p) => p._key)}
+                strategy={rectSortingStrategy}
+              >
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {pendingList.map((p, i) => (
+                    <SortablePhotoCard
+                      key={p._key}
+                      id={p._key}
+                      src={p.previewUrl}
+                      isCover={i === 0}
+                      onSetCover={() => setPendingCover(p._key)}
+                      onRemove={() => removePending(p._key)}
+                    />
+                  ))}
                 </div>
-              ))}
-            </div>
+              </SortableContext>
+            </DndContext>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {photos.map((photo) => (
-                <div
-                  key={photo.id}
-                  className="relative group rounded-lg overflow-hidden border bg-muted aspect-square"
-                >
-                  <img
-                    src={photo.storage_url}
-                    alt="Poză sală"
-                    className="h-full w-full object-cover"
-                    loading="lazy"
-                  />
-                  {photo.is_cover && (
-                    <div className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-md bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5">
-                      <Star className="h-3 w-3 fill-current" />
-                      Principală
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    {!photo.is_cover && (
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => setCover(photo)}
-                        disabled={busyId === photo.id}
-                      >
-                        <Star className="h-4 w-4" />
-                        Setează principală
-                      </Button>
-                    )}
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => removePhoto(photo)}
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handlePhotosDragEnd}
+            >
+              <SortableContext
+                items={photos.map((p) => p.id)}
+                strategy={rectSortingStrategy}
+              >
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {photos.map((photo, i) => (
+                    <SortablePhotoCard
+                      key={photo.id}
+                      id={photo.id}
+                      src={photo.storage_url}
+                      isCover={i === 0}
+                      lazy
                       disabled={busyId === photo.id}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                      onSetCover={() => setCover(photo)}
+                      onRemove={() => removePhoto(photo)}
+                    />
+                  ))}
                 </div>
-              ))}
-            </div>
+              </SortableContext>
+            </DndContext>
           )}
+
         </CardContent>
       </div>
     </Card>
