@@ -33,6 +33,9 @@ function SignupPage() {
   const [checkingEmail, setCheckingEmail] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [agreedToLegal, setAgreedToLegal] = useState(false);
+  const [isOver16, setIsOver16] = useState(false);
+  const [showConsentHint, setShowConsentHint] = useState(false);
 
   async function checkEmailExists(value: string) {
     const trimmed = value.trim().toLowerCase();
