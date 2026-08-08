@@ -2,8 +2,26 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/external-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Upload, Trash2, Star, ImageIcon } from "lucide-react";
+import { Loader2, Upload, Trash2, Star, ImageIcon, GripVertical } from "lucide-react";
 import { toast } from "sonner";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  rectSortingStrategy,
+  sortableKeyboardCoordinates,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
 
 const BUCKET = "room-photos";
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
