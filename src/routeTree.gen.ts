@@ -15,6 +15,7 @@ import { Route as SaliRouteImport } from './routes/sali'
 import { Route as RezervariRouteImport } from './routes/rezervari'
 import { Route as RezervareaMeaRouteImport } from './routes/rezervarea-mea'
 import { Route as ResetParolaRouteImport } from './routes/reset-parola'
+import { Route as PoliticaCookiesRouteImport } from './routes/politica-cookies'
 import { Route as PoliticaConfidentialitateRouteImport } from './routes/politica-confidentialitate'
 import { Route as PanouRouteImport } from './routes/panou'
 import { Route as LoginRouteImport } from './routes/login'
@@ -72,6 +73,11 @@ const RezervareaMeaRoute = RezervareaMeaRouteImport.update({
 const ResetParolaRoute = ResetParolaRouteImport.update({
   id: '/reset-parola',
   path: '/reset-parola',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PoliticaCookiesRoute = PoliticaCookiesRouteImport.update({
+  id: '/politica-cookies',
+  path: '/politica-cookies',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PoliticaConfidentialitateRoute =
@@ -224,6 +230,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/panou': typeof PanouRouteWithChildren
   '/politica-confidentialitate': typeof PoliticaConfidentialitateRoute
+  '/politica-cookies': typeof PoliticaCookiesRoute
   '/reset-parola': typeof ResetParolaRoute
   '/rezervarea-mea': typeof RezervareaMeaRoute
   '/rezervari': typeof RezervariRoute
@@ -258,6 +265,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
   '/politica-confidentialitate': typeof PoliticaConfidentialitateRoute
+  '/politica-cookies': typeof PoliticaCookiesRoute
   '/reset-parola': typeof ResetParolaRoute
   '/rezervarea-mea': typeof RezervareaMeaRoute
   '/rezervari': typeof RezervariRoute
@@ -293,6 +301,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/panou': typeof PanouRouteWithChildren
   '/politica-confidentialitate': typeof PoliticaConfidentialitateRoute
+  '/politica-cookies': typeof PoliticaCookiesRoute
   '/reset-parola': typeof ResetParolaRoute
   '/rezervarea-mea': typeof RezervareaMeaRoute
   '/rezervari': typeof RezervariRoute
@@ -331,6 +340,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/panou'
     | '/politica-confidentialitate'
+    | '/politica-cookies'
     | '/reset-parola'
     | '/rezervarea-mea'
     | '/rezervari'
@@ -365,6 +375,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/login'
     | '/politica-confidentialitate'
+    | '/politica-cookies'
     | '/reset-parola'
     | '/rezervarea-mea'
     | '/rezervari'
@@ -399,6 +410,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/panou'
     | '/politica-confidentialitate'
+    | '/politica-cookies'
     | '/reset-parola'
     | '/rezervarea-mea'
     | '/rezervari'
@@ -436,6 +448,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   PanouRoute: typeof PanouRouteWithChildren
   PoliticaConfidentialitateRoute: typeof PoliticaConfidentialitateRoute
+  PoliticaCookiesRoute: typeof PoliticaCookiesRoute
   ResetParolaRoute: typeof ResetParolaRoute
   RezervareaMeaRoute: typeof RezervareaMeaRoute
   RezervariRoute: typeof RezervariRoute
@@ -487,6 +500,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-parola'
       fullPath: '/reset-parola'
       preLoaderRoute: typeof ResetParolaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/politica-cookies': {
+      id: '/politica-cookies'
+      path: '/politica-cookies'
+      fullPath: '/politica-cookies'
+      preLoaderRoute: typeof PoliticaCookiesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/politica-confidentialitate': {
@@ -780,6 +800,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   PanouRoute: PanouRouteWithChildren,
   PoliticaConfidentialitateRoute: PoliticaConfidentialitateRoute,
+  PoliticaCookiesRoute: PoliticaCookiesRoute,
   ResetParolaRoute: ResetParolaRoute,
   RezervareaMeaRoute: RezervareaMeaRoute,
   RezervariRoute: RezervariRoute,
