@@ -107,6 +107,7 @@ export function RoomPhotosUploader({ roomId, pending, onPendingChange }: Props) 
   const [busyId, setBusyId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dragCounter = useRef(0);
 
   async function loadPhotos() {
     if (!roomId) return;
