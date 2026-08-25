@@ -1231,11 +1231,22 @@ function RoomDetailsPage() {
                             const slotPricing = slotAvail(slotForPricing)
                               ? getPriceForSlotDetailed(activeDay.date, slotForPricing, pricing)
                               : null;
+
+                            // Availability of each half-hour for the hourly button.
+                            const leftHalfAvailable = canStart00;
+                            const rightHalfAvailable = canStart30;
+                            const partialRight = !leftHalfAvailable && rightHalfAvailable && !inFinalized && !isStart && !isEnd;
+                            const partialLeft = leftHalfAvailable && !rightHalfAvailable && !inFinalized && !isStart && !isEnd;
+
                             const title = !enabled
                               ? "Indisponibil"
-                              : slotPricing?.label
-                                ? `${slotPricing.hourlyRate} ${currency}/oră · ${slotPricing.label}`
-                                : undefined;
+                              : partialRight
+                                ? `Disponibil de la ${h30}`
+                                : partialLeft
+                                  ? `Disponibil doar la ${h00}`
+                                  : slotPricing?.label
+                                    ? `${slotPricing.hourlyRate} ${currency}/oră · ${slotPricing.label}`
+                                    : undefined;
 
                             // Chip behavior: shown if isStart or isEnd.
                             const showChip = isStart || isEnd;
@@ -1255,7 +1266,9 @@ function RoomDetailsPage() {
                               ? activeDay.selectedStart
                               : isEnd
                                 ? activeDay.selectedEnd
-                                : h00;
+                                : partialRight
+                                  ? h30
+                                  : h00;
 
                             return (
                               <div key={h} className="flex flex-col items-stretch">
@@ -1270,7 +1283,9 @@ function RoomDetailsPage() {
                                         ? "border-primary bg-primary text-primary-foreground"
                                         : isStart || isEnd
                                           ? "border-primary bg-primary/10 text-primary ring-2 ring-primary"
-                                          : "border-border bg-background hover:border-primary hover:text-primary"
+                                          : partialRight || partialLeft
+                                            ? "border-border bg-background text-foreground hover:border-primary hover:text-primary"
+                                            : "border-border bg-background hover:border-primary hover:text-primary"
                                   }`}
                                 >
                                   {(onlyRight || onlyLeft) && (
@@ -1281,6 +1296,15 @@ function RoomDetailsPage() {
                                         background: `repeating-linear-gradient(45deg, ${
                                           onlyLeft ? "#ffffff" : "var(--primary)"
                                         } 0 2px, transparent 2px 6px)`,
+                                      }}
+                                    />
+                                  )}
+                                  {(partialRight || partialLeft) && (
+                                    <span
+                                      aria-hidden
+                                      className={`pointer-events-none absolute inset-y-0 w-1/2 bg-muted/60 ${partialRight ? "left-0" : "right-0"}`}
+                                      style={{
+                                        backgroundImage: "repeating-linear-gradient(135deg, var(--color-border) 0 1px, transparent 1px 5px)",
                                       }}
                                     />
                                   )}
