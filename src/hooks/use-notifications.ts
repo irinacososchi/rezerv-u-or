@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/external-client";
+import { useAuth } from "@/hooks/use-auth";
 
 export type Notification = {
   id: string;
