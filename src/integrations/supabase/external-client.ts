@@ -18,11 +18,8 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   },
 });
 
-if (typeof window !== "undefined") {
-  supabase.auth.onAuthStateChange((event, session) => {
-    console.log("Auth state change:", event, session?.user?.email);
-  });
-}
+// Starea de autentificare este ascultată într-un singur loc: <AuthProvider />.
+
 
 export function setRememberMe(remember: boolean) {
   if (typeof window === "undefined") return;
