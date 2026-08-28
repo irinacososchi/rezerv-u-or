@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import type { User } from "@supabase/supabase-js";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ChevronDown, LayoutDashboard, LogOut, Calendar, Heart, Settings, Plus, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/notification-bell";
 import { supabase } from "@/integrations/supabase/external-client";
 import { useUserRole } from "@/hooks/use-user-role";
+import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import logoUrl from "@/assets/rzrv-logo-2.png.asset.json";
 
@@ -14,7 +14,7 @@ type Profile = { full_name: string | null; email: string | null };
 export function SiteHeader() {
   const navigate = useNavigate();
   const { isOwner, isRenter, isAdmin, loading: roleLoading } = useUserRole();
-  const [user, setUser] = useState<User | null>(null);
+  const { user, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [hasBookings, setHasBookings] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -28,51 +28,57 @@ export function SiteHeader() {
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const mobileToggleRef = useRef<HTMLButtonElement>(null);
 
-  async function loadUserData() {
-    const { data: { user: u } } = await supabase.auth.getUser();
-    if (!u) {
-      setUser(null);
+  const userId = user?.id ?? null;
+  const userEmail = user?.email ?? null;
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!userId) {
       setProfile(null);
       setHasBookings(false);
       setLoading(false);
       return;
     }
-    setUser(u);
 
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("full_name, email")
-      .eq("id", u.id)
-      .single();
-    setProfile((profileData as Profile) ?? { full_name: null, email: u.email ?? null });
+    let cancelled = false;
 
-    const { count: bookingsByRenterId } = await supabase
-      .from("bookings")
-      .select("id", { count: "exact", head: true })
-      .eq("renter_id", u.id);
+    (async () => {
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("full_name, email")
+        .eq("id", userId)
+        .single();
+      if (cancelled) return;
+      setProfile((profileData as Profile) ?? { full_name: null, email: userEmail });
 
-    let totalBookings = bookingsByRenterId ?? 0;
-
-    const email = profileData?.email ?? u.email;
-    if (email) {
-      const { count: bookingsByEmail } = await supabase
+      const { count: bookingsByRenterId } = await supabase
         .from("bookings")
         .select("id", { count: "exact", head: true })
-        .eq("guest_email", email);
-      totalBookings += bookingsByEmail ?? 0;
-    }
+        .eq("renter_id", userId);
 
-    setHasBookings(totalBookings > 0);
-    setLoading(false);
-  }
+      let totalBookings = bookingsByRenterId ?? 0;
 
-  useEffect(() => {
-    loadUserData();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      loadUserData();
+      const email = profileData?.email ?? userEmail;
+      if (email) {
+        const { count: bookingsByEmail } = await supabase
+          .from("bookings")
+          .select("id", { count: "exact", head: true })
+          .eq("guest_email", email);
+        totalBookings += bookingsByEmail ?? 0;
+      }
+
+      if (cancelled) return;
+      setHasBookings(totalBookings > 0);
+      setLoading(false);
+    })().catch((e) => {
+      console.error("SiteHeader: încărcare profil", e);
+      if (!cancelled) setLoading(false);
     });
-    return () => subscription.unsubscribe();
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, userEmail, authLoading]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -301,7 +307,6 @@ export function SiteHeader() {
                       purge(window.sessionStorage);
                       window.location.replace("/");
                     } else {
-                      setUser(null);
                       setProfile(null);
                       navigate({ to: "/" });
                     }

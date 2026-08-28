@@ -1,3 +1,4 @@
+import { getSessionUser } from "@/lib/auth-user";
 import { useEffect } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { OwnerLayout } from "@/components/owner-layout";
@@ -17,7 +18,7 @@ function CalendarRedirectPage() {
     (async () => {
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getSessionUser();
       if (!user) {
         navigate({ to: "/auth/login" as never });
         return;

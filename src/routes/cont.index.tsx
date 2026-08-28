@@ -1,3 +1,4 @@
+import { getSessionUser } from "@/lib/auth-user";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Loader2, AlertCircle, Trash2, Lock, CheckCircle2 } from "lucide-react";
@@ -57,7 +58,7 @@ function ContPage() {
   useEffect(() => {
     let cancelled = false;
     async function checkAuth() {
-      const { data: { user: u } } = await supabase.auth.getUser();
+      const { data: { user: u } } = await getSessionUser();
       if (!u) {
         navigate({ to: "/login" });
         return;

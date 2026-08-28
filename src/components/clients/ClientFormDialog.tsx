@@ -1,3 +1,4 @@
+import { getSessionUser } from "@/lib/auth-user";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -111,7 +112,7 @@ export function ClientFormDialog({ open, onOpenChange, context, client, onSaved,
     setSaving(true);
     try {
       if (!isEdit) {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await getSessionUser();
         if (!user) {
           toast.error("Sesiune expirată.");
           return;

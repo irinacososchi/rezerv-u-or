@@ -1,3 +1,4 @@
+import { getSessionUser } from "@/lib/auth-user";
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { OwnerLayout } from "@/components/owner-layout";
@@ -114,7 +115,7 @@ function DashboardPage() {
 
   async function loadDashboard() {
     setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await getSessionUser();
     if (!user) {
       setLoading(false);
       return;

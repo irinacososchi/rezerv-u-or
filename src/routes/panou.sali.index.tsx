@@ -1,3 +1,4 @@
+import { getSessionUser } from "@/lib/auth-user";
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { OwnerLayout } from "@/components/owner-layout";
@@ -53,7 +54,7 @@ function RoomsPage() {
     setLoading(true);
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await getSessionUser();
     if (!user) {
       setLoading(false);
       return;

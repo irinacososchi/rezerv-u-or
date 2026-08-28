@@ -1,3 +1,4 @@
+import { getSessionUser } from "@/lib/auth-user";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, CalendarX, Calendar as CalendarIcon } from "lucide-react";
@@ -87,7 +88,7 @@ function RezervariPage() {
   useEffect(() => {
     let cancelled = false;
     async function init() {
-      const { data: { user: u } } = await supabase.auth.getUser();
+      const { data: { user: u } } = await getSessionUser();
       if (cancelled) return;
       if (u) {
         const usr = { id: u.id, email: u.email ?? "" };

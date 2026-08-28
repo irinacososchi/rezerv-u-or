@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/external-client";
+import { useAuth } from "@/hooks/use-auth";
 
 export type Notification = {
   id: string;
@@ -19,28 +20,26 @@ export function useNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const userIdRef = useRef<string | null>(null);
+  const { userId: authUserId, loading: authLoading } = useAuth();
 
   const fetchAll = useCallback(async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    const user = session?.user ?? null;
-    if (!user) {
+    if (authLoading) return;
+    if (!authUserId) {
       userIdRef.current = null;
       setNotifications([]);
       setLoading(false);
       return;
     }
-    userIdRef.current = user.id;
+    userIdRef.current = authUserId;
     const { data, error } = await supabase
       .from("app_notifications")
       .select("*")
-      .eq("user_id", user.id)
+      .eq("user_id", authUserId)
       .order("created_at", { ascending: false })
       .limit(50);
     if (!error && data) setNotifications(data as unknown as Notification[]);
     setLoading(false);
-  }, []);
+  }, [authUserId, authLoading]);
 
   useEffect(() => {
     let cancelled = false;
@@ -54,15 +53,10 @@ export function useNotifications() {
       if (!cancelled) void fetchAll();
     }, POLL_MS);
 
-    const { data: sub } = supabase.auth.onAuthStateChange(() => {
-      if (!cancelled) void fetchAll();
-    });
-
     return () => {
       cancelled = true;
       window.removeEventListener("focus", onFocus);
       window.clearInterval(interval);
-      sub.subscription.unsubscribe();
     };
   }, [fetchAll]);
 

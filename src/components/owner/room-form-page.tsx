@@ -1,3 +1,4 @@
+import { getSessionUser } from "@/lib/auth-user";
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { OwnerLayout } from "@/components/owner-layout";
@@ -333,7 +334,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
     if (isEdit) return;
     let cancelled = false;
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await getSessionUser();
       if (!user || cancelled) return;
       const { data: profile } = await supabase
         .from("profiles")
@@ -441,7 +442,7 @@ export function RoomFormPage({ roomId }: { roomId?: string }) {
     setSaving(true);
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await getSessionUser();
     if (!user) {
       setSaving(false);
       toast.error("Nu ești autentificat.");

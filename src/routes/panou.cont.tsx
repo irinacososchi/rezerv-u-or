@@ -1,3 +1,4 @@
+import { getSessionUser } from "@/lib/auth-user";
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import type { User } from "@supabase/supabase-js";
@@ -46,7 +47,7 @@ function AccountPage() {
     async function loadProfile() {
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getSessionUser();
       if (!user) {
         setLoading(false);
         return;

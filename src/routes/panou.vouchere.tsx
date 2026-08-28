@@ -1,3 +1,4 @@
+import { getSessionUser } from "@/lib/auth-user";
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { OwnerLayout } from "@/components/owner-layout";
@@ -76,7 +77,7 @@ function VouchersPage() {
     async function load() {
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getSessionUser();
       if (!user) return;
       setUserId(user.id);
 

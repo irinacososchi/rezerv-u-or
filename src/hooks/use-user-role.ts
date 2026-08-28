@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/external-client";
+import { useAuth } from "@/hooks/use-auth";
 
 export type UserRoleState = {
   isOwner: boolean;
@@ -24,27 +25,9 @@ const INITIAL: UserRoleState = {
 
 export function useUserRole(): UserRoleState {
   const [state, setState] = useState<UserRoleState>(INITIAL);
-  const [userId, setUserId] = useState<string | null | undefined>(undefined);
-
-  // Track auth user id; re-run when identity changes (not on every render).
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    let cancelled = false;
-
-    supabase.auth.getSession().then(({ data }) => {
-      if (cancelled) return;
-      setUserId(data.session?.user?.id ?? null);
-    });
-
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUserId(session?.user?.id ?? null);
-    });
-
-    return () => {
-      cancelled = true;
-      sub.subscription.unsubscribe();
-    };
-  }, []);
+  const { userId: authUserId, loading: authLoading } = useAuth();
+  // undefined = auth încă se citește; null = neautentificat
+  const userId = authLoading ? undefined : authUserId;
 
   // Fetch role data when userId changes.
   useEffect(() => {

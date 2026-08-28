@@ -1,3 +1,4 @@
+import { getSessionUser } from "@/lib/auth-user";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/external-client";
 import { Button } from "@/components/ui/button";
@@ -268,7 +269,7 @@ export function RoomPhotosUploader({ roomId, pending, onPendingChange }: Props) 
 
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await getSessionUser();
     if (!user) {
       toast.error("Trebuie să fii autentificat.");
       setUploading(false);

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/external-client";
+import { useAuth } from "@/hooks/use-auth";
 
 const STORAGE_KEY = "rzrv-favorites";
 
@@ -54,6 +55,7 @@ export function useFavorites() {
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const migratedForUser = useRef<string | null>(null);
+  const { userId: authUserId, loading: authLoading } = useAuth();
 
   useEffect(() => {
     let cancelled = false;
@@ -105,30 +107,15 @@ export function useFavorites() {
       }
     }
 
-    supabase.auth
-      .getUser()
-      .then(({ data }) => {
-        if (cancelled) return;
-        return syncForUser(data.user ?? null);
-      })
-      .catch((e) => {
-        if (cancelled) return;
-        console.error("useFavorites", e);
-        setFavorites(new Set(readGuestFavorites()));
-        setLoading(false);
-      });
+    // Auth încă se citește — nu decidem încă între cont și vizitator.
+    if (authLoading) return;
 
-    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (cancelled) return;
-      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
-      void syncForUser(session?.user ? { id: session.user.id } : null);
-    });
+    void syncForUser(authUserId ? { id: authUserId } : null);
 
     return () => {
       cancelled = true;
-      sub.subscription.unsubscribe();
     };
-  }, []);
+  }, [authUserId, authLoading]);
 
   const isFavorite = useCallback(
     (roomId: string) => favorites.has(roomId),
