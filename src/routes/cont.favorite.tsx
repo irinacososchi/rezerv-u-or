@@ -1,3 +1,4 @@
+import { getSessionUser } from "@/lib/auth-user";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Loader2, Heart } from "lucide-react";
@@ -6,7 +7,6 @@ import { SiteFooter } from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
 import { RoomCard, type Room } from "@/components/room-card";
 import { supabase } from "@/integrations/supabase/external-client";
-import { getSessionUser } from "@/lib/auth-user";
 
 export const Route = createFileRoute("/cont/favorite")({
   head: () => ({

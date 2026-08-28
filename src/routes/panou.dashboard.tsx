@@ -1,3 +1,4 @@
+import { getSessionUser } from "@/lib/auth-user";
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { OwnerLayout } from "@/components/owner-layout";
@@ -17,7 +18,6 @@ import {
 import { RecurringGroupCard } from "@/components/owner/recurring-group-card";
 import { RecurringBadge } from "@/components/owner/recurring-badge";
 import { useUserRole } from "@/hooks/use-user-role";
-import { getSessionUser } from "@/lib/auth-user";
 
 export const Route = createFileRoute("/panou/dashboard")({
   component: DashboardPage,

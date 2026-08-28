@@ -1,3 +1,4 @@
+import { getSessionUser } from "@/lib/auth-user";
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { OwnerLayout } from "@/components/owner-layout";
@@ -28,7 +29,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-import { getSessionUser } from "@/lib/auth-user";
   Tooltip,
   TooltipContent,
   TooltipProvider,

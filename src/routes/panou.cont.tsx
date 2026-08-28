@@ -1,3 +1,4 @@
+import { getSessionUser } from "@/lib/auth-user";
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import type { User } from "@supabase/supabase-js";
@@ -7,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { getSessionUser } from "@/lib/auth-user";
 
 export const Route = createFileRoute("/panou/cont")({
   component: AccountPage,

@@ -1,3 +1,4 @@
+import { getSessionUser } from "@/lib/auth-user";
 import { createFileRoute, useParams, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/external-client";
@@ -44,7 +45,6 @@ import {
 } from "@/lib/time-slots";
 import { ClientSelect } from "@/components/clients/ClientSelect";
 import { LinkedBadge } from "@/components/clients/LinkedBadge";
-import { getSessionUser } from "@/lib/auth-user";
 
 function AttachedClientDisplay({ bookingId }: { bookingId: string }) {
   const [client, setClient] = useState<{

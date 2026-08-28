@@ -1,3 +1,4 @@
+import { getSessionUser } from "@/lib/auth-user";
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { OwnerLayout } from "@/components/owner-layout";
@@ -8,7 +9,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { getSessionUser } from "@/lib/auth-user";
 
 export const Route = createFileRoute("/panou/sali/")({
   component: RoomsPage,

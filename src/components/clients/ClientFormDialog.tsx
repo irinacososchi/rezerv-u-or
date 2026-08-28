@@ -1,3 +1,4 @@
+import { getSessionUser } from "@/lib/auth-user";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -14,7 +15,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/external-client";
 import { LinkedBadge } from "./LinkedBadge";
-import { getSessionUser } from "@/lib/auth-user";
 
 export type Client = {
   id: string;

@@ -1,3 +1,4 @@
+import { getSessionUser } from "@/lib/auth-user";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Loader2, AlertCircle, Trash2, Lock, CheckCircle2 } from "lucide-react";
@@ -7,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/external-client";
-import { getSessionUser } from "@/lib/auth-user";
 
 export const Route = createFileRoute("/cont/")({
   head: () => ({

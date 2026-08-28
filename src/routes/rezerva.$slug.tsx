@@ -1,3 +1,4 @@
+import { getSessionUser } from "@/lib/auth-user";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Tag, Check, Loader2, AlertCircle, AlertTriangle, ChevronDown, ChevronUp, X, Info } from "lucide-react";
@@ -22,7 +23,6 @@ import {
   DAY_NAMES_RO,
 } from "@/lib/date-utils";
 import {
-import { getSessionUser } from "@/lib/auth-user";
   intervalsOverlap,
   slotFromTime,
   SLOT_GRANULARITY_MINUTES,

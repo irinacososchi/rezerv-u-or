@@ -1,3 +1,4 @@
+import { getSessionUser } from "@/lib/auth-user";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, CalendarX, Calendar as CalendarIcon } from "lucide-react";
@@ -18,7 +19,6 @@ import { supabase } from "@/integrations/supabase/external-client";
 import { BookingTimestamps } from "@/components/booking-timestamps";
 import { RecurringSeriesCard } from "@/components/recurring-series-card";
 import {
-import { getSessionUser } from "@/lib/auth-user";
   groupByRecurrence,
   seriesStats,
   type RecurrenceInfo,

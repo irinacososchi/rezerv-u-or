@@ -1,3 +1,4 @@
+import { getSessionUser } from "@/lib/auth-user";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -33,7 +34,6 @@ import {
   isSameDay,
 } from "@/lib/date-utils";
 import {
-import { getSessionUser } from "@/lib/auth-user";
   SLOT_GRANULARITY_MINUTES,
   slotFromTime,
   timeToMinutes,

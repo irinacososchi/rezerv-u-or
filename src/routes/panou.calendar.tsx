@@ -1,3 +1,4 @@
+import { getSessionUser } from "@/lib/auth-user";
 import { useEffect } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { OwnerLayout } from "@/components/owner-layout";
@@ -5,7 +6,6 @@ import { supabase } from "@/integrations/supabase/external-client";
 import { Calendar as CalendarIcon, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
-import { getSessionUser } from "@/lib/auth-user";
 
 export const Route = createFileRoute("/panou/calendar")({
   component: CalendarRedirectPage,

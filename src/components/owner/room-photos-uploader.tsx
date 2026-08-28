@@ -1,3 +1,4 @@
+import { getSessionUser } from "@/lib/auth-user";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/external-client";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,6 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { getSessionUser } from "@/lib/auth-user";
 
 
 const BUCKET = "room-photos";
