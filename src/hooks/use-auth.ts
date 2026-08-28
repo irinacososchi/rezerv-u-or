@@ -1,28 +1,25 @@
-import { useEffect, useState } from "react";
+import { createContext, useContext } from "react";
 import type { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/external-client";
 
-export function useAuth() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+export type AuthState = {
+  session: Session | null;
+  user: User | null;
+  userId: string | null;
+  /** true cât timp sesiunea inițială e citită din storage */
+  loading: boolean;
+};
 
-  useEffect(() => {
-    // Set up listener FIRST
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s);
-      setUser(s?.user ?? null);
-    });
+export const AuthContext = createContext<AuthState>({
+  session: null,
+  user: null,
+  userId: null,
+  loading: true,
+});
 
-    // THEN read existing session
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => sub.subscription.unsubscribe();
-  }, []);
-
-  return { session, user, loading };
+/**
+ * Sursa unică de adevăr pentru starea de autentificare.
+ * NU apela supabase.auth.getUser()/getSession() în componente — folosește acest hook.
+ */
+export function useAuth(): AuthState {
+  return useContext(AuthContext);
 }
