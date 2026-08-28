@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { getSessionUser } from "@/lib/auth-user";
 
 export const Route = createFileRoute("/panou/cont")({
   component: AccountPage,
@@ -46,7 +47,7 @@ function AccountPage() {
     async function loadProfile() {
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getSessionUser();
       if (!user) {
         setLoading(false);
         return;

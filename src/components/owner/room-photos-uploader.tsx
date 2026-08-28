@@ -21,6 +21,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { getSessionUser } from "@/lib/auth-user";
 
 
 const BUCKET = "room-photos";
@@ -268,7 +269,7 @@ export function RoomPhotosUploader({ roomId, pending, onPendingChange }: Props) 
 
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await getSessionUser();
     if (!user) {
       toast.error("Trebuie să fii autentificat.");
       setUploading(false);

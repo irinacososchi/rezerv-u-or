@@ -22,6 +22,7 @@ import {
   DAY_NAMES_RO,
 } from "@/lib/date-utils";
 import {
+import { getSessionUser } from "@/lib/auth-user";
   intervalsOverlap,
   slotFromTime,
   SLOT_GRANULARITY_MINUTES,
@@ -525,7 +526,7 @@ function CheckoutPage() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await getSessionUser();
       if (cancelled) return;
       if (!user) {
         setIsLoggedIn(false);

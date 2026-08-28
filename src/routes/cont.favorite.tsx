@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
 import { RoomCard, type Room } from "@/components/room-card";
 import { supabase } from "@/integrations/supabase/external-client";
+import { getSessionUser } from "@/lib/auth-user";
 
 export const Route = createFileRoute("/cont/favorite")({
   head: () => ({
@@ -39,7 +40,7 @@ function FavoriteContPage() {
   useEffect(() => {
     let cancelled = false;
     async function checkAuth() {
-      const { data: { user: u } } = await supabase.auth.getUser();
+      const { data: { user: u } } = await getSessionUser();
       if (!u) {
         navigate({ to: "/login" });
         return;

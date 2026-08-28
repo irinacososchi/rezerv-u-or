@@ -33,6 +33,7 @@ import {
   isSameDay,
 } from "@/lib/date-utils";
 import {
+import { getSessionUser } from "@/lib/auth-user";
   SLOT_GRANULARITY_MINUTES,
   slotFromTime,
   timeToMinutes,
@@ -502,7 +503,7 @@ function RoomDetailsPage() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await getSessionUser();
       if (cancelled) return;
       if (!user) {
         setAuthUser(null);

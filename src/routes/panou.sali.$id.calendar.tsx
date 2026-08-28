@@ -44,6 +44,7 @@ import {
 } from "@/lib/time-slots";
 import { ClientSelect } from "@/components/clients/ClientSelect";
 import { LinkedBadge } from "@/components/clients/LinkedBadge";
+import { getSessionUser } from "@/lib/auth-user";
 
 function AttachedClientDisplay({ bookingId }: { bookingId: string }) {
   const [client, setClient] = useState<{
@@ -374,7 +375,7 @@ function RoomCalendarPage() {
     async function loadRooms() {
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getSessionUser();
       if (!user) return;
       const { data } = await supabase
         .from("rooms")
@@ -478,7 +479,7 @@ function RoomCalendarPage() {
     (async () => {
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getSessionUser();
       if (!user) return;
       const { data: r, error } = await supabase
         .from("rooms")
@@ -2215,7 +2216,7 @@ function BlockSlotForm({
     // Create recurrence group when recurrent so all slots share recurrence_id
     let recurrenceId: string | null = null;
     if (isRecurrent && allDates.length > 1) {
-      const { data: userData } = await supabase.auth.getUser();
+      const { data: userData } = await getSessionUser();
       const ownerEmail = userData.user?.email ?? `owner+${Date.now()}@rezervari.intern`;
       const dayOfWeek = getDayOfWeek(parseISODate(date));
       const { data: rec, error: recError } = await supabase

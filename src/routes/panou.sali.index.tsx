@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { getSessionUser } from "@/lib/auth-user";
 
 export const Route = createFileRoute("/panou/sali/")({
   component: RoomsPage,
@@ -53,7 +54,7 @@ function RoomsPage() {
     setLoading(true);
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await getSessionUser();
     if (!user) {
       setLoading(false);
       return;

@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/external-client";
 import { Calendar as CalendarIcon, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
+import { getSessionUser } from "@/lib/auth-user";
 
 export const Route = createFileRoute("/panou/calendar")({
   component: CalendarRedirectPage,
@@ -17,7 +18,7 @@ function CalendarRedirectPage() {
     (async () => {
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getSessionUser();
       if (!user) {
         navigate({ to: "/auth/login" as never });
         return;

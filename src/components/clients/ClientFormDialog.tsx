@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/external-client";
 import { LinkedBadge } from "./LinkedBadge";
+import { getSessionUser } from "@/lib/auth-user";
 
 export type Client = {
   id: string;
@@ -111,7 +112,7 @@ export function ClientFormDialog({ open, onOpenChange, context, client, onSaved,
     setSaving(true);
     try {
       if (!isEdit) {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await getSessionUser();
         if (!user) {
           toast.error("Sesiune expirată.");
           return;

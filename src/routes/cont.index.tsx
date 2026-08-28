@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/external-client";
+import { getSessionUser } from "@/lib/auth-user";
 
 export const Route = createFileRoute("/cont/")({
   head: () => ({
@@ -57,7 +58,7 @@ function ContPage() {
   useEffect(() => {
     let cancelled = false;
     async function checkAuth() {
-      const { data: { user: u } } = await supabase.auth.getUser();
+      const { data: { user: u } } = await getSessionUser();
       if (!u) {
         navigate({ to: "/login" });
         return;

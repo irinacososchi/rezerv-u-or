@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/external-client";
 import { BookingTimestamps } from "@/components/booking-timestamps";
 import { RecurringSeriesCard } from "@/components/recurring-series-card";
 import {
+import { getSessionUser } from "@/lib/auth-user";
   groupByRecurrence,
   seriesStats,
   type RecurrenceInfo,
@@ -87,7 +88,7 @@ function RezervariPage() {
   useEffect(() => {
     let cancelled = false;
     async function init() {
-      const { data: { user: u } } = await supabase.auth.getUser();
+      const { data: { user: u } } = await getSessionUser();
       if (cancelled) return;
       if (u) {
         const usr = { id: u.id, email: u.email ?? "" };

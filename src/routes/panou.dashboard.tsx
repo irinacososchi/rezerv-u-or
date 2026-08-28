@@ -17,6 +17,7 @@ import {
 import { RecurringGroupCard } from "@/components/owner/recurring-group-card";
 import { RecurringBadge } from "@/components/owner/recurring-badge";
 import { useUserRole } from "@/hooks/use-user-role";
+import { getSessionUser } from "@/lib/auth-user";
 
 export const Route = createFileRoute("/panou/dashboard")({
   component: DashboardPage,
@@ -114,7 +115,7 @@ function DashboardPage() {
 
   async function loadDashboard() {
     setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await getSessionUser();
     if (!user) {
       setLoading(false);
       return;

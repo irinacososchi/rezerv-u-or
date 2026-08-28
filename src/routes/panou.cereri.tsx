@@ -8,6 +8,7 @@ import { groupRecurringBookings } from "@/lib/group-recurring-bookings";
 import { RecurringGroupCard } from "@/components/owner/recurring-group-card";
 import { RecurringBadge } from "@/components/owner/recurring-badge";
 import { isBookingLocked, canMarkPaid } from "@/lib/date-utils";
+import { getSessionUser } from "@/lib/auth-user";
 
 export const Route = createFileRoute("/panou/cereri")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -189,7 +190,7 @@ function CereriPage() {
     async function load() {
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getSessionUser();
       if (!user) return;
       setUserId(user.id);
 

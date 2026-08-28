@@ -28,6 +28,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
+import { getSessionUser } from "@/lib/auth-user";
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -76,7 +77,7 @@ function VouchersPage() {
     async function load() {
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getSessionUser();
       if (!user) return;
       setUserId(user.id);
 
