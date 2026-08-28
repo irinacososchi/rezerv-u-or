@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import type { User } from "@supabase/supabase-js";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ChevronDown, LayoutDashboard, LogOut, Calendar, Heart, Settings, Plus, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
