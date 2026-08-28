@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/notification-bell";
 import { supabase } from "@/integrations/supabase/external-client";
 import { useUserRole } from "@/hooks/use-user-role";
+import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import logoUrl from "@/assets/rzrv-logo-2.png.asset.json";
 
@@ -307,7 +308,6 @@ export function SiteHeader() {
                       purge(window.sessionStorage);
                       window.location.replace("/");
                     } else {
-                      setUser(null);
                       setProfile(null);
                       navigate({ to: "/" });
                     }
