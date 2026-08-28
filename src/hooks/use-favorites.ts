@@ -54,6 +54,7 @@ export function useFavorites() {
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const migratedForUser = useRef<string | null>(null);
+  const { userId: authUserId, loading: authLoading } = useAuth();
 
   useEffect(() => {
     let cancelled = false;
