@@ -45,6 +45,7 @@ type CheckoutSearch = {
 };
 
 export const Route = createFileRoute("/rezerva/$slug")({
+  staticData: { sitemap: false },
   validateSearch: (raw: Record<string, unknown>): CheckoutSearch => ({
     date: typeof raw.date === "string" ? raw.date : "",
     intervals: typeof raw.intervals === "string" ? raw.intervals : "",

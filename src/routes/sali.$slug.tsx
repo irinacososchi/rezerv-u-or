@@ -42,6 +42,7 @@ import {
 } from "@/lib/time-slots";
 
 export const Route = createFileRoute("/sali/$slug")({
+  staticData: { sitemap: true },
   loader: ({ params }) => ({ slug: params.slug }),
   head: () => ({
     meta: [

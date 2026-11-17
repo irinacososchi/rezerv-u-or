@@ -25,6 +25,7 @@ import {
 } from "@/lib/recurrence-series";
 
 export const Route = createFileRoute("/rezervari")({
+  staticData: { sitemap: false },
   validateSearch: (s: Record<string, unknown>) => ({
     bookingId: typeof s.bookingId === "string" ? s.bookingId : "",
   }),

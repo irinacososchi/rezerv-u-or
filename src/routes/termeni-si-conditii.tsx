@@ -6,6 +6,7 @@ const DESC =
   "Termenii și condițiile de utilizare a platformei RZRV: rolul de intermediar, rezervări, obligațiile proprietarilor și chiriașilor.";
 
 export const Route = createFileRoute("/termeni-si-conditii")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: TITLE },

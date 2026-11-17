@@ -27,6 +27,7 @@ import {
 } from "@/components/renter/BookingDetailsRenter";
 
 export const Route = createFileRoute("/panou/orarul-meu")({
+  staticData: { sitemap: false },
   component: OrarulMeu,
 });
 

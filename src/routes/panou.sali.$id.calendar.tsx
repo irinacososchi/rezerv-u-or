@@ -139,6 +139,7 @@ function calculatePriceForDate(
 }
 
 export const Route = createFileRoute("/panou/sali/$id/calendar")({
+  staticData: { sitemap: false },
   component: RoomCalendarPage,
 });
 

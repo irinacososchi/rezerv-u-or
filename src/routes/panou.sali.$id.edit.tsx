@@ -2,6 +2,7 @@ import { createFileRoute, useParams } from "@tanstack/react-router";
 import { RoomFormPage } from "@/components/owner/room-form-page";
 
 export const Route = createFileRoute("/panou/sali/$id/edit")({
+  staticData: { sitemap: false },
   component: EditRoomRoute,
 });
 

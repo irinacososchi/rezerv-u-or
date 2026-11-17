@@ -12,6 +12,7 @@ import { RateBreakdown } from "@/components/rate-breakdown";
 import { formatDateRO, parseISODate, getDayOfWeek, DAY_NAMES_RO } from "@/lib/date-utils";
 
 export const Route = createFileRoute("/confirmare")({
+  staticData: { sitemap: false },
   validateSearch: (raw: Record<string, unknown>) => ({
     reference: typeof raw.reference === "string" ? raw.reference : "",
     group: typeof raw.group === "string" ? raw.group : "",

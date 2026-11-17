@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { PasswordResetLinkSection } from "@/components/password-reset-link-section";
 
 export const Route = createFileRoute("/panou/cont")({
+  staticData: { sitemap: false },
   component: AccountPage,
 });
 

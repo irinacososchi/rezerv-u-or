@@ -6,6 +6,7 @@ const DESC =
   "Cum colectează, folosește și protejează RZRV datele cu caracter personal ale utilizatorilor, conform GDPR.";
 
 export const Route = createFileRoute("/politica-confidentialitate")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: TITLE },

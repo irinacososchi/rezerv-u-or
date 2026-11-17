@@ -11,6 +11,7 @@ import { RecurringBadge } from "@/components/owner/recurring-badge";
 import { isBookingLocked, canMarkPaid } from "@/lib/date-utils";
 
 export const Route = createFileRoute("/panou/cereri")({
+  staticData: { sitemap: false },
   validateSearch: (s: Record<string, unknown>) => ({
     q: typeof s.q === "string" ? s.q : "",
     group: typeof s.group === "string" ? s.group : "",
