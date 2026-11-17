@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getRouterInstance } from "@tanstack/react-start";
 import { isSitemapRouteIncluded, sitemapPathForLocation, sitemapStaticPaths, sitemapXML, type SitemapEntry } from "@/lib/sitemap";
 
 const BASE_URL = "https://rzrv.ro/";
@@ -12,7 +11,8 @@ export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: async () => {
-        const router = await getRouterInstance();
+        const { getRouter } = await import("@/router");
+        const router = getRouter();
         const entries: SitemapEntry[] = sitemapStaticPaths(router).map((path) => ({ path }));
         const routeId = "/sali/$slug";
         if (isSitemapRouteIncluded(router.routesById[routeId])) {
