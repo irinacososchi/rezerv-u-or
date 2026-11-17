@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/external-client";
+import { PasswordResetLinkSection } from "@/components/password-reset-link-section";
 
 export const Route = createFileRoute("/cont/")({
   head: () => ({
@@ -43,12 +44,6 @@ function ContPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Password change
-  const [pwOpen, setPwOpen] = useState(false);
-  const [newPw, setNewPw] = useState("");
-  const [confirmPw, setConfirmPw] = useState("");
-  const [pwSaving, setPwSaving] = useState(false);
-  const [pwMsg, setPwMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
   // Delete account
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -114,32 +109,6 @@ function ContPage() {
     }
     setSuccess("Profil actualizat!");
     setTimeout(() => setSuccess(null), 3000);
-  }
-
-  async function handleChangePassword() {
-    setPwMsg(null);
-    if (newPw.length < 8) {
-      setPwMsg({ type: "err", text: "Parola trebuie să aibă minim 8 caractere." });
-      return;
-    }
-    if (newPw !== confirmPw) {
-      setPwMsg({ type: "err", text: "Parolele nu coincid." });
-      return;
-    }
-    setPwSaving(true);
-    const { error: err } = await supabase.auth.updateUser({ password: newPw });
-    setPwSaving(false);
-    if (err) {
-      setPwMsg({ type: "err", text: err.message });
-      return;
-    }
-    setPwMsg({ type: "ok", text: "Parolă schimbată cu succes!" });
-    setNewPw("");
-    setConfirmPw("");
-    setTimeout(() => {
-      setPwOpen(false);
-      setPwMsg(null);
-    }, 2000);
   }
 
   async function handleDeleteAccount() {
@@ -302,64 +271,7 @@ function ContPage() {
             <h2 className="text-lg font-semibold">Securitate și cont</h2>
 
             <div className="mt-5 space-y-4">
-              {/* Password */}
-              <div className="rounded-lg border border-border p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Lock className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Parolă</span>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setPwOpen(!pwOpen);
-                      setPwMsg(null);
-                    }}
-                  >
-                    {pwOpen ? "Anulează" : "Schimbă parola"}
-                  </Button>
-                </div>
-                {pwOpen && (
-                  <div className="mt-4 space-y-3">
-                    <Input
-                      type="password"
-                      placeholder="Parolă nouă (minim 8 caractere)"
-                      value={newPw}
-                      onChange={(e) => setNewPw(e.target.value)}
-                    />
-                    <Input
-                      type="password"
-                      placeholder="Confirmă parola"
-                      value={confirmPw}
-                      onChange={(e) => setConfirmPw(e.target.value)}
-                    />
-                    {pwMsg && (
-                      <p
-                        className={`text-xs ${pwMsg.type === "ok" ? "text-primary" : "text-destructive"}`}
-                      >
-                        {pwMsg.text}
-                      </p>
-                    )}
-                    <Button
-                      type="button"
-                      onClick={handleChangePassword}
-                      disabled={pwSaving}
-                      size="sm"
-                    >
-                      {pwSaving ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Se salvează...
-                        </>
-                      ) : (
-                        "Salvează parola nouă"
-                      )}
-                    </Button>
-                  </div>
-                )}
-              </div>
+              <PasswordResetLinkSection email={user.email} />
 
               {/* Delete */}
               <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
