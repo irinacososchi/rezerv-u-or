@@ -12,6 +12,7 @@ import { RateBreakdown } from "@/components/rate-breakdown";
 import { formatDateRO, parseISODate, getDayOfWeek, DAY_NAMES_RO } from "@/lib/date-utils";
 
 export const Route = createFileRoute("/confirmare")({
+  staticData: { sitemap: false },
   validateSearch: (raw: Record<string, unknown>) => ({
     reference: typeof raw.reference === "string" ? raw.reference : "",
     group: typeof raw.group === "string" ? raw.group : "",
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/confirmare")({
   }),
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex" },
       { title: "Rezervare confirmată — Rezervări Săli" },
       { name: "description", content: "Detaliile rezervării tale." },
     ],

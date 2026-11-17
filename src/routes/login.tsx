@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { supabase, setRememberMe } from "@/integrations/supabase/external-client";
 
 export const Route = createFileRoute("/login")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Autentificare — Rezervări Săli" },

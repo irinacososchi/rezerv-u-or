@@ -9,6 +9,7 @@ import { RoomCard, type Room } from "@/components/room-card";
 import { supabase } from "@/integrations/supabase/external-client";
 
 export const Route = createFileRoute("/cont/favorite")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [{ title: "Săli favorite — RZRV" }],
   }),

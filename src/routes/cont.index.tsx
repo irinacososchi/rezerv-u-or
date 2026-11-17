@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/external-client";
 import { PasswordResetLinkSection } from "@/components/password-reset-link-section";
 
 export const Route = createFileRoute("/cont/")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [{ title: "Contul meu — RZRV" }],
   }),

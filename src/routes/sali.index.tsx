@@ -29,6 +29,7 @@ type SaliSearch = { county?: string; city?: string };
 const ALL = "__all__";
 
 export const Route = createFileRoute("/sali/")({
+  staticData: { sitemap: true },
   validateSearch: (search: Record<string, unknown>): SaliSearch => ({
     county: typeof search.county === "string" ? search.county : undefined,
     city: typeof search.city === "string" ? search.city : undefined,

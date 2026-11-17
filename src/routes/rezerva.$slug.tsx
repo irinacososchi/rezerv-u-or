@@ -45,6 +45,7 @@ type CheckoutSearch = {
 };
 
 export const Route = createFileRoute("/rezerva/$slug")({
+  staticData: { sitemap: false },
   validateSearch: (raw: Record<string, unknown>): CheckoutSearch => ({
     date: typeof raw.date === "string" ? raw.date : "",
     intervals: typeof raw.intervals === "string" ? raw.intervals : "",
@@ -60,6 +61,7 @@ export const Route = createFileRoute("/rezerva/$slug")({
   loader: ({ params }) => ({ slug: params.slug }),
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex" },
       { title: "Finalizează rezervarea — Rezervări Săli" },
       { name: "description", content: "Completează datele și confirmă rezervarea sălii." },
     ],

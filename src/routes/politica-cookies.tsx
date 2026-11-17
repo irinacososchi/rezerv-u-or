@@ -6,6 +6,7 @@ const DESC =
   "Ce cookie-uri și tehnologii de stocare locală folosește RZRV: doar cele strict necesare funcționării, plus analiză de trafic fără cookie-uri, fără tracking de marketing.";
 
 export const Route = createFileRoute("/politica-cookies")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: TITLE },

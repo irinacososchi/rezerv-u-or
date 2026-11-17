@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/panou/sali/")({
+  staticData: { sitemap: false },
   component: RoomsPage,
 });
 

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { fetchRooms } from "@/data/rooms";
 
 export const Route = createFileRoute("/")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "Rezervări Săli — Găsește sala perfectă pentru dans" },

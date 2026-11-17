@@ -11,8 +11,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/reset-parola")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex" },
       { title: "Resetare parolă — Rezervări Săli" },
       { name: "description", content: "Setează o parolă nouă pentru contul tău." },
     ],

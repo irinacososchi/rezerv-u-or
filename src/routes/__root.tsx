@@ -27,6 +27,7 @@ function NotFoundComponent() {
 }
 
 export const Route = createRootRoute({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -34,6 +35,7 @@ export const Route = createRootRoute({
       { title: "Rezervări Săli — Săli de închiriat" },
       { name: "description", content: "Găsește și rezervă online săli de dans din toată țara." },
       { name: "author", content: "Rezervări Săli" },
+      { name: "google-site-verification", content: "re_7zlj34gh1XHCv154m44jqJ1ub0QrYcOd6Bpxmm5U" },
       { property: "og:title", content: "Rezervări Săli — Săli de închiriat" },
       { property: "og:description", content: "Găsește și rezervă online săli de dans din toată țara." },
       { property: "og:type", content: "website" },

@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermeniSiConditiiRouteImport } from './routes/termeni-si-conditii'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SaliRouteImport } from './routes/sali'
 import { Route as RezervariRouteImport } from './routes/rezervari'
@@ -48,6 +49,11 @@ import { Route as PanouSaliIdCalendarRouteImport } from './routes/panou.sali.$id
 const TermeniSiConditiiRoute = TermeniSiConditiiRouteImport.update({
   id: '/termeni-si-conditii',
   path: '/termeni-si-conditii',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignupRoute = SignupRouteImport.update({
@@ -236,6 +242,7 @@ export interface FileRoutesByFullPath {
   '/rezervari': typeof RezervariRoute
   '/sali': typeof SaliRouteWithChildren
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/termeni-si-conditii': typeof TermeniSiConditiiRoute
   '/cont/favorite': typeof ContFavoriteRoute
   '/cont/rezervari': typeof ContRezervariRoute
@@ -270,6 +277,7 @@ export interface FileRoutesByTo {
   '/rezervarea-mea': typeof RezervareaMeaRoute
   '/rezervari': typeof RezervariRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/termeni-si-conditii': typeof TermeniSiConditiiRoute
   '/cont/favorite': typeof ContFavoriteRoute
   '/cont/rezervari': typeof ContRezervariRoute
@@ -307,6 +315,7 @@ export interface FileRoutesById {
   '/rezervari': typeof RezervariRoute
   '/sali': typeof SaliRouteWithChildren
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/termeni-si-conditii': typeof TermeniSiConditiiRoute
   '/cont/favorite': typeof ContFavoriteRoute
   '/cont/rezervari': typeof ContRezervariRoute
@@ -346,6 +355,7 @@ export interface FileRouteTypes {
     | '/rezervari'
     | '/sali'
     | '/signup'
+    | '/sitemap.xml'
     | '/termeni-si-conditii'
     | '/cont/favorite'
     | '/cont/rezervari'
@@ -380,6 +390,7 @@ export interface FileRouteTypes {
     | '/rezervarea-mea'
     | '/rezervari'
     | '/signup'
+    | '/sitemap.xml'
     | '/termeni-si-conditii'
     | '/cont/favorite'
     | '/cont/rezervari'
@@ -416,6 +427,7 @@ export interface FileRouteTypes {
     | '/rezervari'
     | '/sali'
     | '/signup'
+    | '/sitemap.xml'
     | '/termeni-si-conditii'
     | '/cont/favorite'
     | '/cont/rezervari'
@@ -454,6 +466,7 @@ export interface RootRouteChildren {
   RezervariRoute: typeof RezervariRoute
   SaliRoute: typeof SaliRouteWithChildren
   SignupRoute: typeof SignupRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermeniSiConditiiRoute: typeof TermeniSiConditiiRoute
   RezervaSlugRoute: typeof RezervaSlugRoute
 }
@@ -465,6 +478,13 @@ declare module '@tanstack/react-router' {
       path: '/termeni-si-conditii'
       fullPath: '/termeni-si-conditii'
       preLoaderRoute: typeof TermeniSiConditiiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signup': {
@@ -806,6 +826,7 @@ const rootRouteChildren: RootRouteChildren = {
   RezervariRoute: RezervariRoute,
   SaliRoute: SaliRouteWithChildren,
   SignupRoute: SignupRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermeniSiConditiiRoute: TermeniSiConditiiRoute,
   RezervaSlugRoute: RezervaSlugRoute,
 }

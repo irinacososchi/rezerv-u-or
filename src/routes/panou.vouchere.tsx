@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/tooltip";
 
 export const Route = createFileRoute("/panou/vouchere")({
+  staticData: { sitemap: false },
   component: VouchersPage,
 });
 

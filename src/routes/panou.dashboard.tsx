@@ -20,6 +20,7 @@ import { RecurringBadge } from "@/components/owner/recurring-badge";
 import { useUserRole } from "@/hooks/use-user-role";
 
 export const Route = createFileRoute("/panou/dashboard")({
+  staticData: { sitemap: false },
   component: DashboardPage,
 });
 
