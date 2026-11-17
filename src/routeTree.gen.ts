@@ -9,75 +9,70 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TermeniSiConditiiRouteImport } from './routes/termeni-si-conditii'
-import { Route as SignupRouteImport } from './routes/signup'
-import { Route as SaliRouteImport } from './routes/sali'
-import { Route as RezervariRouteImport } from './routes/rezervari'
-import { Route as RezervareaMeaRouteImport } from './routes/rezervarea-mea'
-import { Route as ResetParolaRouteImport } from './routes/reset-parola'
-import { Route as PoliticaCookiesRouteImport } from './routes/politica-cookies'
-import { Route as PoliticaConfidentialitateRouteImport } from './routes/politica-confidentialitate'
-import { Route as PanouRouteImport } from './routes/panou'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as ContactRouteImport } from './routes/contact'
-import { Route as ContRouteImport } from './routes/cont'
-import { Route as ConfirmareRouteImport } from './routes/confirmare'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as SaliIndexRouteImport } from './routes/sali.index'
-import { Route as PanouIndexRouteImport } from './routes/panou.index'
+import { Route as ConfirmareRouteImport } from './routes/confirmare'
+import { Route as ContRouteImport } from './routes/cont'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as PanouRouteImport } from './routes/panou'
+import { Route as PoliticaConfidentialitateRouteImport } from './routes/politica-confidentialitate'
+import { Route as PoliticaCookiesRouteImport } from './routes/politica-cookies'
+import { Route as ResetParolaRouteImport } from './routes/reset-parola'
+import { Route as RezervareaMeaRouteImport } from './routes/rezervarea-mea'
+import { Route as RezervariRouteImport } from './routes/rezervari'
+import { Route as SaliRouteImport } from './routes/sali'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as TermeniSiConditiiRouteImport } from './routes/termeni-si-conditii'
 import { Route as ContIndexRouteImport } from './routes/cont.index'
-import { Route as SaliSlugRouteImport } from './routes/sali.$slug'
-import { Route as RezervaSlugRouteImport } from './routes/rezerva.$slug'
-import { Route as PanouVouchereRouteImport } from './routes/panou.vouchere'
-import { Route as PanouSaliRouteImport } from './routes/panou.sali'
-import { Route as PanouOrarulMeuRouteImport } from './routes/panou.orarul-meu'
-import { Route as PanouDashboardRouteImport } from './routes/panou.dashboard'
-import { Route as PanouContRouteImport } from './routes/panou.cont'
-import { Route as PanouClientiProprietarRouteImport } from './routes/panou.clienti-proprietar'
-import { Route as PanouClientiChiriasRouteImport } from './routes/panou.clienti-chirias'
-import { Route as PanouCereriRouteImport } from './routes/panou.cereri'
-import { Route as PanouCalendarRouteImport } from './routes/panou.calendar'
-import { Route as ContRezervariRouteImport } from './routes/cont.rezervari'
 import { Route as ContFavoriteRouteImport } from './routes/cont.favorite'
+import { Route as ContRezervariRouteImport } from './routes/cont.rezervari'
+import { Route as PanouIndexRouteImport } from './routes/panou.index'
+import { Route as PanouCalendarRouteImport } from './routes/panou.calendar'
+import { Route as PanouCereriRouteImport } from './routes/panou.cereri'
+import { Route as PanouClientiChiriasRouteImport } from './routes/panou.clienti-chirias'
+import { Route as PanouClientiProprietarRouteImport } from './routes/panou.clienti-proprietar'
+import { Route as PanouContRouteImport } from './routes/panou.cont'
+import { Route as PanouDashboardRouteImport } from './routes/panou.dashboard'
+import { Route as PanouOrarulMeuRouteImport } from './routes/panou.orarul-meu'
+import { Route as PanouSaliRouteImport } from './routes/panou.sali'
+import { Route as PanouVouchereRouteImport } from './routes/panou.vouchere'
+import { Route as RezervaSlugRouteImport } from './routes/rezerva.$slug'
+import { Route as SaliIndexRouteImport } from './routes/sali.index'
+import { Route as SaliSlugRouteImport } from './routes/sali.$slug'
 import { Route as PanouSaliIndexRouteImport } from './routes/panou.sali.index'
-import { Route as PanouSaliNouRouteImport } from './routes/panou.sali.nou'
 import { Route as PanouSaliIdRouteImport } from './routes/panou.sali.$id'
-import { Route as PanouSaliIdEditRouteImport } from './routes/panou.sali.$id.edit'
+import { Route as PanouSaliNouRouteImport } from './routes/panou.sali.nou'
 import { Route as PanouSaliIdCalendarRouteImport } from './routes/panou.sali.$id.calendar'
+import { Route as PanouSaliIdEditRouteImport } from './routes/panou.sali.$id.edit'
 
-const TermeniSiConditiiRoute = TermeniSiConditiiRouteImport.update({
-  id: '/termeni-si-conditii',
-  path: '/termeni-si-conditii',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SignupRoute = SignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
+const ConfirmareRoute = ConfirmareRouteImport.update({
+  id: '/confirmare',
+  path: '/confirmare',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SaliRoute = SaliRouteImport.update({
-  id: '/sali',
-  path: '/sali',
+const ContRoute = ContRouteImport.update({
+  id: '/cont',
+  path: '/cont',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RezervariRoute = RezervariRouteImport.update({
-  id: '/rezervari',
-  path: '/rezervari',
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RezervareaMeaRoute = RezervareaMeaRouteImport.update({
-  id: '/rezervarea-mea',
-  path: '/rezervarea-mea',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ResetParolaRoute = ResetParolaRouteImport.update({
-  id: '/reset-parola',
-  path: '/reset-parola',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PoliticaCookiesRoute = PoliticaCookiesRouteImport.update({
-  id: '/politica-cookies',
-  path: '/politica-cookies',
+const PanouRoute = PanouRouteImport.update({
+  id: '/panou',
+  path: '/panou',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PoliticaConfidentialitateRoute =
@@ -86,109 +81,44 @@ const PoliticaConfidentialitateRoute =
     path: '/politica-confidentialitate',
     getParentRoute: () => rootRouteImport,
   } as any)
-const PanouRoute = PanouRouteImport.update({
-  id: '/panou',
-  path: '/panou',
+const PoliticaCookiesRoute = PoliticaCookiesRouteImport.update({
+  id: '/politica-cookies',
+  path: '/politica-cookies',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
+const ResetParolaRoute = ResetParolaRouteImport.update({
+  id: '/reset-parola',
+  path: '/reset-parola',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ContactRoute = ContactRouteImport.update({
-  id: '/contact',
-  path: '/contact',
+const RezervareaMeaRoute = RezervareaMeaRouteImport.update({
+  id: '/rezervarea-mea',
+  path: '/rezervarea-mea',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ContRoute = ContRouteImport.update({
-  id: '/cont',
-  path: '/cont',
+const RezervariRoute = RezervariRouteImport.update({
+  id: '/rezervari',
+  path: '/rezervari',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ConfirmareRoute = ConfirmareRouteImport.update({
-  id: '/confirmare',
-  path: '/confirmare',
+const SaliRoute = SaliRouteImport.update({
+  id: '/sali',
+  path: '/sali',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SaliIndexRoute = SaliIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => SaliRoute,
-} as any)
-const PanouIndexRoute = PanouIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => PanouRoute,
+const TermeniSiConditiiRoute = TermeniSiConditiiRouteImport.update({
+  id: '/termeni-si-conditii',
+  path: '/termeni-si-conditii',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ContIndexRoute = ContIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => ContRoute,
-} as any)
-const SaliSlugRoute = SaliSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => SaliRoute,
-} as any)
-const RezervaSlugRoute = RezervaSlugRouteImport.update({
-  id: '/rezerva/$slug',
-  path: '/rezerva/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PanouVouchereRoute = PanouVouchereRouteImport.update({
-  id: '/vouchere',
-  path: '/vouchere',
-  getParentRoute: () => PanouRoute,
-} as any)
-const PanouSaliRoute = PanouSaliRouteImport.update({
-  id: '/sali',
-  path: '/sali',
-  getParentRoute: () => PanouRoute,
-} as any)
-const PanouOrarulMeuRoute = PanouOrarulMeuRouteImport.update({
-  id: '/orarul-meu',
-  path: '/orarul-meu',
-  getParentRoute: () => PanouRoute,
-} as any)
-const PanouDashboardRoute = PanouDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => PanouRoute,
-} as any)
-const PanouContRoute = PanouContRouteImport.update({
-  id: '/cont',
-  path: '/cont',
-  getParentRoute: () => PanouRoute,
-} as any)
-const PanouClientiProprietarRoute = PanouClientiProprietarRouteImport.update({
-  id: '/clienti-proprietar',
-  path: '/clienti-proprietar',
-  getParentRoute: () => PanouRoute,
-} as any)
-const PanouClientiChiriasRoute = PanouClientiChiriasRouteImport.update({
-  id: '/clienti-chirias',
-  path: '/clienti-chirias',
-  getParentRoute: () => PanouRoute,
-} as any)
-const PanouCereriRoute = PanouCereriRouteImport.update({
-  id: '/cereri',
-  path: '/cereri',
-  getParentRoute: () => PanouRoute,
-} as any)
-const PanouCalendarRoute = PanouCalendarRouteImport.update({
-  id: '/calendar',
-  path: '/calendar',
-  getParentRoute: () => PanouRoute,
-} as any)
-const ContRezervariRoute = ContRezervariRouteImport.update({
-  id: '/rezervari',
-  path: '/rezervari',
   getParentRoute: () => ContRoute,
 } as any)
 const ContFavoriteRoute = ContFavoriteRouteImport.update({
@@ -196,14 +126,79 @@ const ContFavoriteRoute = ContFavoriteRouteImport.update({
   path: '/favorite',
   getParentRoute: () => ContRoute,
 } as any)
+const ContRezervariRoute = ContRezervariRouteImport.update({
+  id: '/rezervari',
+  path: '/rezervari',
+  getParentRoute: () => ContRoute,
+} as any)
+const PanouIndexRoute = PanouIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PanouRoute,
+} as any)
+const PanouCalendarRoute = PanouCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => PanouRoute,
+} as any)
+const PanouCereriRoute = PanouCereriRouteImport.update({
+  id: '/cereri',
+  path: '/cereri',
+  getParentRoute: () => PanouRoute,
+} as any)
+const PanouClientiChiriasRoute = PanouClientiChiriasRouteImport.update({
+  id: '/clienti-chirias',
+  path: '/clienti-chirias',
+  getParentRoute: () => PanouRoute,
+} as any)
+const PanouClientiProprietarRoute = PanouClientiProprietarRouteImport.update({
+  id: '/clienti-proprietar',
+  path: '/clienti-proprietar',
+  getParentRoute: () => PanouRoute,
+} as any)
+const PanouContRoute = PanouContRouteImport.update({
+  id: '/cont',
+  path: '/cont',
+  getParentRoute: () => PanouRoute,
+} as any)
+const PanouDashboardRoute = PanouDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => PanouRoute,
+} as any)
+const PanouOrarulMeuRoute = PanouOrarulMeuRouteImport.update({
+  id: '/orarul-meu',
+  path: '/orarul-meu',
+  getParentRoute: () => PanouRoute,
+} as any)
+const PanouSaliRoute = PanouSaliRouteImport.update({
+  id: '/sali',
+  path: '/sali',
+  getParentRoute: () => PanouRoute,
+} as any)
+const PanouVouchereRoute = PanouVouchereRouteImport.update({
+  id: '/vouchere',
+  path: '/vouchere',
+  getParentRoute: () => PanouRoute,
+} as any)
+const RezervaSlugRoute = RezervaSlugRouteImport.update({
+  id: '/rezerva/$slug',
+  path: '/rezerva/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SaliIndexRoute = SaliIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SaliRoute,
+} as any)
+const SaliSlugRoute = SaliSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => SaliRoute,
+} as any)
 const PanouSaliIndexRoute = PanouSaliIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => PanouSaliRoute,
-} as any)
-const PanouSaliNouRoute = PanouSaliNouRouteImport.update({
-  id: '/nou',
-  path: '/nou',
   getParentRoute: () => PanouSaliRoute,
 } as any)
 const PanouSaliIdRoute = PanouSaliIdRouteImport.update({
@@ -211,14 +206,19 @@ const PanouSaliIdRoute = PanouSaliIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => PanouSaliRoute,
 } as any)
-const PanouSaliIdEditRoute = PanouSaliIdEditRouteImport.update({
-  id: '/edit',
-  path: '/edit',
-  getParentRoute: () => PanouSaliIdRoute,
+const PanouSaliNouRoute = PanouSaliNouRouteImport.update({
+  id: '/nou',
+  path: '/nou',
+  getParentRoute: () => PanouSaliRoute,
 } as any)
 const PanouSaliIdCalendarRoute = PanouSaliIdCalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
+  getParentRoute: () => PanouSaliIdRoute,
+} as any)
+const PanouSaliIdEditRoute = PanouSaliIdEditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
   getParentRoute: () => PanouSaliIdRoute,
 } as any)
 
@@ -460,88 +460,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/termeni-si-conditii': {
-      id: '/termeni-si-conditii'
-      path: '/termeni-si-conditii'
-      fullPath: '/termeni-si-conditii'
-      preLoaderRoute: typeof TermeniSiConditiiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/signup': {
-      id: '/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof SignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sali': {
-      id: '/sali'
-      path: '/sali'
-      fullPath: '/sali'
-      preLoaderRoute: typeof SaliRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/rezervari': {
-      id: '/rezervari'
-      path: '/rezervari'
-      fullPath: '/rezervari'
-      preLoaderRoute: typeof RezervariRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/rezervarea-mea': {
-      id: '/rezervarea-mea'
-      path: '/rezervarea-mea'
-      fullPath: '/rezervarea-mea'
-      preLoaderRoute: typeof RezervareaMeaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-parola': {
-      id: '/reset-parola'
-      path: '/reset-parola'
-      fullPath: '/reset-parola'
-      preLoaderRoute: typeof ResetParolaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/politica-cookies': {
-      id: '/politica-cookies'
-      path: '/politica-cookies'
-      fullPath: '/politica-cookies'
-      preLoaderRoute: typeof PoliticaCookiesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/politica-confidentialitate': {
-      id: '/politica-confidentialitate'
-      path: '/politica-confidentialitate'
-      fullPath: '/politica-confidentialitate'
-      preLoaderRoute: typeof PoliticaConfidentialitateRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/panou': {
-      id: '/panou'
-      path: '/panou'
-      fullPath: '/panou'
-      preLoaderRoute: typeof PanouRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contact': {
-      id: '/contact'
-      path: '/contact'
-      fullPath: '/contact'
-      preLoaderRoute: typeof ContactRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/cont': {
-      id: '/cont'
-      path: '/cont'
-      fullPath: '/cont'
-      preLoaderRoute: typeof ContRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/confirmare': {
@@ -551,116 +474,95 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConfirmareRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/cont': {
+      id: '/cont'
+      path: '/cont'
+      fullPath: '/cont'
+      preLoaderRoute: typeof ContRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/sali/': {
-      id: '/sali/'
-      path: '/'
-      fullPath: '/sali/'
-      preLoaderRoute: typeof SaliIndexRouteImport
-      parentRoute: typeof SaliRoute
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/panou/': {
-      id: '/panou/'
-      path: '/'
-      fullPath: '/panou/'
-      preLoaderRoute: typeof PanouIndexRouteImport
-      parentRoute: typeof PanouRoute
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/panou': {
+      id: '/panou'
+      path: '/panou'
+      fullPath: '/panou'
+      preLoaderRoute: typeof PanouRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/politica-confidentialitate': {
+      id: '/politica-confidentialitate'
+      path: '/politica-confidentialitate'
+      fullPath: '/politica-confidentialitate'
+      preLoaderRoute: typeof PoliticaConfidentialitateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/politica-cookies': {
+      id: '/politica-cookies'
+      path: '/politica-cookies'
+      fullPath: '/politica-cookies'
+      preLoaderRoute: typeof PoliticaCookiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-parola': {
+      id: '/reset-parola'
+      path: '/reset-parola'
+      fullPath: '/reset-parola'
+      preLoaderRoute: typeof ResetParolaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rezervarea-mea': {
+      id: '/rezervarea-mea'
+      path: '/rezervarea-mea'
+      fullPath: '/rezervarea-mea'
+      preLoaderRoute: typeof RezervareaMeaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rezervari': {
+      id: '/rezervari'
+      path: '/rezervari'
+      fullPath: '/rezervari'
+      preLoaderRoute: typeof RezervariRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sali': {
+      id: '/sali'
+      path: '/sali'
+      fullPath: '/sali'
+      preLoaderRoute: typeof SaliRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/termeni-si-conditii': {
+      id: '/termeni-si-conditii'
+      path: '/termeni-si-conditii'
+      fullPath: '/termeni-si-conditii'
+      preLoaderRoute: typeof TermeniSiConditiiRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/cont/': {
       id: '/cont/'
       path: '/'
       fullPath: '/cont/'
       preLoaderRoute: typeof ContIndexRouteImport
-      parentRoute: typeof ContRoute
-    }
-    '/sali/$slug': {
-      id: '/sali/$slug'
-      path: '/$slug'
-      fullPath: '/sali/$slug'
-      preLoaderRoute: typeof SaliSlugRouteImport
-      parentRoute: typeof SaliRoute
-    }
-    '/rezerva/$slug': {
-      id: '/rezerva/$slug'
-      path: '/rezerva/$slug'
-      fullPath: '/rezerva/$slug'
-      preLoaderRoute: typeof RezervaSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/panou/vouchere': {
-      id: '/panou/vouchere'
-      path: '/vouchere'
-      fullPath: '/panou/vouchere'
-      preLoaderRoute: typeof PanouVouchereRouteImport
-      parentRoute: typeof PanouRoute
-    }
-    '/panou/sali': {
-      id: '/panou/sali'
-      path: '/sali'
-      fullPath: '/panou/sali'
-      preLoaderRoute: typeof PanouSaliRouteImport
-      parentRoute: typeof PanouRoute
-    }
-    '/panou/orarul-meu': {
-      id: '/panou/orarul-meu'
-      path: '/orarul-meu'
-      fullPath: '/panou/orarul-meu'
-      preLoaderRoute: typeof PanouOrarulMeuRouteImport
-      parentRoute: typeof PanouRoute
-    }
-    '/panou/dashboard': {
-      id: '/panou/dashboard'
-      path: '/dashboard'
-      fullPath: '/panou/dashboard'
-      preLoaderRoute: typeof PanouDashboardRouteImport
-      parentRoute: typeof PanouRoute
-    }
-    '/panou/cont': {
-      id: '/panou/cont'
-      path: '/cont'
-      fullPath: '/panou/cont'
-      preLoaderRoute: typeof PanouContRouteImport
-      parentRoute: typeof PanouRoute
-    }
-    '/panou/clienti-proprietar': {
-      id: '/panou/clienti-proprietar'
-      path: '/clienti-proprietar'
-      fullPath: '/panou/clienti-proprietar'
-      preLoaderRoute: typeof PanouClientiProprietarRouteImport
-      parentRoute: typeof PanouRoute
-    }
-    '/panou/clienti-chirias': {
-      id: '/panou/clienti-chirias'
-      path: '/clienti-chirias'
-      fullPath: '/panou/clienti-chirias'
-      preLoaderRoute: typeof PanouClientiChiriasRouteImport
-      parentRoute: typeof PanouRoute
-    }
-    '/panou/cereri': {
-      id: '/panou/cereri'
-      path: '/cereri'
-      fullPath: '/panou/cereri'
-      preLoaderRoute: typeof PanouCereriRouteImport
-      parentRoute: typeof PanouRoute
-    }
-    '/panou/calendar': {
-      id: '/panou/calendar'
-      path: '/calendar'
-      fullPath: '/panou/calendar'
-      preLoaderRoute: typeof PanouCalendarRouteImport
-      parentRoute: typeof PanouRoute
-    }
-    '/cont/rezervari': {
-      id: '/cont/rezervari'
-      path: '/rezervari'
-      fullPath: '/cont/rezervari'
-      preLoaderRoute: typeof ContRezervariRouteImport
       parentRoute: typeof ContRoute
     }
     '/cont/favorite': {
@@ -670,18 +572,109 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContFavoriteRouteImport
       parentRoute: typeof ContRoute
     }
+    '/cont/rezervari': {
+      id: '/cont/rezervari'
+      path: '/rezervari'
+      fullPath: '/cont/rezervari'
+      preLoaderRoute: typeof ContRezervariRouteImport
+      parentRoute: typeof ContRoute
+    }
+    '/panou/': {
+      id: '/panou/'
+      path: '/'
+      fullPath: '/panou/'
+      preLoaderRoute: typeof PanouIndexRouteImport
+      parentRoute: typeof PanouRoute
+    }
+    '/panou/calendar': {
+      id: '/panou/calendar'
+      path: '/calendar'
+      fullPath: '/panou/calendar'
+      preLoaderRoute: typeof PanouCalendarRouteImport
+      parentRoute: typeof PanouRoute
+    }
+    '/panou/cereri': {
+      id: '/panou/cereri'
+      path: '/cereri'
+      fullPath: '/panou/cereri'
+      preLoaderRoute: typeof PanouCereriRouteImport
+      parentRoute: typeof PanouRoute
+    }
+    '/panou/clienti-chirias': {
+      id: '/panou/clienti-chirias'
+      path: '/clienti-chirias'
+      fullPath: '/panou/clienti-chirias'
+      preLoaderRoute: typeof PanouClientiChiriasRouteImport
+      parentRoute: typeof PanouRoute
+    }
+    '/panou/clienti-proprietar': {
+      id: '/panou/clienti-proprietar'
+      path: '/clienti-proprietar'
+      fullPath: '/panou/clienti-proprietar'
+      preLoaderRoute: typeof PanouClientiProprietarRouteImport
+      parentRoute: typeof PanouRoute
+    }
+    '/panou/cont': {
+      id: '/panou/cont'
+      path: '/cont'
+      fullPath: '/panou/cont'
+      preLoaderRoute: typeof PanouContRouteImport
+      parentRoute: typeof PanouRoute
+    }
+    '/panou/dashboard': {
+      id: '/panou/dashboard'
+      path: '/dashboard'
+      fullPath: '/panou/dashboard'
+      preLoaderRoute: typeof PanouDashboardRouteImport
+      parentRoute: typeof PanouRoute
+    }
+    '/panou/orarul-meu': {
+      id: '/panou/orarul-meu'
+      path: '/orarul-meu'
+      fullPath: '/panou/orarul-meu'
+      preLoaderRoute: typeof PanouOrarulMeuRouteImport
+      parentRoute: typeof PanouRoute
+    }
+    '/panou/sali': {
+      id: '/panou/sali'
+      path: '/sali'
+      fullPath: '/panou/sali'
+      preLoaderRoute: typeof PanouSaliRouteImport
+      parentRoute: typeof PanouRoute
+    }
+    '/panou/vouchere': {
+      id: '/panou/vouchere'
+      path: '/vouchere'
+      fullPath: '/panou/vouchere'
+      preLoaderRoute: typeof PanouVouchereRouteImport
+      parentRoute: typeof PanouRoute
+    }
+    '/rezerva/$slug': {
+      id: '/rezerva/$slug'
+      path: '/rezerva/$slug'
+      fullPath: '/rezerva/$slug'
+      preLoaderRoute: typeof RezervaSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sali/': {
+      id: '/sali/'
+      path: '/'
+      fullPath: '/sali/'
+      preLoaderRoute: typeof SaliIndexRouteImport
+      parentRoute: typeof SaliRoute
+    }
+    '/sali/$slug': {
+      id: '/sali/$slug'
+      path: '/$slug'
+      fullPath: '/sali/$slug'
+      preLoaderRoute: typeof SaliSlugRouteImport
+      parentRoute: typeof SaliRoute
+    }
     '/panou/sali/': {
       id: '/panou/sali/'
       path: '/'
       fullPath: '/panou/sali/'
       preLoaderRoute: typeof PanouSaliIndexRouteImport
-      parentRoute: typeof PanouSaliRoute
-    }
-    '/panou/sali/nou': {
-      id: '/panou/sali/nou'
-      path: '/nou'
-      fullPath: '/panou/sali/nou'
-      preLoaderRoute: typeof PanouSaliNouRouteImport
       parentRoute: typeof PanouSaliRoute
     }
     '/panou/sali/$id': {
@@ -691,18 +684,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PanouSaliIdRouteImport
       parentRoute: typeof PanouSaliRoute
     }
-    '/panou/sali/$id/edit': {
-      id: '/panou/sali/$id/edit'
-      path: '/edit'
-      fullPath: '/panou/sali/$id/edit'
-      preLoaderRoute: typeof PanouSaliIdEditRouteImport
-      parentRoute: typeof PanouSaliIdRoute
+    '/panou/sali/nou': {
+      id: '/panou/sali/nou'
+      path: '/nou'
+      fullPath: '/panou/sali/nou'
+      preLoaderRoute: typeof PanouSaliNouRouteImport
+      parentRoute: typeof PanouSaliRoute
     }
     '/panou/sali/$id/calendar': {
       id: '/panou/sali/$id/calendar'
       path: '/calendar'
       fullPath: '/panou/sali/$id/calendar'
       preLoaderRoute: typeof PanouSaliIdCalendarRouteImport
+      parentRoute: typeof PanouSaliIdRoute
+    }
+    '/panou/sali/$id/edit': {
+      id: '/panou/sali/$id/edit'
+      path: '/edit'
+      fullPath: '/panou/sali/$id/edit'
+      preLoaderRoute: typeof PanouSaliIdEditRouteImport
       parentRoute: typeof PanouSaliIdRoute
     }
   }
