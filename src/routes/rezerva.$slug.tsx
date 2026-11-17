@@ -61,6 +61,7 @@ export const Route = createFileRoute("/rezerva/$slug")({
   loader: ({ params }) => ({ slug: params.slug }),
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex" },
       { title: "Finalizează rezervarea — Rezervări Săli" },
       { name: "description", content: "Completează datele și confirmă rezervarea sălii." },
     ],

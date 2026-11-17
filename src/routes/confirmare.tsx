@@ -21,6 +21,7 @@ export const Route = createFileRoute("/confirmare")({
   }),
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex" },
       { title: "Rezervare confirmată — Rezervări Săli" },
       { name: "description", content: "Detaliile rezervării tale." },
     ],
