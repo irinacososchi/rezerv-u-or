@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordResetLinkSection } from "@/components/password-reset-link-section";
 
 export const Route = createFileRoute("/panou/cont")({
   component: AccountPage,
@@ -36,12 +37,6 @@ function AccountPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const [changingPassword, setChangingPassword] = useState(false);
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordSaving, setPasswordSaving] = useState(false);
-  const [passwordError, setPasswordError] = useState<string | null>(null);
-  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadProfile() {
@@ -108,34 +103,6 @@ function AccountPage() {
     );
     setSuccess("Profil actualizat cu succes!");
     setTimeout(() => setSuccess(null), 3000);
-  }
-
-  async function handleSavePassword() {
-    setPasswordError(null);
-    setPasswordSuccess(null);
-    if (newPassword.length < 8) {
-      setPasswordError("Minim 8 caractere.");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setPasswordError("Parolele nu coincid.");
-      return;
-    }
-
-    setPasswordSaving(true);
-    const { error: err } = await supabase.auth.updateUser({ password: newPassword });
-    setPasswordSaving(false);
-
-    if (err) {
-      setPasswordError(err.message);
-      return;
-    }
-
-    setPasswordSuccess("Parolă schimbată cu succes!");
-    setNewPassword("");
-    setConfirmPassword("");
-    setChangingPassword(false);
-    setTimeout(() => setPasswordSuccess(null), 3000);
   }
 
   const initial =
@@ -265,74 +232,7 @@ function AccountPage() {
                 <CardTitle>Securitate</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <div className="font-medium text-sm">Parolă</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">
-                      Ultima modificare: necunoscut
-                    </div>
-                  </div>
-                  {!changingPassword && (
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setChangingPassword(true);
-                        setPasswordError(null);
-                        setPasswordSuccess(null);
-                      }}
-                    >
-                      Schimbă parola
-                    </Button>
-                  )}
-                </div>
-
-                {passwordSuccess && (
-                  <p className="text-sm text-green-600">{passwordSuccess}</p>
-                )}
-
-                {changingPassword && (
-                  <div className="space-y-3 rounded-md border border-border bg-muted/30 p-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="new_password">Parolă nouă</Label>
-                      <Input
-                        id="new_password"
-                        type="password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="Minim 8 caractere"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="confirm_password">Confirmă parola</Label>
-                      <Input
-                        id="confirm_password"
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="Repetă parola"
-                      />
-                    </div>
-                    {passwordError && (
-                      <p className="text-sm text-destructive">{passwordError}</p>
-                    )}
-                    <div className="flex items-center justify-end gap-2 pt-1">
-                      <Button
-                        variant="ghost"
-                        onClick={() => {
-                          setChangingPassword(false);
-                          setNewPassword("");
-                          setConfirmPassword("");
-                          setPasswordError(null);
-                        }}
-                      >
-                        Anulează
-                      </Button>
-                      <Button onClick={handleSavePassword} disabled={passwordSaving}>
-                        {passwordSaving ? "Se salvează..." : "Salvează parola nouă"}
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                <PasswordResetLinkSection email={user?.email} />
               </CardContent>
             </Card>
           </>
